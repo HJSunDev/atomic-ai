@@ -8,7 +8,7 @@ export default function Home() {
       <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full fixed top-0 z-50">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+            <div className="w-[2rem] h-[2rem] rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
               O
             </div>
             <span className="font-bold text-xl">OmniAid</span>
@@ -20,89 +20,95 @@ export default function Home() {
         </div>
       </header>
 
-      <main className="flex-1 pt-16">
-        {/* 英雄区域 - 优化布局 */}
-        <section className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-[30rem] items-center">
-          <div className="grid md:grid-cols-2 gap-8 lg:gap-12 w-full items-center">
-            {/* 左侧内容 */}
-            <div className="flex flex-col justify-center text-left">
-              <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm mb-6 w-fit bg-white">
-                <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium">AI驱动的开发效率革命</span>
+      <main className="flex-1">
+        {/* 英雄区域 - 占满首屏 */}
+        <section className="h-screen flex items-center relative">
+          {/* 移除背景效果 */}
+          
+          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 z-10">
+            <div className="grid md:grid-cols-2 gap-8 lg:gap-12 w-full items-center">
+              {/* 左侧内容 */}
+              <div className="flex flex-col justify-center text-left ml-0 md:ml-[2rem]">
+                <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm mb-6 w-fit bg-white">
+                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium">AI驱动的开发效率革命</span>
+                </div>
+                <h1 className="text-[1.75rem] sm:text-[2.25rem] md:text-[2.75rem] lg:text-[3.5rem] font-semibold tracking-tight mb-4 sm:mb-6">
+                  模块化AI协作<span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">开发效率平台</span>
+                </h1>
+                <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl">
+                  通过模块化、可组合的提示词管理与AI智能体协作，覆盖开发全生命周期场景，提升开发效率与代码质量
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button className="px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                    开始使用
+                  </Button>
+                  <Button variant="outline" className="px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base">
+                    查看演示
+                  </Button>
+                </div>
               </div>
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight mb-4 sm:mb-6">
-                模块化AI协作<span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">开发效率平台</span>
-              </h1>
-              <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl">
-                通过模块化、可组合的提示词管理与AI智能体协作，覆盖开发全生命周期场景，提升开发效率与代码质量
-              </p>
-              <div className="flex flex-col sm:flex-row gap-4">
-                <Button className="px-6 py-2 sm:px-8 sm:py-6 text-sm sm:text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                  开始使用
-                </Button>
-                <Button variant="outline" className="px-6 py-2 sm:px-8 sm:py-6 text-sm sm:text-base">
-                  查看演示
-                </Button>
-              </div>
-            </div>
-            
-            {/* 右侧占位区域 - 为将来的动画效果预留空间 */}
-            <div className="hidden md:flex justify-center items-center">
-              <div className="relative w-full max-w-md aspect-square">
-                {/* 外层光晕效果 */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-full blur-xl"></div>
-                
-                {/* 内层圆形 */}
-                <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center shadow-lg">
-                  {/* 简单的图标网格，作为占位 */}
-                  <div className="grid grid-cols-2 gap-4 p-6 lg:gap-6 lg:p-10">
-                    <div className="bg-blue-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 lg:w-9 lg:h-9">
-                        <circle cx="12" cy="12" r="10" />
-                        <circle cx="12" cy="12" r="2" />
-                        <path d="M12 19a7 7 0 1 0 0-14" />
-                      </svg>
-                    </div>
-                    <div className="bg-purple-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 lg:w-9 lg:h-9">
-                        <rect width="18" height="18" x="3" y="3" rx="2" />
-                        <path d="M3 9h18" />
-                        <path d="M9 21V9" />
-                      </svg>
-                    </div>
-                    <div className="bg-green-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 lg:w-9 lg:h-9">
-                        <path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8Z" />
-                        <circle cx="12" cy="10" r="3" />
-                      </svg>
-                    </div>
-                    <div className="bg-orange-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-600 lg:w-9 lg:h-9">
-                        <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                        <path d="m9 12 2 2 4-4" />
-                      </svg>
+              
+              {/* 右侧占位区域 - 为将来的动画效果预留空间 */}
+              <div className="hidden md:flex justify-center items-center ml-0 md:ml-[2rem]">
+                <div className="relative w-full max-w-md aspect-square">
+                  {/* 外层光晕效果 */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-full blur-xl"></div>
+                  
+                  {/* 内层圆形 */}
+                  <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center shadow-lg">
+                    {/* 简单的图标网格，作为占位 */}
+                    <div className="grid grid-cols-2 gap-4 p-6 lg:gap-6 lg:p-10">
+                      <div className="bg-blue-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1.75rem" height="1.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 lg:w-[2.25rem] lg:h-[2.25rem]">
+                          <circle cx="12" cy="12" r="10" />
+                          <circle cx="12" cy="12" r="2" />
+                          <path d="M12 19a7 7 0 1 0 0-14" />
+                        </svg>
+                      </div>
+                      <div className="bg-purple-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1.75rem" height="1.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 lg:w-[2.25rem] lg:h-[2.25rem]">
+                          <rect width="18" height="18" x="3" y="3" rx="2" />
+                          <path d="M3 9h18" />
+                          <path d="M9 21V9" />
+                        </svg>
+                      </div>
+                      <div className="bg-green-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1.75rem" height="1.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 lg:w-[2.25rem] lg:h-[2.25rem]">
+                          <path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8Z" />
+                          <circle cx="12" cy="10" r="3" />
+                        </svg>
+                      </div>
+                      <div className="bg-orange-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="1.75rem" height="1.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-600 lg:w-[2.25rem] lg:h-[2.25rem]">
+                          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
+                          <path d="m9 12 2 2 4-4" />
+                        </svg>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
+          
+          {/* 移除向下滚动指示器 */}
         </section>
 
-        {/* 特性区域 - 优化视觉过渡 */}
-        <section id="features" className="py-16 sm:py-20 bg-gradient-to-b from-background to-muted/30">
+        {/* 特性区域 */}
+        <section id="features" className="py-8 sm:py-12">
           <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12 sm:mb-16">
+            <div className="text-center mb-4 sm:mb-8 ">
               <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">三层模块化架构</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
-                基于用户需求，将产品拆解为3层模块化结构，支持灵活组合与扩展
+                支持灵活组合与扩展
               </p>
             </div>
 
-            <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+            <div className="grid md:grid-cols-3 gap-6 lg:gap-8 ">
               {/* 原子层 */}
               <div className="bg-background rounded-xl border p-6 lg:p-8 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-lg bg-blue-100 flex items-center justify-center mb-4 lg:mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 lg:w-7 lg:h-7">
+                <div className="w-12 h-12 lg:w-[3.5rem] lg:h-[3.5rem] rounded-lg bg-blue-100 flex items-center justify-center mb-4 lg:mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 lg:w-[1.75rem] lg:h-[1.75rem]">
                     <circle cx="12" cy="12" r="10" />
                     <circle cx="12" cy="12" r="2" />
                     <path d="M12 19a7 7 0 1 0 0-14" />
@@ -117,8 +123,8 @@ export default function Home() {
 
               {/* 组合层 */}
               <div className="bg-background rounded-xl border p-6 lg:p-8 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-lg bg-purple-100 flex items-center justify-center mb-4 lg:mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 lg:w-7 lg:h-7">
+                <div className="w-12 h-12 lg:w-[3.5rem] lg:h-[3.5rem] rounded-lg bg-purple-100 flex items-center justify-center mb-4 lg:mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 lg:w-[1.75rem] lg:h-[1.75rem]">
                     <rect width="18" height="18" x="3" y="3" rx="2" />
                     <path d="M3 9h18" />
                     <path d="M9 21V9" />
@@ -133,8 +139,8 @@ export default function Home() {
 
               {/* 智能层 */}
               <div className="bg-background rounded-xl border p-6 lg:p-8 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 lg:w-14 lg:h-14 rounded-lg bg-green-100 flex items-center justify-center mb-4 lg:mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 lg:w-7 lg:h-7">
+                <div className="w-12 h-12 lg:w-[3.5rem] lg:h-[3.5rem] rounded-lg bg-green-100 flex items-center justify-center mb-4 lg:mb-6">
+                  <svg xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 lg:w-[1.75rem] lg:h-[1.75rem]">
                     <path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8Z" />
                     <circle cx="12" cy="10" r="3" />
                   </svg>
@@ -162,12 +168,12 @@ export default function Home() {
             {/* 工作流程设计 */}
             <div className="relative mt-12 sm:mt-20">
               {/* 水平连接线 */}
-              <div className="hidden md:block absolute top-16 left-0 w-full h-[1px] bg-border"></div>
+              <div className="hidden md:block absolute top-16 left-0 w-full h-[0.0625rem] bg-border"></div>
               
               <div className="grid md:grid-cols-4 gap-6 lg:gap-8">
                 {/* 步骤1 */}
                 <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
+                  <div className="w-[3rem] h-[3rem] sm:w-[4rem] sm:h-[4rem] rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
                     <span className="font-bold text-primary text-lg sm:text-xl">1</span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">需求分析</h3>
@@ -178,7 +184,7 @@ export default function Home() {
 
                 {/* 步骤2 */}
                 <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
+                  <div className="w-[3rem] h-[3rem] sm:w-[4rem] sm:h-[4rem] rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
                     <span className="font-bold text-primary text-lg sm:text-xl">2</span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">代码生成</h3>
@@ -189,7 +195,7 @@ export default function Home() {
 
                 {/* 步骤3 */}
                 <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
+                  <div className="w-[3rem] h-[3rem] sm:w-[4rem] sm:h-[4rem] rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
                     <span className="font-bold text-primary text-lg sm:text-xl">3</span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">测试与优化</h3>
@@ -200,7 +206,7 @@ export default function Home() {
 
                 {/* 步骤4 */}
                 <div className="flex flex-col items-center">
-                  <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
+                  <div className="w-[3rem] h-[3rem] sm:w-[4rem] sm:h-[4rem] rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
                     <span className="font-bold text-primary text-lg sm:text-xl">4</span>
                   </div>
                   <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">部署与监控</h3>
@@ -220,7 +226,7 @@ export default function Home() {
             <p className="text-white/80 max-w-2xl mx-auto mb-8 sm:mb-10 text-sm sm:text-lg">
               加入数千名开发者的行列，体验AI驱动的开发效率革命
             </p>
-            <Button variant="secondary" className="bg-white text-primary hover:bg-white/90 px-6 py-2 sm:px-8 sm:py-6 text-sm sm:text-base">
+            <Button variant="secondary" className="bg-white text-primary hover:bg-white/90 px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base">
               立即开始免费试用
             </Button>
           </div>
@@ -274,7 +280,7 @@ export default function Home() {
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 mb-6 md:mb-0">
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
+              <div className="w-[2rem] h-[2rem] rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
                 O
               </div>
               <span className="font-bold text-xl">OmniAid</span>
