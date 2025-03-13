@@ -124,3 +124,16 @@
     @apply bg-background text-foreground;
   }
 }
+
+/**
+ * 响应式字体大小设置
+ * - 最小字体大小: 14px
+ * - 基准计算: 根据设计稿宽度1440px计算比例
+ * - 最大字体大小: 18px
+ * - 当屏幕宽度大于等于375px时生效
+ */
+ @media screen and (min-width: 375px) {
+  html {
+    font-size: clamp(14px, calc(16 * (100vw / 1440)), 18px);
+  }
+}
