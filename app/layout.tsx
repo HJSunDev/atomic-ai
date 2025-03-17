@@ -3,15 +3,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 import { ConvexClientProvider } from "@/components/providers/convex-provider";
-
-import {
-  ClerkProvider,
-  SignInButton,
-  SignUpButton,
-  SignedIn,
-  SignedOut,
-  UserButton,
-} from '@clerk/nextjs'
+import { ThemeProviderWrapper } from "@/components/providers/theme-provider";
 
 // 定义 Geist Sans 字体
 const geistSans = Geist({
@@ -42,7 +34,9 @@ export default function RootLayout({
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       > 
         <ConvexClientProvider>
-          {children}
+          <ThemeProviderWrapper>
+            {children}
+          </ThemeProviderWrapper>
         </ConvexClientProvider>
       </body>
     </html>

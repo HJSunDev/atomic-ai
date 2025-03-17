@@ -3,11 +3,14 @@
 import { 
   PanelLeftClose, 
   PanelLeftOpen,
+  Home,
+  HelpCircle
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -15,7 +18,7 @@ export function Sidebar() {
   return (
     <aside 
       className={cn(
-        "flex flex-col h-full bg-[#FAFAFA] overflow-hidden",
+        "flex flex-col h-full bg-[#FAFAFA] dark:bg-[#121212] overflow-hidden border-r dark:border-gray-800",
         collapsed ? "w-[4rem]" : "w-[12rem]"
       )}
     >
@@ -25,12 +28,9 @@ export function Sidebar() {
       )}>
         {/* 应用名 */}
         {!collapsed && (
-          <Link 
-            href="/" 
-            className="font-semibold text-xl text-primary flex items-center"
-          >
+          <div className="font-semibold text-xl text-primary dark:text-white flex items-center">
             OmniAid
-          </Link>
+          </div>
         )}
 
         {/* 展开状态下的头像和按钮 */}
@@ -46,7 +46,7 @@ export function Sidebar() {
               onClick={() => setCollapsed(!collapsed)}
               className="flex items-center justify-center ml-1 w-6 h-6 cursor-pointer"
             >
-              <PanelLeftClose className="h-4 w-4 text-gray-600" />
+              <PanelLeftClose className="h-4 w-4 text-gray-600 dark:text-gray-400" />
             </button>
           </>
         )}
@@ -57,9 +57,9 @@ export function Sidebar() {
             {/* 展开收起按钮 */}
             <button
               onClick={() => setCollapsed(!collapsed)}
-              className=" flex items-center justify-center w-6 h-6 mb-3 cursor-pointer"
+              className="flex items-center justify-center w-6 h-6 mb-3 cursor-pointer"
             >
-              <PanelLeftOpen className="h-5 w-5 text-gray-600" />
+              <PanelLeftOpen className="h-5 w-5 text-gray-600 dark:text-gray-400" />
             </button>
 
             {/* 用户头像 */}
@@ -69,6 +69,28 @@ export function Sidebar() {
           </>
         )}
       </header>
+
+      {/* 主内容区域 - 可以根据需要添加 */}
+      <div className="flex-1"></div>
+      
+      {/* 底部图标导航栏 */}
+      <footer className={cn(
+        "border-gray-200 dark:border-gray-800 py-2 overflow-hidden",
+        collapsed 
+          ? "flex flex-col items-center space-y-3 px-0 py-3" 
+          : "border-t flex justify-around items-center px-1"
+      )}>
+        <Link href="/" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <Home className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+        </Link>
+        <div className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+          <HelpCircle className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+        </div>
+        <ThemeToggle />
+        {/** 只在展开状态下显示 */}
+        {/* {!collapsed && (
+        )} */}
+      </footer>
 
     </aside>
   );
