@@ -14,10 +14,10 @@ export default function Home() {
             <span className="font-bold text-xl">OmniAid</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/dashboard">
+            <Link href="/home">
               <Button variant="outline" size="sm">登录</Button>
             </Link>
-            <Link href="/dashboard">
+            <Link href="/home">
               <Button size="sm" className="bg-primary hover:bg-primary/90">免费试用</Button>
             </Link>
           </div>
@@ -43,7 +43,7 @@ export default function Home() {
                   通过模块化、可组合的提示词管理与AI智能体协作，覆盖开发全生命周期场景，提升开发效率与代码质量
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/dashboard">
+                  <Link href="/home">
                     <Button className="px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
                       开始使用
                     </Button>
@@ -233,7 +233,7 @@ export default function Home() {
               加入数千名开发者的行列，体验AI驱动的开发效率革命
             </p>
             <Button variant="secondary" className="bg-white text-primary hover:bg-white/90 px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base">
-              <Link href="/dashboard">立即开始免费试用</Link>
+              <Link href="/home">立即开始免费试用</Link>
             </Button>
           </div>
         </section>

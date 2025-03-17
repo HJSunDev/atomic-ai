@@ -137,3 +137,10 @@
     font-size: clamp(14px, calc(16 * (100vw / 1440)), 18px);
   }
 }
+
+
+/* 在你的全局 CSS 文件中 */
+.cl-userButtonAvatarBox {
+  width: 26px;
+  height: 26px;
+}
