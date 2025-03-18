@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Clock, Brain, Sparkles, Maximize2, Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Bot, User } from "lucide-react";
 
@@ -17,6 +17,9 @@ interface Message {
 export function AiChatPanel() {
   // 添加状态来跟踪输入内容
   const [inputValue, setInputValue] = useState("");
+  
+  // 创建一个ref用于消息列表底部的元素
+  const messagesEndRef = useRef<HTMLDivElement>(null);
   
   // 模拟对话数据，参考OpenAI格式
   const [messages, setMessages] = useState<Message[]>([
@@ -59,6 +62,16 @@ export function AiChatPanel() {
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
   };
+  
+  // 滚动到底部的函数 - 使用auto实现即时滚动
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
+  };
+  
+  // 组件挂载和消息更新时滚动到底部
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
   
   return (
     // AI聊天面板 - 固定占据右侧宽度
@@ -126,6 +139,8 @@ export function AiChatPanel() {
             )}
           </div>
         ))}
+        {/* 用于滚动到底部的空div */}
+        <div ref={messagesEndRef} />
       </div>
       
       {/* 输入区域 */}
