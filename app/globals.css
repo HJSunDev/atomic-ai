@@ -79,6 +79,14 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+  
+  /* 滚动条变量 - 浅色模式 */
+  --scrollbar-track: oklch(0.98 0 0);
+  --scrollbar-thumb: oklch(0.85 0 0);
+  --scrollbar-thumb-hover: oklch(0.75 0 0);
+  --scrollbar-width: 0.5rem;
+  --scrollbar-height: 0.5rem;
+  --scrollbar-radius: 0.25rem;
 }
 
 .dark {
@@ -114,6 +122,11 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+  
+  /* 滚动条变量 - 深色模式 */
+  --scrollbar-track: oklch(0.18 0 0);
+  --scrollbar-thumb: oklch(0.3 0 0);
+  --scrollbar-thumb-hover: oklch(0.4 0 0);
 }
 
 @layer base {
@@ -122,6 +135,38 @@
   }
   body {
     @apply bg-background text-foreground;
+  }
+  
+  /* 自定义滚动条样式 */
+  ::-webkit-scrollbar {
+    width: var(--scrollbar-width);
+    height: var(--scrollbar-height);
+  }
+  
+  ::-webkit-scrollbar-track {
+    background: var(--scrollbar-track);
+    border-radius: var(--scrollbar-radius);
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb);
+    border-radius: var(--scrollbar-radius);
+    transition: background-color 0.2s ease;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--scrollbar-thumb-hover);
+  }
+  
+  /* 滚动条角落样式 */
+  ::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+  
+  /* 针对Firefox的滚动条样式 */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   }
 }
 
