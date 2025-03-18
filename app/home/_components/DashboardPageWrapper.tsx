@@ -17,11 +17,11 @@ export function DashboardPageWrapper({ children }: DashboardPageWrapperProps) {
   };
 
   return (
-    <>
+    <div className="flex h-full">
       {/* 主内容区域 - 宽度根据AI面板显示状态调整 */}
       <div 
         className={`flex flex-col transition-all duration-300 ${
-          showAiChat ? 'w-[55%]' : 'flex-1'
+          showAiChat ? 'w-[55%]' : 'w-full'
         }`}
       >
         {/* 工具栏 - 包含切换AI面板按钮 */}
@@ -42,6 +42,6 @@ export function DashboardPageWrapper({ children }: DashboardPageWrapperProps) {
 
       {/* AI聊天面板 - 可控制显示/隐藏 */}
       {showAiChat && <AiChatPanel />}
-    </>
+    </div>
   );
 } 

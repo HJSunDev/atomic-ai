@@ -12,8 +12,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
     <div className="flex h-screen overflow-hidden">
       {/* 侧边栏 - 固定宽度 */}
       <Sidebar />
-      {/* 直接渲染页面内容 */}
-      {children}
+      {/* 主内容区域 - 占用剩余空间 */}
+      <div className="flex-1 overflow-hidden">
+        {children}
+      </div>
     </div>
   );
 } 
