@@ -21,6 +21,9 @@ export function AiChatPanel() {
   // 创建一个ref用于消息列表底部的元素
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
+  // 创建一个ref用于textarea元素
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  
   // 模拟对话数据，参考OpenAI格式
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -57,6 +60,9 @@ export function AiChatPanel() {
       model: "GPT-4o"
     }
   ]);
+
+  // 模拟无内容对话列表数据
+  const [emptyMessages, setEmptyMessages] = useState<Message[]>([]);
   
   // 处理输入变化
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -73,72 +79,126 @@ export function AiChatPanel() {
     scrollToBottom();
   }, [messages]);
   
+  // 处理提示卡片点击
+  const handlePromptClick = (promptText: string) => {
+    // 查找占位符位置（使用&&&作为光标定位点）
+    const placeholderText = "&&&";
+    const placeholderIndex = promptText.indexOf(placeholderText);
+    
+    if (placeholderIndex !== -1) {
+      // 如果存在占位符，则替换占位符为空，并记录光标位置
+      const newText = promptText.replace(placeholderText, "");
+      setInputValue(newText);
+      
+      // 聚焦到输入框并设置光标位置
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+        // 设置光标位置到占位符的位置
+        setTimeout(() => {
+          if (textareaRef.current) {
+            textareaRef.current.setSelectionRange(placeholderIndex, placeholderIndex);
+          }
+        }, 0);
+      }
+    } else {
+      // 如果没有占位符，则直接设置文本并聚焦
+      setInputValue(promptText);
+      if (textareaRef.current) {
+        textareaRef.current.focus();
+      }
+    }
+  };
+  
   return (
     // AI聊天面板 - 固定占据右侧宽度
     <div className="w-[45%] h-full border-l bg-background flex flex-col overflow-hidden">
       
       {/* 内容区域 */}
       <div className="flex-1 overflow-y-auto p-4 bg-muted/10">
-        {messages.map((message, index) => (
-          <div 
-            key={message.id}
-            className="group mb-6 last:mb-2"
-          >
-            {message.role === "user" ? (
-              // 用户消息容器
-              <div className="flex flex-col items-end">
-                {/* 用户消息内容 */}
-                <div className="w-3/4 bg-[#F1F2F3] rounded-tl-lg rounded-tr-lg rounded-bl-lg p-4 ml-auto">
-                  <div className="text-sm whitespace-pre-line">{message.content}</div>
+        {emptyMessages.length === 0 ? (
+          // 无对话状态设计
+          <div className="h-full flex flex-col items-center justify-center">
+            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg">
+              <Bot className="w-8 h-8 text-white" />
+            </div>
+            <h3 className="text-xl font-medium text-gray-800 mb-2">OmniAid</h3>
+            <p className="text-sm text-gray-500 mb-8 text-center max-w-[300px]">我是您的智能开发助手，随时为您提供编程相关问题的解答与支持</p>
+            
+            <div className="grid grid-cols-2 gap-3 w-full max-w-md">
+              <div 
+                className="p-4 border border-gray-200 rounded-lg hover:border-blue-300 hover:bg-blue-50/30 transition-colors group cursor-pointer"
+                onClick={() => handlePromptClick("&&&是什么？有什么用？使用场景是什么？如何使用？用不用的区别是什么？最佳实践是什么？")}
+              >
+                <div className="flex items-center mb-2">
+                  <span className="text-sm font-medium text-gray-700 group-hover:text-blue-600">知识节点</span>
                 </div>
-                
-                {/* 用户消息功能区 - 根据是否为最后一条消息决定是否默认显示 */}
-                <div className={`mt-2 flex items-center gap-1 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
-                  <button className="w-6 h-6 rounded hover:bg-gray-100 flex items-center justify-center bg-white">
-                    <Copy className="w-3.5 h-3.5 text-gray-500" />
-                  </button>
-                  <button className="w-6 h-6 rounded hover:bg-gray-100 flex items-center justify-center bg-white">
-                    <MoreHorizontal className="w-3.5 h-3.5 text-gray-500" />
-                  </button>
-                </div>
+                <p className="text-xs text-gray-500">帮我拓宽知识边界，探索知识节点</p>
               </div>
-            ) : (
-              // AI消息容器
-              <div className="flex flex-col">
-                {/* AI消息内容 */}
-                <div className="w-full">
-                  {/* AI信息栏 */}
-                  <div className="flex items-center gap-2 mb-1.5">
-                    <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center">
-                      <Bot className="w-4 h-4 text-white" />
-                    </div>
-                    <span className="text-sm font-medium">OmniAid</span>
-                    <span className="text-xs text-gray-500">{message.model}</span>
+            </div>
+          </div>
+        ) : (
+          // 有对话内容时展示消息列表
+          messages.map((message, index) => (
+            <div 
+              key={message.id}
+              className="group mb-6 last:mb-2"
+            >
+              {message.role === "user" ? (
+                // 用户消息容器
+                <div className="flex flex-col items-end">
+                  {/* 用户消息内容 */}
+                  <div className="w-3/4 bg-[#F1F2F3] rounded-tl-lg rounded-tr-lg rounded-bl-lg p-4 ml-auto">
+                    <div className="text-sm whitespace-pre-line">{message.content}</div>
                   </div>
                   
+                  {/* 用户消息功能区 - 根据是否为最后一条消息决定是否默认显示 */}
+                  <div className={`mt-2 flex items-center gap-1 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
+                    <button className="w-6 h-6 rounded hover:bg-gray-100 flex items-center justify-center bg-white">
+                      <Copy className="w-3.5 h-3.5 text-gray-500" />
+                    </button>
+                    <button className="w-6 h-6 rounded hover:bg-gray-100 flex items-center justify-center bg-white">
+                      <MoreHorizontal className="w-3.5 h-3.5 text-gray-500" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                // AI消息容器
+                <div className="flex flex-col">
                   {/* AI消息内容 */}
-                  <div className="text-sm whitespace-pre-line">{message.content}</div>
+                  <div className="w-full">
+                    {/* AI信息栏 */}
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center">
+                        <Bot className="w-4 h-4 text-white" />
+                      </div>
+                      <span className="text-sm font-medium">OmniAid</span>
+                      <span className="text-xs text-gray-500">{message.model}</span>
+                    </div>
+                    
+                    {/* AI消息内容 */}
+                    <div className="text-sm whitespace-pre-line">{message.content}</div>
+                  </div>
+                  
+                  {/* AI消息功能区 - 根据是否为最后一条消息决定是否默认显示 */}
+                  <div className={`mt-2 flex items-center gap-1.5 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
+                    <button className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center bg-white">
+                      <ThumbsUp className="w-3.5 h-3.5 text-gray-500" />
+                    </button>
+                    <button className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center bg-white">
+                      <ThumbsDown className="w-3.5 h-3.5 text-gray-500" />
+                    </button>
+                    <button className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center bg-white">
+                      <Copy className="w-3.5 h-3.5 text-gray-500" />
+                    </button>
+                    <button className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center bg-white">
+                      <MoreHorizontal className="w-3.5 h-3.5 text-gray-500" />
+                    </button>
+                  </div>
                 </div>
-                
-                {/* AI消息功能区 - 根据是否为最后一条消息决定是否默认显示 */}
-                <div className={`mt-2 flex items-center gap-1.5 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
-                  <button className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center bg-white">
-                    <ThumbsUp className="w-3.5 h-3.5 text-gray-500" />
-                  </button>
-                  <button className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center bg-white">
-                    <ThumbsDown className="w-3.5 h-3.5 text-gray-500" />
-                  </button>
-                  <button className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center bg-white">
-                    <Copy className="w-3.5 h-3.5 text-gray-500" />
-                  </button>
-                  <button className="w-7 h-7 rounded-md hover:bg-gray-100 flex items-center justify-center bg-white">
-                    <MoreHorizontal className="w-3.5 h-3.5 text-gray-500" />
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        ))}
+              )}
+            </div>
+          ))
+        )}
         {/* 用于滚动到底部的空div */}
         <div ref={messagesEndRef} />
       </div>
@@ -185,6 +245,7 @@ export function AiChatPanel() {
               className="min-h-[3.7rem] max-h-[6.25rem] w-full resize-none rounded-none border-0 focus-visible:ring-0 focus:outline-none px-3 py-2.5 text-sm overflow-y-auto"
               value={inputValue}
               onChange={handleInputChange}
+              ref={textareaRef}
             />
             
             {/* textarea右下侧功能区 */}
