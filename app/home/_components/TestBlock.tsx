@@ -9,6 +9,15 @@ interface DragData {
   hoveredCardId: number | null;
 }
 
+// 定义卡片数据接口
+interface CardData {
+  id: number;
+  title: string;
+  description: string;
+  color: string;
+  children?: CardData[];
+}
+
 // 可拖动卡片组件
 function DraggableCard({ 
   card, 
@@ -18,12 +27,7 @@ function DraggableCard({
   onDragEnter,
   onDragLeave
 }: { 
-  card: {
-    id: number;
-    title: string;
-    description: string;
-    color: string;
-  };
+  card: CardData;
   dragData: DragData;
   onDragStart: (cardId: number) => void;
   onDragEnd: () => void;
@@ -161,6 +165,27 @@ function DraggableCard({
             {id}
           </div>
         </div>
+
+        {/* 子卡片区域 */}
+        {card.children && card.children.length > 0 && (
+          <div className="mt-4 pt-3 border-t border-white/30">
+            <div className="text-xs font-semibold mb-2 flex items-center">
+              <span>子卡片</span>
+              <span className="ml-1 bg-white/20 text-xs px-1.5 rounded-full">{card.children.length}</span>
+            </div>
+            <div className="grid grid-cols-1 gap-2">
+              {card.children.map(childCard => (
+                <div 
+                  key={childCard.id}
+                  className={`${childCard.color} p-2 rounded text-sm shadow-sm`}
+                >
+                  <div className="font-medium">{childCard.title}</div>
+                  <div className="text-xs mt-1 opacity-80">{childCard.description}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -168,48 +193,71 @@ function DraggableCard({
 
 export function TestBlock() {
   // 卡片数据
-  const [cards] = useState([
+  const [cards] = useState<CardData[]>([
     {
       id: 1,
       title: "思维导图",
       description: "整理和组织想法的可视化工具",
-      color: "bg-blue-400"
+      color: "bg-blue-400",
+      children: [
+        {
+          id: 11,
+          title: "头脑风暴",
+          description: "快速生成创意和想法",
+          color: "bg-blue-300"
+        },
+        {
+          id: 12,
+          title: "知识结构",
+          description: "建立知识体系和框架",
+          color: "bg-blue-300"
+        }
+      ]
     },
     {
       id: 2,
       title: "日程计划",
       description: "管理时间和安排任务的工具",
-      color: "bg-green-400"
+      color: "bg-green-400",
+      children: [
+      ]
     },
     {
       id: 3,
       title: "笔记本",
       description: "记录灵感和重要信息",
-      color: "bg-yellow-400"
+      color: "bg-yellow-400",
+      children: []
     },
     {
       id: 4,
       title: "待办事项",
       description: "追踪需要完成的任务",
-      color: "bg-red-400"
+      color: "bg-red-400",
+      children: [
+      ]
     },
     {
       id: 5,
       title: "文件管理",
       description: "组织和存储重要文档",
-      color: "bg-purple-400"
+      color: "bg-purple-400",
+      children: []
     },
     {
       id: 6,
       title: "知识库",
       description: "积累和分享知识的平台",
-      color: "bg-indigo-400"
+      color: "bg-indigo-400",
+      children: [
+      ]
     },
     {
       id: 7,
       title: "统计分析",
       description: "数据可视化和趋势分析",
-      color: "bg-pink-400"
+      color: "bg-pink-400",
+      children: []
     }
   ]);
 
@@ -270,6 +318,12 @@ export function TestBlock() {
         <p>拖拽状态: {dragData.isDragging ? "拖动中" : "未拖动"}</p>
         <p>拖动卡片: {dragData.draggedCardId || "无"}</p>
         <p>悬停卡片: {dragData.hoveredCardId || "无"}</p>
+      </div>
+
+      {/* 卡片统计信息 */}
+      <div className="bg-white/70 px-3 py-2 rounded mb-4 text-xs text-gray-700 flex space-x-4">
+        <p>主卡片数量: {cards.length}</p>
+        <p>子卡片总数: {cards.reduce((sum, card) => sum + (card.children?.length || 0), 0)}</p>
       </div>
 
       {/* 响应式网格布局 */}
