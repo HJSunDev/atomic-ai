@@ -51,7 +51,21 @@ function DraggableCard({
     // 只在拖动状态下添加全局监听
     if (!localDragging) return;
     
-    // 处理全局鼠标移动
+    // 检测鼠标是否悬停在其他卡片上
+    const checkHoverElements = (e: MouseEvent) => {
+      const elementsUnderMouse = document.elementsFromPoint(e.clientX, e.clientY);
+      for (const element of elementsUnderMouse) {
+        const cardId = element.getAttribute('data-card-id');
+        if (cardId && parseInt(cardId) !== id && dragData.draggedCardId === id) {
+          onDragEnter(parseInt(cardId));
+          return;
+        }
+      }
+      if (dragData.hoveredCardId !== null && dragData.draggedCardId === id) {
+        onDragLeave();
+      }
+    };
+
     const handleGlobalMouseMove = (e: MouseEvent) => {
       // 计算新位置
       const newX = e.clientX - startPos.x;
@@ -65,6 +79,11 @@ function DraggableCard({
     // 处理全局鼠标释放
     const handleGlobalMouseUp = () => {
       setLocalDragging(false);
+      // 如果释放时没有悬停在任何卡片上，重置位置
+      if (dragData.hoveredCardId === null && dragData.draggedCardId === id) {
+        setPosition({ x: 0, y: 0 });
+        console.log(`卡片 ${id} 未放置在其他卡片上，重置位置`);
+      }
       onDragEnd();
       console.log(`全局鼠标释放: 卡片 ${id} 停止拖动`);
     };
@@ -78,28 +97,7 @@ function DraggableCard({
       document.removeEventListener('mousemove', handleGlobalMouseMove);
       document.removeEventListener('mouseup', handleGlobalMouseUp);
     };
-  }, [localDragging, id, startPos, onDragEnd]);
-  
-  // 检测鼠标是否悬停在其他卡片上
-  const checkHoverElements = (e: MouseEvent) => {
-    // 获取鼠标下方的所有元素
-    const elementsUnderMouse = document.elementsFromPoint(e.clientX, e.clientY);
-    
-    // 找到带有data-card-id属性的元素
-    for (const element of elementsUnderMouse) {
-      const cardId = element.getAttribute('data-card-id');
-      if (cardId && parseInt(cardId) !== id && dragData.draggedCardId === id) {
-        console.log(`检测到鼠标悬停在卡片 ${cardId} 上, 当前拖动卡片: ${id}`);
-        onDragEnter(parseInt(cardId));
-        return;
-      }
-    }
-    
-    // 如果没有找到其他卡片，但之前有悬停的卡片，则触发离开事件
-    if (dragData.hoveredCardId !== null && dragData.draggedCardId === id) {
-      onDragLeave();
-    }
-  };
+  }, [localDragging, id, startPos, onDragEnd, dragData]);
 
   // 开始拖动
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -221,15 +219,6 @@ export function TestBlock() {
     draggedCardId: null,
     hoveredCardId: null
   });
-
-  // 添加调试输出，监控全局状态变化
-  useEffect(() => {
-    console.log("全局拖拽状态变化:", {
-      isDragging: dragData.isDragging,
-      draggedCardId: dragData.draggedCardId,
-      hoveredCardId: dragData.hoveredCardId
-    });
-  }, [dragData]);
 
   // 监控拖拽事件，记录全局拖拽状态，使其在卡片间共享
   const handleDragStart = (cardId: number) => {
