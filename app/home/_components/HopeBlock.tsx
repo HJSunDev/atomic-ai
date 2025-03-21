@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   DndContext,
   DragOverlay,
@@ -105,6 +105,31 @@ function ChildCard({
   );
 }
 
+// 可放置区域组件
+function DroppableArea({
+  id,
+  children,
+  className = '',
+}: {
+  id: string | number;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  // 使用dnd-kit的可放置钩子
+  const { setNodeRef, isOver } = useDroppable({
+    id: `droppable-${id}`,
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`${className} ${isOver ? 'ring-2 ring-blue-500 ring-opacity-75 bg-blue-50/10' : ''}`}
+    >
+      {children}
+    </div>
+  );
+}
+
 // 子卡片容器组件
 function ChildCardContainer({ 
   parentId, 
@@ -139,31 +164,6 @@ function ChildCardContainer({
           拖放子卡片至此
         </div>
       </DroppableArea>
-    </div>
-  );
-}
-
-// 可放置区域组件
-function DroppableArea({
-  id,
-  children,
-  className = '',
-}: {
-  id: string | number;
-  children: React.ReactNode;
-  className?: string;
-}) {
-  // 使用dnd-kit的可放置钩子
-  const { setNodeRef, isOver } = useDroppable({
-    id: `droppable-${id}`,
-  });
-
-  return (
-    <div
-      ref={setNodeRef}
-      className={`${className} ${isOver ? 'ring-2 ring-blue-500 ring-opacity-75 bg-blue-50/10' : ''}`}
-    >
-      {children}
     </div>
   );
 }
@@ -728,14 +728,8 @@ export function HopeBlock() {
         ref={setMainAreaRef} 
         className={`h-[1500px] mb-[20px] bg-gray-100 p-6 rounded-lg  overflow-hidden relative ${isOverMainArea && dndState.activeType === 'child' ? 'bg-blue-50 ring-2 ring-blue-200' : ''}`}
       >
-        {isOverMainArea && dndState.activeType === 'child' && (
-          <div className="absolute top-0 left-0 w-full h-full flex items-center justify-center pointer-events-none">
-            <div className="bg-blue-500 text-white px-3 py-2 rounded-lg shadow-md text-sm animate-pulse">
-              放置此处将子卡片提升为父卡片
-            </div>
-          </div>
-        )}
-      
+        {/* 删除可能导致水合错误的元素 */}
+        
         <h2 className="text-xl font-bold mb-6">功能卡片 <span className="text-sm font-normal text-gray-500">(使用dnd-kit实现拖放)</span></h2>
         
         <p className="text-sm text-gray-600 mb-4">
@@ -763,11 +757,12 @@ export function HopeBlock() {
 
         {/* 卡片网格布局 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
-          {cards.map((card) => (
+          {/* 使用useClient钩子进行客户端渲染 */}
+          {typeof window !== 'undefined' ? cards.map((card) => (
             <DroppableArea key={card.id} id={`parent-${card.id}`} className="h-full">
               <ParentCard card={card} onReleaseChild={handleReleaseChildCard} />
             </DroppableArea>
-          ))}
+          )) : null}
         </div>
       </div>
 
@@ -775,4 +770,35 @@ export function HopeBlock() {
       <CardOverlay dndState={dndState} cards={cards} />
     </DndContext>
   );
+}
+
+// 创建一个客户端包装组件
+export function ClientHopeBlock() {
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // 在客户端加载后再渲染组件
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  // 服务端渲染时返回一个占位符
+  if (!isMounted) {
+    return (
+      <div className="h-[1500px] mb-[20px] bg-gray-100 p-6 rounded-lg overflow-hidden relative">
+        <h2 className="text-xl font-bold mb-6">功能卡片加载中...</h2>
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-gray-200 rounded-lg h-48"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  return <HopeBlock />;
 }
