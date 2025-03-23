@@ -280,6 +280,14 @@ function CardOverlay({ dndState, cards }: { dndState: DndState, cards: CardData[
 }
 
 export function HopeBlock() {
+  // 添加客户端渲染状态
+  const [isMounted, setIsMounted] = useState(false);
+  
+  // 在客户端加载后再渲染组件
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
   // 卡片数据
   const [cards, setCards] = useState<CardData[]>([
     {
@@ -714,6 +722,25 @@ export function HopeBlock() {
     setCards(newCards);
   };
 
+  // 服务端渲染时返回一个占位符
+  if (!isMounted) {
+    return (
+      <div className="h-[1500px] mb-[20px] bg-gray-100 p-6 rounded-lg overflow-hidden relative">
+        <h2 className="text-xl font-bold mb-6">功能卡片加载中...</h2>
+        <div className="animate-pulse">
+          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+          <div className="h-4 bg-gray-200 rounded w-2/3 mb-6"></div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <div key={i} className="bg-gray-200 rounded-lg h-48"></div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <DndContext
       sensors={sensors}
@@ -726,10 +753,8 @@ export function HopeBlock() {
       {/* 使用div包裹整个区域，作为全局放置区 */}
       <div 
         ref={setMainAreaRef} 
-        className={`h-[1500px] mb-[20px] bg-gray-100 p-6 rounded-lg  overflow-hidden relative ${isOverMainArea && dndState.activeType === 'child' ? 'bg-blue-50 ring-2 ring-blue-200' : ''}`}
+        className={`h-[1500px] mb-[20px] bg-gray-100 p-6 rounded-lg overflow-hidden relative ${isOverMainArea && dndState.activeType === 'child' ? 'bg-blue-50 ring-2 ring-blue-200' : ''}`}
       >
-        {/* 删除可能导致水合错误的元素 */}
-        
         <h2 className="text-xl font-bold mb-6">功能卡片 <span className="text-sm font-normal text-gray-500">(使用dnd-kit实现拖放)</span></h2>
         
         <p className="text-sm text-gray-600 mb-4">
@@ -757,12 +782,11 @@ export function HopeBlock() {
 
         {/* 卡片网格布局 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 relative">
-          {/* 使用useClient钩子进行客户端渲染 */}
-          {typeof window !== 'undefined' ? cards.map((card) => (
+          {cards.map((card) => (
             <DroppableArea key={card.id} id={`parent-${card.id}`} className="h-full">
               <ParentCard card={card} onReleaseChild={handleReleaseChildCard} />
             </DroppableArea>
-          )) : null}
+          ))}
         </div>
       </div>
 
@@ -770,35 +794,4 @@ export function HopeBlock() {
       <CardOverlay dndState={dndState} cards={cards} />
     </DndContext>
   );
-}
-
-// 创建一个客户端包装组件
-export function ClientHopeBlock() {
-  const [isMounted, setIsMounted] = useState(false);
-  
-  // 在客户端加载后再渲染组件
-  useEffect(() => {
-    setIsMounted(true);
-  }, []);
-  
-  // 服务端渲染时返回一个占位符
-  if (!isMounted) {
-    return (
-      <div className="h-[1500px] mb-[20px] bg-gray-100 p-6 rounded-lg overflow-hidden relative">
-        <h2 className="text-xl font-bold mb-6">功能卡片加载中...</h2>
-        <div className="animate-pulse">
-          <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
-          <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
-          <div className="h-4 bg-gray-200 rounded w-2/3 mb-6"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map(i => (
-              <div key={i} className="bg-gray-200 rounded-lg h-48"></div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  return <HopeBlock />;
 }
