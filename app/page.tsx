@@ -1,7 +1,13 @@
+"use client"
+
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useUser } from "@clerk/nextjs"
+import { SignInButton, UserButton } from "@clerk/nextjs"
 
 export default function Home() {
+  const { isSignedIn } = useUser()
+
   return (
     <div className="flex flex-col min-h-screen">
       {/* 导航栏 */}
@@ -14,12 +20,17 @@ export default function Home() {
             <span className="font-bold text-xl">OmniAid</span>
           </div>
           <div className="flex items-center gap-4">
-            <Link href="/home">
-              <Button variant="outline" size="sm">登录</Button>
-            </Link>
-            <Link href="/home">
-              <Button size="sm" className="bg-primary hover:bg-primary/90">免费试用</Button>
-            </Link>
+            {isSignedIn ? (
+              <>
+                <UserButton/>
+              </>
+            ) : (
+              <>
+                <SignInButton mode="modal">
+                  <Button variant="outline" size="sm">登录</Button>
+                </SignInButton>
+              </>
+            )}
           </div>
         </div>
       </header>
@@ -43,11 +54,19 @@ export default function Home() {
                   通过模块化、可组合的提示词管理与AI智能体协作，覆盖开发全生命周期场景，提升开发效率与代码质量
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Link href="/home">
-                    <Button className="px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                      开始使用
-                    </Button>
-                  </Link>
+                  {isSignedIn ? (
+                    <Link href="/home">
+                      <Button className="px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                        开始使用
+                      </Button>
+                    </Link>
+                  ) : (
+                    <SignInButton mode="modal">
+                      <Button className="px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
+                        开始使用
+                      </Button>
+                    </SignInButton>
+                  )}
                   <Button variant="outline" className="px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base">
                     查看演示
                   </Button>
