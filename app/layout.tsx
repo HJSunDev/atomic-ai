@@ -5,6 +5,9 @@ import "./globals.css";
 import { ConvexClientProvider } from "@/components/providers/convex-provider";
 import { ThemeProviderWrapper } from "@/components/providers/theme-provider";
 
+import { Toaster } from "sonner";
+import { AuthGuardProvider } from "@/components/providers/auth-guard-provider";
+
 // 定义 Geist Sans 字体
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -35,7 +38,10 @@ export default function RootLayout({
       > 
         <ConvexClientProvider>
           <ThemeProviderWrapper>
-            {children}
+            <AuthGuardProvider>
+              <Toaster position="bottom-center" />
+              {children}
+            </AuthGuardProvider>
           </ThemeProviderWrapper>
         </ConvexClientProvider>
       </body>
