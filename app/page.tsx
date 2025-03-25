@@ -10,14 +10,55 @@ export default function Home() {
 
   return (
     <div className="flex flex-col min-h-screen">
+      <style jsx global>{`
+        @keyframes pulse-slow {
+          0% { opacity: 0.6; }
+          50% { opacity: 1; }
+          100% { opacity: 0.6; }
+        }
+        
+        .animate-pulse-slow {
+          animation: pulse-slow 3s infinite ease-in-out;
+        }
+        
+        @keyframes orbit {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+        
+        .animate-orbit-slow {
+          animation: orbit 12s infinite linear;
+        }
+      `}</style>
       {/* 导航栏 */}
       <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full fixed top-0 z-50">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-[2rem] h-[2rem] rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-              O
+            <div className="w-[2rem] h-[2rem] rounded-lg bg-gradient-to-br from-[#5B5BD6] to-[#9D50BB] flex items-center justify-center text-white font-bold relative overflow-hidden shadow-md">
+              <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+                {/* 中心原子核 */}
+                <div className="w-[0.75rem] h-[0.75rem] rounded-full bg-gradient-to-r from-pink-200 to-white opacity-95 z-10 shadow-[0_0_10px_rgba(255,255,255,0.7)]"></div>
+                
+                {/* 模块化电子点 - 带微光效果和轨道动画 */}
+                <div className="absolute w-full h-full animate-orbit-slow">
+                  {/* 电子轨道 */}
+                  <div className="absolute w-[1.7rem] h-[1.7rem] rounded-full border border-white/25"></div>
+                  
+                  {/* 电子1 - 左上 */}
+                  <div className="absolute top-[22%] left-[22%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#60A5FA] shadow-[0_0_8px_rgba(96,165,250,0.8)] animate-pulse-slow"></div>
+                  
+                  {/* 电子2 - 右上 */}
+                  <div className="absolute top-[22%] right-[22%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#F472B6] shadow-[0_0_8px_rgba(244,114,182,0.8)] animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+                  
+                  {/* 电子3 - 底部 */}
+                  <div className="absolute bottom-[22%] left-[45%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+                </div>
+                
+                {/* 光晕效果 */}
+                <div className="absolute w-full h-full bg-gradient-to-tr from-indigo-500/10 to-purple-500/5 rounded-lg"></div>
+              </div>
             </div>
-            <span className="font-bold text-xl">OmniAid</span>
+            <span className="font-bold text-xl">Atomic</span>
           </div>
           <div className="flex items-center gap-4">
             {isSignedIn ? (
@@ -27,7 +68,7 @@ export default function Home() {
             ) : (
               <>
                 <SignInButton mode="modal">
-                  <Button variant="outline" size="sm">登录</Button>
+                  <Button variant="outline" size="sm">Dashboard</Button>
                 </SignInButton>
               </>
             )}
@@ -186,7 +227,7 @@ export default function Home() {
             <div className="text-center mb-12 sm:mb-16">
               <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">覆盖开发全生命周期</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
-                从需求分析到代码实现，从测试到部署，OmniAid全程助力
+                从需求分析到代码实现，从测试到部署，Atomic全程助力
               </p>
             </div>
 
@@ -263,34 +304,34 @@ export default function Home() {
             <div className="text-center mb-12 sm:mb-16">
               <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">常见问题</h2>
               <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
-                关于OmniAid的一些常见问题解答
+                关于Atomic的一些常见问题解答
               </p>
             </div>
 
             <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-4xl mx-auto">
               <div className="border rounded-lg p-5 sm:p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-base sm:text-lg font-bold mb-2">OmniAid适合哪些开发者？</h3>
+                <h3 className="text-base sm:text-lg font-bold mb-2">Atomic适合哪些开发者？</h3>
                 <p className="text-muted-foreground text-sm sm:text-base">
-                  OmniAid适合所有前端开发者和技术团队，无论是个人开发者还是大型企业团队都能从中受益。
+                  Atomic适合所有前端开发者和技术团队，无论是个人开发者还是大型企业团队都能从中受益。
                 </p>
               </div>
 
               <div className="border rounded-lg p-5 sm:p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-base sm:text-lg font-bold mb-2">如何开始使用OmniAid？</h3>
+                <h3 className="text-base sm:text-lg font-bold mb-2">如何开始使用Atomic？</h3>
                 <p className="text-muted-foreground text-sm sm:text-base">
                   注册账号后，您可以立即开始使用基础功能。我们提供详细的文档和教程帮助您快速上手。
                 </p>
               </div>
 
               <div className="border rounded-lg p-5 sm:p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-base sm:text-lg font-bold mb-2">OmniAid支持哪些编程语言和框架？</h3>
+                <h3 className="text-base sm:text-lg font-bold mb-2">Atomic支持哪些编程语言和框架？</h3>
                 <p className="text-muted-foreground text-sm sm:text-base">
                   我们支持主流的前端框架和语言，包括React、Vue、Angular、TypeScript等，并持续扩展中。
                 </p>
               </div>
 
               <div className="border rounded-lg p-5 sm:p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-base sm:text-lg font-bold mb-2">OmniAid如何保护我的代码和数据安全？</h3>
+                <h3 className="text-base sm:text-lg font-bold mb-2">Atomic如何保护我的代码和数据安全？</h3>
                 <p className="text-muted-foreground text-sm sm:text-base">
                   我们采用企业级加密技术保护您的代码和数据，并提供细粒度的权限控制，确保安全性。
                 </p>
@@ -305,10 +346,31 @@ export default function Home() {
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 mb-6 md:mb-0">
-              <div className="w-[2rem] h-[2rem] rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center text-white font-bold">
-                O
+              <div className="w-[2rem] h-[2rem] rounded-lg bg-gradient-to-br from-[#5B5BD6] to-[#9D50BB] flex items-center justify-center text-white font-bold relative overflow-hidden shadow-md">
+                <div className="absolute inset-0 w-full h-full flex items-center justify-center">
+                  {/* 中心原子核 */}
+                  <div className="w-[0.75rem] h-[0.75rem] rounded-full bg-gradient-to-r from-pink-200 to-white opacity-95 z-10 shadow-[0_0_10px_rgba(255,255,255,0.7)]"></div>
+                  
+                  {/* 模块化电子点 - 带微光效果和轨道动画 */}
+                  <div className="absolute w-full h-full animate-orbit-slow">
+                    {/* 电子轨道 */}
+                    <div className="absolute w-[1.7rem] h-[1.7rem] rounded-full border border-white/25"></div>
+                    
+                    {/* 电子1 - 左上 */}
+                    <div className="absolute top-[22%] left-[22%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#60A5FA] shadow-[0_0_8px_rgba(96,165,250,0.8)] animate-pulse-slow"></div>
+                    
+                    {/* 电子2 - 右上 */}
+                    <div className="absolute top-[22%] right-[22%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#F472B6] shadow-[0_0_8px_rgba(244,114,182,0.8)] animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
+                    
+                    {/* 电子3 - 底部 */}
+                    <div className="absolute bottom-[22%] left-[45%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
+                  </div>
+                  
+                  {/* 光晕效果 */}
+                  <div className="absolute w-full h-full bg-gradient-to-tr from-indigo-500/10 to-purple-500/5 rounded-lg"></div>
+                </div>
               </div>
-              <span className="font-bold text-xl">OmniAid</span>
+              <span className="font-bold text-xl">Atomic</span>
             </div>
             <div className="flex flex-wrap justify-center gap-4 sm:gap-8">
               <Link href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground">关于我们</Link>
@@ -318,7 +380,7 @@ export default function Home() {
             </div>
           </div>
           <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t text-center text-xs sm:text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} OmniAid. 保留所有权利。
+            &copy; {new Date().getFullYear()} Atomic. 保留所有权利。
           </div>
         </div>
       </footer>

@@ -121,7 +121,7 @@ export function AiChatPanel() {
             <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg">
               <Bot className="w-8 h-8 text-white" />
             </div>
-            <h3 className="text-xl font-medium text-gray-800 mb-2">OmniAid</h3>
+            <h3 className="text-xl font-medium text-gray-800 mb-2">Atomic</h3>
             <p className="text-sm text-gray-500 mb-8 text-center max-w-[300px]">我是您的智能开发助手，随时为您提供编程相关问题的解答与支持</p>
             
             <div className="grid grid-cols-2 gap-3 w-full max-w-md">

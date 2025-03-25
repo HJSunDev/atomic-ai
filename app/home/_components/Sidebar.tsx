@@ -24,12 +24,12 @@ export function Sidebar() {
     >
       <header className={cn(
         "flex items-center",
-        collapsed ? "h-auto py-4 flex-col" : "h-14 justify-between pl-3 pr-2"
+        collapsed ? "h-auto py-4 flex-col" : "h-14 justify-between pl-4 pr-2"
       )}>
         {/* 应用名 */}
         {!collapsed && (
           <div className="font-semibold text-xl text-primary dark:text-white flex items-center">
-            OmniAid
+            Atomic
           </div>
         )}
 
