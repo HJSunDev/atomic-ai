@@ -1,6 +1,7 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
+import { Logo } from "@/components/ui/logo"
 import Link from "next/link"
 import { useUser } from "@clerk/nextjs"
 import { SignInButton, UserButton } from "@clerk/nextjs"
@@ -34,30 +35,7 @@ export default function Home() {
       <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full fixed top-0 z-50">
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-[2rem] h-[2rem] rounded-lg bg-gradient-to-br from-[#5B5BD6] to-[#9D50BB] flex items-center justify-center text-white font-bold relative overflow-hidden shadow-md">
-              <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-                {/* 中心原子核 */}
-                <div className="w-[0.75rem] h-[0.75rem] rounded-full bg-gradient-to-r from-pink-200 to-white opacity-95 z-10 shadow-[0_0_10px_rgba(255,255,255,0.7)]"></div>
-                
-                {/* 模块化电子点 - 带微光效果和轨道动画 */}
-                <div className="absolute w-full h-full animate-orbit-slow">
-                  {/* 电子轨道 */}
-                  <div className="absolute w-[1.7rem] h-[1.7rem] rounded-full border border-white/25"></div>
-                  
-                  {/* 电子1 - 左上 */}
-                  <div className="absolute top-[22%] left-[22%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#60A5FA] shadow-[0_0_8px_rgba(96,165,250,0.8)] animate-pulse-slow"></div>
-                  
-                  {/* 电子2 - 右上 */}
-                  <div className="absolute top-[22%] right-[22%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#F472B6] shadow-[0_0_8px_rgba(244,114,182,0.8)] animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
-                  
-                  {/* 电子3 - 底部 */}
-                  <div className="absolute bottom-[22%] left-[45%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-                </div>
-                
-                {/* 光晕效果 */}
-                <div className="absolute w-full h-full bg-gradient-to-tr from-indigo-500/10 to-purple-500/5 rounded-lg"></div>
-              </div>
-            </div>
+            <Logo size="md" />
             <span className="font-bold text-xl">Atomic</span>
           </div>
           <div className="flex items-center gap-4">
@@ -346,30 +324,7 @@ export default function Home() {
         <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="flex items-center gap-2 mb-6 md:mb-0">
-              <div className="w-[2rem] h-[2rem] rounded-lg bg-gradient-to-br from-[#5B5BD6] to-[#9D50BB] flex items-center justify-center text-white font-bold relative overflow-hidden shadow-md">
-                <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-                  {/* 中心原子核 */}
-                  <div className="w-[0.75rem] h-[0.75rem] rounded-full bg-gradient-to-r from-pink-200 to-white opacity-95 z-10 shadow-[0_0_10px_rgba(255,255,255,0.7)]"></div>
-                  
-                  {/* 模块化电子点 - 带微光效果和轨道动画 */}
-                  <div className="absolute w-full h-full animate-orbit-slow">
-                    {/* 电子轨道 */}
-                    <div className="absolute w-[1.7rem] h-[1.7rem] rounded-full border border-white/25"></div>
-                    
-                    {/* 电子1 - 左上 */}
-                    <div className="absolute top-[22%] left-[22%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#60A5FA] shadow-[0_0_8px_rgba(96,165,250,0.8)] animate-pulse-slow"></div>
-                    
-                    {/* 电子2 - 右上 */}
-                    <div className="absolute top-[22%] right-[22%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#F472B6] shadow-[0_0_8px_rgba(244,114,182,0.8)] animate-pulse-slow" style={{ animationDelay: '1s' }}></div>
-                    
-                    {/* 电子3 - 底部 */}
-                    <div className="absolute bottom-[22%] left-[45%] w-[0.28rem] h-[0.28rem] rounded-full bg-[#10B981] shadow-[0_0_8px_rgba(16,185,129,0.8)] animate-pulse-slow" style={{ animationDelay: '2s' }}></div>
-                  </div>
-                  
-                  {/* 光晕效果 */}
-                  <div className="absolute w-full h-full bg-gradient-to-tr from-indigo-500/10 to-purple-500/5 rounded-lg"></div>
-                </div>
-              </div>
+              <Logo size="md" />
               <span className="font-bold text-xl">Atomic</span>
             </div>
             <div className="flex flex-wrap justify-center gap-4 sm:gap-8">
