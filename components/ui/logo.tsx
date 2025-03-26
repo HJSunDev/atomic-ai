@@ -35,30 +35,21 @@ export function Logo({ size = 'md', className = '' }: LogoProps) {
   }
 
   return (
-    <div className={`${sizes[size].container} rounded-lg bg-gradient-to-br from-[#6366F1] to-[#A855F7] flex items-center justify-center text-white font-bold relative overflow-hidden shadow-md ${className}`}>
+    <div className={`${sizes[size].container} rounded-lg bg-[#1A1A2E] flex items-center justify-center text-white font-bold relative overflow-hidden shadow-[0_0_25px_rgba(74,144,226,0.2)] ${className}`}>
       <div className="absolute inset-0 w-full h-full flex items-center justify-center">
-        {/* 轨道 - 使用一个轨道增加层次感 */}
-        <div className={`absolute w-[75%] h-[75%] rounded-full border border-white/25`}></div>
+        {/* 轨道 - 使用霓虹蓝轨道增加科技感 */}
+        <div className={`absolute w-[75%] h-[75%] rounded-full border border-[#00F5FF]/40`}></div>
         
-        {/* 中心原子核 - 更小更聚焦 */}
-        <div className={`${sizes[size].nucleus} rounded-full bg-white/90 z-10`}></div>
+        {/* 中心原子核 - 使用紫罗兰到科技蓝的渐变 */}
+        <div className={`${sizes[size].nucleus} rounded-full bg-gradient-to-br from-[#6E48AA] to-[#4A90E2] z-10 shadow-[0_0_18px_rgba(110,72,170,0.5)] animate-pulse-slow`}></div>
         
-        {/* 电子 - 更明亮，更大 */}
+        {/* 电子 - 使用霓虹蓝电子，增加量子效果 */}
         <div className="absolute w-full h-full animate-orbit-slow">
-          {/* 电子1 - 蓝色 */}
-          <div className={`absolute top-[20%] left-[20%] ${sizes[size].electron} rounded-full bg-[#38BDF8] shadow-[0_0_5px_rgba(56,189,248,0.8)] animate-pulse-slow`}></div>
+          {/* 电子1 - 霓虹蓝 */}
+          <div className={`absolute top-[20%] left-[20%] ${sizes[size].electron} rounded-full bg-[#00F5FF] shadow-[0_0_15px_rgba(0,245,255,0.9)] animate-pulse-slow`}></div>
           
-          {/* 电子2 - 粉色 */}
-          <div className={`absolute top-[20%] right-[20%] ${sizes[size].electron} rounded-full bg-[#FB7185] shadow-[0_0_5px_rgba(251,113,133,0.8)] animate-pulse-slow`} style={{ animationDelay: '1s' }}></div>
-          
-          {/* 电子3 - 绿色 */}
-          <div className={`absolute bottom-[20%] left-[45%] ${sizes[size].electron} rounded-full bg-[#4ADE80] shadow-[0_0_5px_rgba(74,222,128,0.8)] animate-pulse-slow`} style={{ animationDelay: '2s' }}></div>
-        </div>
-        
-        {/* 内部轨道上的电子 */}
-        <div className="absolute w-[75%] h-[75%] animate-orbit-slow" style={{ animationDirection: 'reverse', animationDuration: '8s' }}>
-          {/* 内部轨道电子 - 紫色 */}
-          <div className={`absolute top-[15%] right-[15%] ${sizes[size].electron} rounded-full bg-[#C084FC] shadow-[0_0_5px_rgba(192,132,252,0.8)] animate-pulse-slow`} style={{ animationDelay: '1.2s' }}></div>
+          {/* 电子2 - 霓虹蓝，带延迟 */}
+          <div className={`absolute bottom-[20%] right-[20%] ${sizes[size].electron} rounded-full bg-[#00F5FF] shadow-[0_0_15px_rgba(0,245,255,0.9)] animate-pulse-slow`} style={{ animationDelay: '1.2s' }}></div>
         </div>
       </div>
     </div>
