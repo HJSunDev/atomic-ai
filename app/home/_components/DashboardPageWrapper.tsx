@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 import { AiChatPanel } from "./AiChatPanel";
 import { Bot, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAiPanelStore } from "@/store/home";
+import { useAiPanelStore } from "@/store";
 
 interface DashboardPageWrapperProps {
   children: ReactNode;
