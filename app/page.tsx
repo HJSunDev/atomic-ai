@@ -38,7 +38,7 @@ export default function Home() {
             <Logo size="md" />
             <span className="font-bold text-xl">Atomic</span>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-4 landing-navbar">
             {isSignedIn ? (
               <>
                 <UserButton/>

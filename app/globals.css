@@ -189,3 +189,9 @@
   width: 26px;
   height: 26px;
 }
+
+/* 营销页导航栏中的用户头像样式 */
+.landing-navbar .cl-userButtonAvatarBox {
+  width: 32px;  /* 默认大小稍大一些 */
+  height: 32px;
+}
