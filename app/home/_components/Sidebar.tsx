@@ -10,7 +10,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { CustomUserAvatar } from "./CustomUserAvatar";
+import { CustomUserAvatar } from "@/components/ui/CustomUserAvatar";
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
