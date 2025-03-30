@@ -8,9 +8,9 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { UserButton } from "@clerk/nextjs";
 import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { CustomUserAvatar } from "./CustomUserAvatar";
 
 export function Sidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -38,7 +38,7 @@ export function Sidebar() {
           <>
             {/* 用户头像 */}
             <div className="flex items-center justify-center ml-1">
-              <UserButton />
+              <CustomUserAvatar size="sm" menuPosition="left" />
             </div>
 
             {/* 展开收起按钮 */}
@@ -64,7 +64,7 @@ export function Sidebar() {
 
             {/* 用户头像 */}
             <div className="flex items-center justify-center">
-              <UserButton />
+              <CustomUserAvatar size="sm" menuPosition="right" />
             </div>
           </>
         )}
