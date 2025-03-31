@@ -85,7 +85,7 @@ export function Sidebar() {
     // 设置隐藏定时器，添加延迟使交互更平滑
     hideTimeoutRef.current = setTimeout(() => {
       setShowMoreMenu(false);
-    }, 150);
+    }, 120);
   };
   
   // 鼠标进入菜单时保持显示
@@ -102,7 +102,7 @@ export function Sidebar() {
     >
       <header className={cn(
         "flex items-center",
-        collapsed ? "h-auto py-4 flex-col" : "h-14 justify-between pl-4 pr-2"
+        collapsed ? "h-auto pt-4 flex-col" : "h-14 justify-between pl-4 pr-2"
       )}>
         {/* 应用名 */}
         {!collapsed && (
@@ -149,17 +149,20 @@ export function Sidebar() {
       </header>
 
       {/* 主内容区域 - 菜单项列表 */}
-      <div className={cn("flex-1", collapsed ? "mt-2" : "mt-3")}>
+      <div className={cn("flex-1")}>
         {/* 主功能导航项 */}
         <nav className="px-2 space-y-1">
           {/* 主页 */}
           {collapsed ? (
-            <div className="flex flex-col items-center py-2">
-              <div className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                <Home className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+            <Link
+              href="/"
+              className="flex flex-col items-center py-2 group"
+            >
+              <div className="h-9 w-9 flex items-center justify-center rounded-full transition-colors group-hover:bg-gray-100 dark:group-hover:bg-gray-800">
+                <Home className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
               </div>
-              <span className="text-[11px] mt-1.5">主页</span>
-            </div>
+              <span className="text-[11px] mt-1">主页</span>
+            </Link>
           ) : (
             <Link
               href="/"
@@ -186,10 +189,13 @@ export function Sidebar() {
               onMouseEnter={handleMenuShow}
               onMouseLeave={handleMenuHide}
             >
-              <div className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
-                <MoreHorizontal className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+              <div className={cn(
+                "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
+                showMoreMenu ? "bg-gray-100 dark:bg-gray-800" : "hover:bg-gray-100 dark:hover:bg-gray-800" 
+              )}>
+                <MoreHorizontal className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
               </div>
-              <span className="text-[11px] mt-1.5">更多</span>
+              <span className="text-[11px] mt-1">更多</span>
             </div>
           ) : (
             <div
