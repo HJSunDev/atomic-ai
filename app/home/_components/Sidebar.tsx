@@ -22,13 +22,49 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { CustomUserAvatar } from "@/components/ui/CustomUserAvatar";
 import { createPortal } from "react-dom";
 import { useOnClickOutside } from "@/hooks/use-on-click-outside";
+import { useSidebarMenuStore } from "@/store/home";
+
+// 自定义AI机器人图标
+const AIRobotIcon = ({ className }: { className?: string }) => {
+  return (
+    <svg 
+      xmlns="http://www.w3.org/2000/svg" 
+      viewBox="0 0 24 24" 
+      fill="none" 
+      stroke="currentColor" 
+      strokeWidth="2" 
+      strokeLinecap="round" 
+      strokeLinejoin="round" 
+      className={className}
+    >
+      {/* 机器人头部 */}
+      <rect x="4" y="8" width="16" height="12" rx="2" ry="2" />
+      
+      {/* 机器人天线 */}
+      <path d="M12 4v4" />
+      <circle cx="12" cy="3" r="1" />
+      
+      {/* 机器人眼睛 */}
+      <circle cx="9" cy="13" r="1.5" />
+      <circle cx="15" cy="13" r="1.5" />
+      
+      {/* 机器人嘴巴 */}
+      <path d="M9 17h6" />
+      
+      {/* 机器人腿部 */}
+      <path d="M8 20v1" />
+      <path d="M16 20v1" />
+    </svg>
+  );
+};
 
 export function Sidebar() {
-  const [collapsed, setCollapsed] = useState(false);
-  
   // 更多菜单相关状态
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [mounted, setMounted] = useState(false);
+  
+  // 获取当前菜单状态
+  const { activeMenuId, setActiveMenu, collapsed, toggleCollapsed } = useSidebarMenuStore();
   
   // 引用
   const moreButtonRef = useRef<HTMLDivElement>(null);
@@ -46,6 +82,12 @@ export function Sidebar() {
       setShowMoreMenu(false);
     };
   }, []);
+  
+  // 组件加载时，确保设置默认活动菜单
+  useEffect(() => {
+    // 设置为AI创作中心
+    setActiveMenu("ai-studio");
+  }, [setActiveMenu]);
   
   // 清除所有定时器
   const clearAllTimeouts = () => {
@@ -97,7 +139,7 @@ export function Sidebar() {
     <aside 
       className={cn(
         "flex flex-col h-full bg-[#FAFAFA] dark:bg-[#121212] overflow-hidden dark:border-gray-800 shrink-0 relative z-10",
-        collapsed ? "w-[4rem]" : "w-[12rem]"
+        collapsed ? "w-[4rem]" : "w-[10.5rem]"
       )}
     >
       <header className={cn(
@@ -121,7 +163,7 @@ export function Sidebar() {
 
             {/* 展开收起按钮 */}
             <button
-              onClick={() => setCollapsed(!collapsed)}
+              onClick={toggleCollapsed}
               className="flex items-center justify-center ml-1 w-6 h-6 cursor-pointer"
             >
               <PanelLeftClose className="h-4 w-4 text-gray-600 dark:text-gray-400" />
@@ -134,7 +176,7 @@ export function Sidebar() {
           <>
             {/* 展开收起按钮 */}
             <button
-              onClick={() => setCollapsed(!collapsed)}
+              onClick={toggleCollapsed}
               className="flex items-center justify-center w-6 h-6 mb-3 cursor-pointer"
             >
               <PanelLeftOpen className="h-5 w-5 text-gray-600 dark:text-gray-400" />
@@ -152,27 +194,147 @@ export function Sidebar() {
       <div className={cn("flex-1")}>
         {/* 主功能导航项 */}
         <nav className="px-2 space-y-1">
-          {/* 主页 */}
+          {/* 智创 */}
           {collapsed ? (
-            <Link
-              href="/"
-              className="flex flex-col items-center py-2 group"
+            <div
+              className={cn(
+                "flex flex-col items-center py-2 group cursor-pointer",
+                activeMenuId === "ai-studio" && "rounded-lg"
+              )}
+              onClick={() => setActiveMenu("ai-studio")}
             >
-              <div className="h-9 w-9 flex items-center justify-center rounded-full transition-colors group-hover:bg-gray-100 dark:group-hover:bg-gray-800">
-                <Home className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
+              <div className={cn(
+                "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
+                activeMenuId === "ai-studio" 
+                  ? "bg-[#ECEDEE]" 
+                  : "group-hover:bg-[#ECEDEE]/50"
+              )}>
+                <AIRobotIcon className={cn(
+                  "h-[18px] w-[18px]",
+                  activeMenuId === "ai-studio"
+                    ? "text-primary dark:text-primary"
+                    : "text-gray-600 dark:text-gray-400"
+                )} />
               </div>
-              <span className="text-[11px] mt-1">主页</span>
-            </Link>
+              <span className={cn(
+                "text-[11px] mt-1",
+                activeMenuId === "ai-studio" && "text-primary dark:text-primary font-medium"
+              )}>智创</span>
+            </div>
           ) : (
-            <Link
-              href="/"
-              className="w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            <div
+              className={cn(
+                "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
+                activeMenuId === "ai-studio"
+                  ? "bg-[#ECEDEE] text-primary dark:bg-gray-800 dark:text-primary"
+                  : "hover:bg-[#ECEDEE]/50 text-gray-700 dark:text-gray-300"
+              )}
+              onClick={() => setActiveMenu("ai-studio")}
             >
-              <Home className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-400" />
-              <span>主页</span>
-            </Link>
+              <AIRobotIcon className={cn(
+                "h-4 w-4 mr-3",
+                activeMenuId === "ai-studio"
+                  ? "text-primary dark:text-primary"
+                  : "text-gray-600 dark:text-gray-400"
+              )} />
+              <span>智创</span>
+            </div>
           )}
           
+          {/* 收藏夹 */}
+          {collapsed ? (
+            <div
+              className={cn(
+                "flex flex-col items-center py-2 group cursor-pointer",
+                activeMenuId === "favorites" && "rounded-lg"
+              )}
+              onClick={() => setActiveMenu("favorites")}
+            >
+              <div className={cn(
+                "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
+                activeMenuId === "favorites" 
+                  ? "bg-[#ECEDEE]" 
+                  : "group-hover:bg-[#ECEDEE]/50"
+              )}>
+                <Star className={cn(
+                  "h-[18px] w-[18px]",
+                  activeMenuId === "favorites"
+                    ? "text-primary dark:text-primary"
+                    : "text-gray-600 dark:text-gray-400"
+                )} />
+              </div>
+              <span className={cn(
+                "text-[11px] mt-1",
+                activeMenuId === "favorites" && "text-primary dark:text-primary font-medium"
+              )}>收藏</span>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
+                activeMenuId === "favorites"
+                  ? "bg-[#ECEDEE] text-primary dark:bg-gray-800 dark:text-primary"
+                  : "hover:bg-[#ECEDEE]/50 text-gray-700 dark:text-gray-300"
+              )}
+              onClick={() => setActiveMenu("favorites")}
+            >
+              <Star className={cn(
+                "h-4 w-4 mr-3",
+                activeMenuId === "favorites"
+                  ? "text-primary dark:text-primary"
+                  : "text-gray-600 dark:text-gray-400"
+              )} />
+              <span>收藏</span>
+            </div>
+          )}
+          
+          {/* 资源库 */}
+          {collapsed ? (
+            <div
+              className={cn(
+                "flex flex-col items-center py-2 group cursor-pointer",
+                activeMenuId === "resource-library" && "rounded-lg"
+              )}
+              onClick={() => setActiveMenu("resource-library")}
+            >
+              <div className={cn(
+                "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
+                activeMenuId === "resource-library" 
+                  ? "bg-[#ECEDEE]" 
+                  : "group-hover:bg-[#ECEDEE]/50"
+              )}>
+                <LibraryBig className={cn(
+                  "h-[18px] w-[18px]",
+                  activeMenuId === "resource-library"
+                    ? "text-primary dark:text-primary"
+                    : "text-gray-600 dark:text-gray-400"
+                )} />
+              </div>
+              <span className={cn(
+                "text-[11px] mt-1",
+                activeMenuId === "resource-library" && "text-primary dark:text-primary font-medium"
+              )}>资源</span>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
+                activeMenuId === "resource-library"
+                  ? "bg-[#ECEDEE] text-primary dark:bg-gray-800 dark:text-primary"
+                  : "hover:bg-[#ECEDEE]/50 text-gray-700 dark:text-gray-300"
+              )}
+              onClick={() => setActiveMenu("resource-library")}
+            >
+              <LibraryBig className={cn(
+                "h-4 w-4 mr-3",
+                activeMenuId === "resource-library"
+                  ? "text-primary dark:text-primary"
+                  : "text-gray-600 dark:text-gray-400"
+              )} />
+              <span>资源</span>
+            </div>
+          )}
+
           {/* 分割线 */}
           <div className="py-1">
             <div className={cn(
@@ -191,7 +353,7 @@ export function Sidebar() {
             >
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
-                showMoreMenu ? "bg-gray-100 dark:bg-gray-800" : "hover:bg-gray-100 dark:hover:bg-gray-800" 
+                showMoreMenu ? "bg-[#ECEDEE]" : "hover:bg-[#ECEDEE]/50" 
               )}>
                 <MoreHorizontal className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
               </div>
@@ -200,7 +362,7 @@ export function Sidebar() {
           ) : (
             <div
               ref={moreButtonRef}
-              className="w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer relative"
+              className="w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium hover:bg-[#ECEDEE]/50 transition-colors cursor-pointer relative"
               onMouseEnter={handleMenuShow}
               onMouseLeave={handleMenuHide}
             >
@@ -253,63 +415,70 @@ export function Sidebar() {
             {/* 菜单内容 */}
             <div className="py-3 px-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-60">
               {/* 以下为菜单项 */}
-              <Link href="/settings" className="block">
-                <div className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-3 group transition-colors">
-                  <Settings className="h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
-                  <span className="text-sm">设置</span>
-                </div>
-              </Link>
               
-              <Link href="/profile" className="block">
-                <div className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-3 group transition-colors">
-                  <UserCircle className="h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
-                  <span className="text-sm">个人资料</span>
+              <div className="block" onClick={() => setActiveMenu("documents")}>
+                <div className={cn(
+                  "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
+                  activeMenuId === "documents"
+                    ? "bg-primary/10"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                )}>
+                  <FileText className={cn(
+                    "h-4 w-4",
+                    activeMenuId === "documents"
+                      ? "text-primary"
+                      : "text-gray-500 group-hover:text-primary transition-colors"
+                  )} />
+                  <span className={cn(
+                    "text-sm",
+                    activeMenuId === "documents" && "text-primary font-medium"
+                  )}>文档中心</span>
                 </div>
-              </Link>
+              </div>
               
-              <Link href="/documents" className="block">
-                <div className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-3 group transition-colors">
-                  <FileText className="h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
-                  <span className="text-sm">文档中心</span>
+              <div className="block" onClick={() => setActiveMenu("knowledge-base")}>
+                <div className={cn(
+                  "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
+                  activeMenuId === "knowledge-base"
+                    ? "bg-primary/10"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                )}>
+                  <BookOpen className={cn(
+                    "h-4 w-4",
+                    activeMenuId === "knowledge-base"
+                      ? "text-primary"
+                      : "text-gray-500 group-hover:text-primary transition-colors"
+                  )} />
+                  <span className={cn(
+                    "text-sm",
+                    activeMenuId === "knowledge-base" && "text-primary font-medium"
+                  )}>知识库</span>
                 </div>
-              </Link>
-              
-              <Link href="/knowledge-base" className="block">
-                <div className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-3 group transition-colors">
-                  <BookOpen className="h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
-                  <span className="text-sm">知识库</span>
-                </div>
-              </Link>
+              </div>
               
               <div className="my-2 border-t border-gray-100 dark:border-gray-700"></div>
               
-              <Link href="/history" className="block">
-                <div className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-3 group transition-colors">
-                  <History className="h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
-                  <span className="text-sm">历史记录</span>
-                </div>
-              </Link>
               
-              <Link href="/favorites" className="block">
-                <div className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-3 group transition-colors">
-                  <Star className="h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
-                  <span className="text-sm">收藏夹</span>
+              <div className="block" onClick={() => setActiveMenu("feedback")}>
+                <div className={cn(
+                  "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
+                  activeMenuId === "feedback"
+                    ? "bg-primary/10"
+                    : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                )}>
+                  <MessageSquare className={cn(
+                    "h-4 w-4",
+                    activeMenuId === "feedback"
+                      ? "text-primary"
+                      : "text-gray-500 group-hover:text-primary transition-colors"
+                  )} />
+                  <span className={cn(
+                    "text-sm",
+                    activeMenuId === "feedback" && "text-primary font-medium"
+                  )}>反馈</span>
                 </div>
-              </Link>
+              </div>
               
-              <Link href="/feedback" className="block">
-                <div className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-3 group transition-colors">
-                  <MessageSquare className="h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
-                  <span className="text-sm">反馈</span>
-                </div>
-              </Link>
-              
-              <Link href="/resource-library" className="block">
-                <div className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center gap-3 group transition-colors">
-                  <LibraryBig className="h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
-                  <span className="text-sm">资源库</span>
-                </div>
-              </Link>
             </div>
           </div>
         </div>,
