@@ -14,6 +14,27 @@ export type MenuItemId =
   | "feedback" 
   | "resource-library";
 
+// 定义菜单项元数据接口
+export interface MenuItemMetadata {
+  id: MenuItemId;
+  showAiPanel: boolean; // 是否显示AI面板
+  // 未来可以添加更多元数据字段，比如icon, title, description等
+}
+
+// 菜单项元数据配置
+export const MENU_ITEMS_CONFIG: Record<MenuItemId, MenuItemMetadata> = {
+  "ai-studio": { id: "ai-studio", showAiPanel: true },
+  "chat": { id: "chat", showAiPanel: false }, // 聊天模块不需要AI面板
+  "favorites": { id: "favorites", showAiPanel: true },
+  "resource-library": { id: "resource-library", showAiPanel: true },
+  "documents": { id: "documents", showAiPanel: true },
+  "knowledge-base": { id: "knowledge-base", showAiPanel: true },
+  "history": { id: "history", showAiPanel: true },
+  "feedback": { id: "feedback", showAiPanel: true },
+  "settings": { id: "settings", showAiPanel: true },
+  "profile": { id: "profile", showAiPanel: true },
+};
+
 // 定义侧边栏菜单状态类型
 interface SidebarMenuState {
   // 是否折叠侧边栏
@@ -27,12 +48,14 @@ interface SidebarMenuState {
   toggleCollapsed: () => void;
   // 设置当前活动菜单项
   setActiveMenu: (menuId: MenuItemId) => void;
+  // 获取当前活动菜单项的元数据
+  getActiveMenuMetadata: () => MenuItemMetadata;
 }
 
 // 创建带有本地存储持久化的状态管理
 export const useSidebarMenuStore = create<SidebarMenuState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       // 默认不折叠
       collapsed: false,
       // 默认选中AI创作中心
@@ -44,6 +67,8 @@ export const useSidebarMenuStore = create<SidebarMenuState>()(
       toggleCollapsed: () => set((state) => ({ collapsed: !state.collapsed })),
       // 设置当前活动菜单项
       setActiveMenu: (menuId: MenuItemId) => set({ activeMenuId: menuId }),
+      // 获取当前活动菜单项的元数据
+      getActiveMenuMetadata: () => MENU_ITEMS_CONFIG[get().activeMenuId]
     }),
     {
       // 持久化配置
