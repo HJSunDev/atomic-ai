@@ -4,6 +4,7 @@ import { persist } from "zustand/middleware";
 // 定义菜单项类型
 export type MenuItemId = 
   | "ai-studio" 
+  | "chat"
   | "settings" 
   | "profile" 
   | "documents" 

@@ -36,6 +36,16 @@ export default function DashboardPage() {
         <AtomicBlock />
       </div>
     ),
+    // 聊天模块
+    "chat": (
+      <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+        <h2 className="text-xl font-bold mb-4">聊天</h2>
+        <p className="text-gray-600 dark:text-gray-300">这里是AI聊天界面，您可以与AI进行自然语言对话。</p>
+        <div className="mt-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+          <div className="text-sm text-gray-500 dark:text-gray-400">聊天记录将显示在这里</div>
+        </div>
+      </div>
+    ),
     // 其他菜单项使用占位内容
     "favorites": <MenuPlaceholder title="收藏夹" description="这里展示您收藏的内容。" />,
     "resource-library": <MenuPlaceholder title="资源库" description="浏览和管理您的资源。" />,

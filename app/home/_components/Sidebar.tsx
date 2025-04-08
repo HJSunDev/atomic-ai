@@ -241,6 +241,53 @@ export function Sidebar() {
             </div>
           )}
           
+          {/* 聊天 */}
+          {collapsed ? (
+            <div
+              className={cn(
+                "flex flex-col items-center py-2 group cursor-pointer",
+                activeMenuId === "chat" && "rounded-lg"
+              )}
+              onClick={() => setActiveMenu("chat")}
+            >
+              <div className={cn(
+                "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
+                activeMenuId === "chat" 
+                  ? "bg-[#ECEDEE]" 
+                  : "group-hover:bg-[#ECEDEE]/50"
+              )}>
+                <MessageSquare className={cn(
+                  "h-[18px] w-[18px]",
+                  activeMenuId === "chat"
+                    ? "text-primary dark:text-primary"
+                    : "text-gray-600 dark:text-gray-400"
+                )} />
+              </div>
+              <span className={cn(
+                "text-[11px] mt-1",
+                activeMenuId === "chat" && "text-primary dark:text-primary font-medium"
+              )}>聊天</span>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
+                activeMenuId === "chat"
+                  ? "bg-[#ECEDEE] text-primary dark:bg-gray-800 dark:text-primary"
+                  : "hover:bg-[#ECEDEE]/50 text-gray-700 dark:text-gray-300"
+              )}
+              onClick={() => setActiveMenu("chat")}
+            >
+              <MessageSquare className={cn(
+                "h-4 w-4 mr-3",
+                activeMenuId === "chat"
+                  ? "text-primary dark:text-primary"
+                  : "text-gray-600 dark:text-gray-400"
+              )} />
+              <span>聊天</span>
+            </div>
+          )}
+          
           {/* 收藏夹 */}
           {collapsed ? (
             <div
