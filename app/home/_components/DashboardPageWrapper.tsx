@@ -28,27 +28,14 @@ export function DashboardPageWrapper({ children }: DashboardPageWrapperProps) {
   return (
     <div className="flex h-full relative">
       {/* 主内容区域 - 宽度根据AI面板显示状态调整 */}
-      <div 
+      <main
         className={cn(
           "flex flex-col transition-all duration-300 relative",
           effectiveShowAiPanel ? 'w-[55%]' : 'w-full'
         )}
       >
-        {/* 主要内容 */}
-        <main className={cn(
-          "flex-1 overflow-y-auto p-4 md:p-6 bg-muted/20",
-          // 当AI面板关闭时，给内容添加居中样式，但保持容器占满
-          !effectiveShowAiPanel && 'flex justify-center'
-        )}>
-          {/* 内容容器 - 当AI面板关闭时限制宽度并居中 */}
-          <div className={cn(
-            "w-full",
-            !effectiveShowAiPanel && 'max-w-[70rem]'
-          )}>
-            {children}
-          </div>
-        </main>
-      </div>
+        {children}
+      </main>
 
       {/* AI面板控制按钮 - 只在当前菜单支持AI面板时显示 */}
       {shouldShowAiPanel && (

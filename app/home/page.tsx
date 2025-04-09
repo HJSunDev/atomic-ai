@@ -30,11 +30,13 @@ export default function DashboardPage() {
   const menuContentMap: Record<string, ReactNode> = {
     // 智创模块保留原始内容
     "ai-studio": (
-      <div className="space-y-6">
-        <NewBlock />
-        <HopeBlock />
-        <TestBlock />
-        <AtomicBlock />
+      <div className="w-full h-full bg-muted/20 overflow-y-auto flex justify-center">
+        <div className="max-w-[70rem] w-full">
+          <NewBlock />
+          <HopeBlock />
+          <TestBlock />
+          <AtomicBlock />
+        </div>
       </div>
     ),
     // 聊天模块使用独立组件
