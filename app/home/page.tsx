@@ -29,7 +29,7 @@ export default function DashboardPage() {
   // 菜单内容映射表 - 将菜单ID映射到对应的内容组件
   const menuContentMap: Record<string, ReactNode> = {
     // 智创模块保留原始内容
-    "ai-studio": (
+    "prompt-studio": (
       <div className="w-full h-full bg-muted/20 overflow-y-auto flex justify-center">
         <div className="max-w-[70rem] w-full">
           <NewBlock />
@@ -53,7 +53,7 @@ export default function DashboardPage() {
   };
 
   // 获取当前菜单内容，如果没有对应内容则显示智创模块
-  const currentContent = menuContentMap[activeMenuId] || menuContentMap["ai-studio"];
+  const currentContent = menuContentMap[activeMenuId] || menuContentMap["prompt-studio"];
 
   return (
     <DashboardPageWrapper>

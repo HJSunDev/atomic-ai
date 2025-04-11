@@ -86,7 +86,7 @@ export function Sidebar() {
   // 组件加载时，确保设置默认活动菜单
   useEffect(() => {
     // 设置为AI创作中心
-    setActiveMenu("ai-studio");
+    setActiveMenu("prompt-studio");
   }, [setActiveMenu]);
   
   // 清除所有定时器
@@ -199,41 +199,41 @@ export function Sidebar() {
             <div
               className={cn(
                 "flex flex-col items-center py-2 group cursor-pointer",
-                activeMenuId === "ai-studio" && "rounded-lg"
+                activeMenuId === "prompt-studio" && "rounded-lg"
               )}
-              onClick={() => setActiveMenu("ai-studio")}
+              onClick={() => setActiveMenu("prompt-studio")}
             >
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
-                activeMenuId === "ai-studio" 
+                activeMenuId === "prompt-studio" 
                   ? "bg-[#ECEDEE]" 
                   : "group-hover:bg-[#ECEDEE]/50"
               )}>
                 <AIRobotIcon className={cn(
                   "h-[18px] w-[18px]",
-                  activeMenuId === "ai-studio"
+                  activeMenuId === "prompt-studio"
                     ? "text-primary dark:text-primary"
                     : "text-gray-600 dark:text-gray-400"
                 )} />
               </div>
               <span className={cn(
                 "text-[11px] mt-1",
-                activeMenuId === "ai-studio" && "text-primary dark:text-primary font-medium"
+                activeMenuId === "prompt-studio" && "text-primary dark:text-primary font-medium"
               )}>智创</span>
             </div>
           ) : (
             <div
               className={cn(
                 "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
-                activeMenuId === "ai-studio"
+                activeMenuId === "prompt-studio"
                   ? "bg-[#ECEDEE] text-primary dark:bg-gray-800 dark:text-primary"
                   : "hover:bg-[#ECEDEE]/50 text-gray-700 dark:text-gray-300"
               )}
-              onClick={() => setActiveMenu("ai-studio")}
+              onClick={() => setActiveMenu("prompt-studio")}
             >
               <AIRobotIcon className={cn(
                 "h-4 w-4 mr-3",
-                activeMenuId === "ai-studio"
+                activeMenuId === "prompt-studio"
                   ? "text-primary dark:text-primary"
                   : "text-gray-600 dark:text-gray-400"
               )} />

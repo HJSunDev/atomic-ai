@@ -3,7 +3,7 @@ import { persist } from "zustand/middleware";
 
 // 定义菜单项类型
 export type MenuItemId = 
-  | "ai-studio" 
+  | "prompt-studio" 
   | "chat"
   | "settings" 
   | "profile" 
@@ -23,7 +23,7 @@ export interface MenuItemMetadata {
 
 // 菜单项元数据配置
 export const MENU_ITEMS_CONFIG: Record<MenuItemId, MenuItemMetadata> = {
-  "ai-studio": { id: "ai-studio", showAiPanel: true },
+  "prompt-studio": { id: "prompt-studio", showAiPanel: true },
   "chat": { id: "chat", showAiPanel: false }, // 聊天模块不需要AI面板
   "favorites": { id: "favorites", showAiPanel: true },
   "resource-library": { id: "resource-library", showAiPanel: true },
@@ -59,7 +59,7 @@ export const useSidebarMenuStore = create<SidebarMenuState>()(
       // 默认不折叠
       collapsed: false,
       // 默认选中AI创作中心
-      activeMenuId: "ai-studio",
+      activeMenuId: "prompt-studio",
       
       // 设置折叠状态
       setCollapsed: (isCollapsed: boolean) => set({ collapsed: isCollapsed }),
