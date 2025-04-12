@@ -83,12 +83,6 @@ export function Sidebar() {
     };
   }, []);
   
-  // 组件加载时，确保设置默认活动菜单
-  useEffect(() => {
-    // 设置为AI创作中心
-    setActiveMenu("prompt-studio");
-  }, [setActiveMenu]);
-  
   // 清除所有定时器
   const clearAllTimeouts = () => {
     if (showTimeoutRef.current) {
