@@ -1,13 +1,10 @@
 "use client";
 
 import { DashboardPageWrapper } from "./_components/DashboardPageWrapper";
-import { AtomicBlock } from "./_components/AtomicBlock";
-import { TestBlock } from "./_components/TestBlock";
-import { HopeBlock } from "./_components/HopeBlock";
-import { NewBlock } from "./_components/NewBlock";
 import { useSidebarMenuStore } from "@/store";
 import { ReactNode } from "react";
 import { ChatModule} from "./_chat/ChatModule";
+import { PromptStudioModule } from "./_prompt-studio/PromptStudioModule";
 
 // 菜单占位内容组件
 interface PlaceholderProps {
@@ -28,17 +25,8 @@ export default function DashboardPage() {
 
   // 菜单内容映射表 - 将菜单ID映射到对应的内容组件
   const menuContentMap: Record<string, ReactNode> = {
-    // 智创模块保留原始内容
-    "prompt-studio": (
-      <div className="w-full h-full bg-muted/20 overflow-y-auto flex justify-center">
-        <div className="max-w-[70rem] w-full">
-          <NewBlock />
-          <HopeBlock />
-          <TestBlock />
-          <AtomicBlock />
-        </div>
-      </div>
-    ),
+    // 智创模块使用独立组件
+    "prompt-studio": <PromptStudioModule />,
     // 聊天模块使用独立组件
     "chat": <ChatModule />,
     // 其他菜单项使用占位内容
