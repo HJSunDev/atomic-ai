@@ -1,8 +1,8 @@
 "use client";
 
 import { 
-  PanelLeftClose, 
-  PanelLeftOpen,
+  ArrowLeftToLine,
+  ArrowRightFromLine,
   Home,
   HelpCircle,
   MoreHorizontal,
@@ -158,9 +158,9 @@ export function Sidebar() {
             {/* 展开收起按钮 */}
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center ml-1 w-6 h-6 cursor-pointer"
+              className="flex items-center justify-center ml-1 w-6 h-6 cursor-pointer rounded-full bg-[#E6E6E8]"
             >
-              <PanelLeftClose className="h-4 w-4 text-gray-600 dark:text-gray-400" />
+              <ArrowLeftToLine className="h-3 w-3 text-gray-600 dark:text-gray-400" />
             </button>
           </>
         )}
@@ -171,9 +171,9 @@ export function Sidebar() {
             {/* 展开收起按钮 */}
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center w-6 h-6 mb-3 cursor-pointer"
+              className="flex items-center justify-center w-6 h-6 mb-3 cursor-pointer rounded-full bg-[#E6E6E8]"
             >
-              <PanelLeftOpen className="h-5 w-5 text-gray-600 dark:text-gray-400" />
+              <ArrowRightFromLine className="h-3 w-3 text-gray-600 dark:text-gray-400 translate-x-0.5" />
             </button>
 
             {/* 用户头像 */}
