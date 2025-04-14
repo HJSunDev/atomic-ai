@@ -8,7 +8,7 @@ import { User, Search, ChevronLeft, ChevronDown, PanelLeftClose, PanelLeftOpen, 
 // 聊天侧边栏组件
 const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
   return (
-    <div className="w-[260px] h-full border-r bg-white dark:bg-gray-800 flex flex-col">
+    <div className="w-[13.5rem] h-full border-r bg-white dark:bg-gray-800 flex flex-col">
       {/* 顶部搜索和折叠区域 */}
       <div className="p-3 flex items-center justify-between">
         <div className="relative flex-1">
@@ -180,7 +180,7 @@ const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boolean; o
         }) => (
           <>
             {/* 内容区域 */}
-            <div className="flex-1 overflow-y-auto p-4 bg-muted/10">
+            <div className="flex-1 overflow-y-auto p-4 scrollbar-hide pt-2">
               <MessageList 
                 messages={messages} 
                 messagesEndRef={messagesEndRef}
@@ -225,8 +225,8 @@ export const ChatModule = () => {
       {showSidebar && <ChatSidebar onToggle={toggleSidebar} />}
       
       {/* 聊天内容区域 - 在剩余空间中居中显示 */}
-      <div className="flex-1 flex justify-center">
-        <div className="w-full max-w-4xl">
+      <div className="flex-1 flex justify-center ">
+        <div className="w-[50rem]">
           <ChatContent showSidebar={showSidebar} onToggleSidebar={toggleSidebar} />
         </div>
       </div>

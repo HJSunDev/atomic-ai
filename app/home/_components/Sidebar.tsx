@@ -158,7 +158,7 @@ export function Sidebar() {
             {/* 展开收起按钮 */}
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center ml-1 w-6 h-6 cursor-pointer rounded-full bg-[#E6E6E8]"
+              className="flex items-center justify-center ml-1 w-5 h-5 cursor-pointer rounded-full bg-[#E6E6E8]"
             >
               <ArrowLeftToLine className="h-3 w-3 text-gray-600 dark:text-gray-400" />
             </button>
