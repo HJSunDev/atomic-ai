@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode } from "react";
+import { ReactNode, useEffect, useRef } from "react";
 import { AiChatPanel } from "./AiChatPanel";
 import { Bot, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -18,14 +18,28 @@ export function DashboardPageWrapper({ children }: DashboardPageWrapperProps) {
   const hasMounted = useHasMounted();
   
   // 使用全局状态管理中的AI面板状态和方法
-  const { showAiPanel, toggleAiPanel } = useAiPanelStore();
+  const { showAiPanel, toggleAiPanel, setAiPanelVisibility } = useAiPanelStore();
   
   // 获取当前活动菜单的元数据
-  const { getActiveMenuMetadata } = useSidebarMenuStore();
+  const { getActiveMenuMetadata, activeMenuId } = useSidebarMenuStore();
   const currentMenuMetadata = getActiveMenuMetadata();
   
   // 根据当前菜单项元数据决定是否显示AI面板
   const shouldShowAiPanel = currentMenuMetadata.showAiPanel;
+  
+  // 记录上一次活动的菜单ID，用于检测菜单切换
+  const prevMenuIdRef = useRef(activeMenuId);
+  
+  // 当活动菜单项改变时，重置AI面板显示状态为不显示
+  useEffect(() => {
+    // 只有在菜单ID真正变化时才重置面板状态
+    if (prevMenuIdRef.current !== activeMenuId) {
+      // 每次菜单切换时，将AI面板状态重置为不显示
+      setAiPanelVisibility(false);
+      // 更新前一个菜单ID引用
+      prevMenuIdRef.current = activeMenuId;
+    }
+  }, [activeMenuId, setAiPanelVisibility]);
   
   // 如果当前菜单不支持AI面板，则不显示面板和按钮
   const effectiveShowAiPanel = shouldShowAiPanel ? showAiPanel : false;
