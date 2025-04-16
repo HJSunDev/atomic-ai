@@ -179,29 +179,34 @@ const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boolean; o
           scrollToBottom 
         }) => (
           <>
-            {/* 内容区域 */}
-            <div className="flex-1 overflow-y-auto p-4 scrollbar-hide pt-2">
-              <MessageList 
-                messages={messages} 
-                messagesEndRef={messagesEndRef}
-                emptyState={
-                  <EmptyState
-                    promptCards={promptCards.map(card => ({
-                      ...card,
-                      onClick: handlePromptClick
-                    }))}
-                  />
-                }
-              />
+            {/* 内容区域 - 让内容区域占满宽度并允许滚动 */}
+            <div className="flex-1 overflow-y-auto w-full scrollbar-hide">
+              {/* 内容居中容器 - 限制内容最大宽度并居中 */}
+              <div className="w-[50rem] mx-auto">
+                <MessageList 
+                  messages={messages} 
+                  messagesEndRef={messagesEndRef}
+                  emptyState={
+                    <EmptyState
+                      promptCards={promptCards.map(card => ({
+                        ...card,
+                        onClick: handlePromptClick
+                      }))}
+                    />
+                  }
+                />
+              </div>
             </div>
             
-            {/* 输入区域 */}
-            <ChatInput
-              inputValue={inputValue}
-              textareaRef={textareaRef}
-              handleInputChange={handleInputChange}
-              handleSendMessage={handleSendMessage}
-            />
+            {/* 输入区域 - 限制最大宽度并居中 */}
+            <div className="w-[50rem] mx-auto">
+              <ChatInput
+                inputValue={inputValue}
+                textareaRef={textareaRef}
+                handleInputChange={handleInputChange}
+                handleSendMessage={handleSendMessage}
+              />
+            </div>
           </>
         )}
       </AiChatCore>
@@ -224,11 +229,9 @@ export const ChatModule = () => {
       {/* 聊天侧边栏 - 根据状态显示或隐藏 */}
       {showSidebar && <ChatSidebar onToggle={toggleSidebar} />}
       
-      {/* 聊天内容区域 - 在剩余空间中居中显示 */}
-      <div className="flex-1 flex justify-center ">
-        <div className="w-[50rem]">
-          <ChatContent showSidebar={showSidebar} onToggleSidebar={toggleSidebar} />
-        </div>
+      {/* 聊天内容区域 - 直接占满剩余空间 */}
+      <div className="flex-1">
+        <ChatContent showSidebar={showSidebar} onToggleSidebar={toggleSidebar} />
       </div>
     </div>
   );

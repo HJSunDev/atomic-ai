@@ -14,7 +14,7 @@ export function MessageList({ messages, messagesEndRef, emptyState }: MessageLis
   }
 
   return (
-    <>
+    <div className="p-4">
       {messages.map((message, index) => (
         <div 
           key={message.id}
@@ -77,6 +77,6 @@ export function MessageList({ messages, messagesEndRef, emptyState }: MessageLis
       ))}
       {/* 用于滚动到底部的空div */}
       <div ref={messagesEndRef} />
-    </>
+    </div>
   );
 } 
