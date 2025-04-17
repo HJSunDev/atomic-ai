@@ -21,7 +21,6 @@ import Link from "next/link";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { CustomUserAvatar } from "@/components/ui/CustomUserAvatar";
 import { createPortal } from "react-dom";
-import { useOnClickOutside } from "@/hooks/use-on-click-outside";
 import { useSidebarMenuStore } from "@/store/home";
 
 // 自定义AI机器人图标
@@ -68,7 +67,6 @@ export function Sidebar() {
   
   // 引用
   const moreButtonRef = useRef<HTMLDivElement>(null);
-  const moreMenuRef = useRef<HTMLDivElement>(null);
   
   // 菜单显示隐藏定时器引用
   const showTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -94,13 +92,7 @@ export function Sidebar() {
       hideTimeoutRef.current = null;
     }
   };
-  
-  // 处理点击外部关闭菜单
-  useOnClickOutside<HTMLDivElement>(moreMenuRef, (e) => {
-    if (moreButtonRef.current && !moreButtonRef.current.contains(e.target as Node)) {
-      handleMenuHide();
-    }
-  });
+
   
   // 显示菜单时的处理函数
   const handleMenuShow = () => {
@@ -132,7 +124,7 @@ export function Sidebar() {
   return (
     <aside 
       className={cn(
-        "flex flex-col h-full bg-[#FAFAFA] dark:bg-[#121212] overflow-hidden dark:border-gray-800 shrink-0 relative z-10",
+        "flex flex-col h-full bg-[#FAFAFA] dark:bg-[#1B1B1D] overflow-hidden dark:border-gray-800 shrink-0 relative z-10",
         collapsed ? "w-[4rem]" : "w-[10.5rem]"
       )}
     >
@@ -158,7 +150,7 @@ export function Sidebar() {
             {/* 展开收起按钮 */}
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center ml-1 w-5 h-5 cursor-pointer rounded-full bg-[#E6E6E8]"
+              className="flex items-center justify-center ml-1 w-5 h-5 cursor-pointer rounded-full bg-[#E6E6E8] dark:bg-[#2C2C2E]"
             >
               <ArrowLeftToLine className="h-3 w-3 text-gray-600 dark:text-gray-400" />
             </button>
@@ -171,7 +163,7 @@ export function Sidebar() {
             {/* 展开收起按钮 */}
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center w-6 h-6 mb-3 cursor-pointer rounded-full bg-[#E6E6E8]"
+              className="flex items-center justify-center w-6 h-6 mb-3 cursor-pointer rounded-full bg-[#E6E6E8] dark:bg-[#2C2C2E]"
             >
               <ArrowRightFromLine className="h-3 w-3 text-gray-600 dark:text-gray-400 translate-x-0.5" />
             </button>
@@ -200,19 +192,19 @@ export function Sidebar() {
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
                 activeMenuId === "prompt-studio" 
-                  ? "bg-[#ECEDEE]" 
-                  : "group-hover:bg-[#ECEDEE]/50"
+                  ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
+                  : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <AIRobotIcon className={cn(
                   "h-[18px] w-[18px]",
                   activeMenuId === "prompt-studio"
-                    ? "text-primary dark:text-primary"
-                    : "text-gray-600 dark:text-gray-400"
+                    ? "text-primary dark:text-gray-200"
+                    : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
                 "text-[11px] mt-1",
-                activeMenuId === "prompt-studio" && "text-primary dark:text-primary font-medium"
+                activeMenuId === "prompt-studio" && "text-primary dark:text-gray-200 font-medium"
               )}>智创</span>
             </div>
           ) : (
@@ -220,15 +212,15 @@ export function Sidebar() {
               className={cn(
                 "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
                 activeMenuId === "prompt-studio"
-                  ? "bg-[#ECEDEE] text-primary dark:bg-gray-800 dark:text-primary"
-                  : "hover:bg-[#ECEDEE]/50 text-gray-700 dark:text-gray-300"
+                  ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
+                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
               )}
               onClick={() => setActiveMenu("prompt-studio")}
             >
               <AIRobotIcon className={cn(
                 "h-4 w-4 mr-3",
                 activeMenuId === "prompt-studio"
-                  ? "text-primary dark:text-primary"
+                  ? "text-primary dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
               )} />
               <span>智创</span>
@@ -247,19 +239,19 @@ export function Sidebar() {
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
                 activeMenuId === "chat" 
-                  ? "bg-[#ECEDEE]" 
-                  : "group-hover:bg-[#ECEDEE]/50"
+                  ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
+                  : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <MessageSquare className={cn(
                   "h-[18px] w-[18px]",
                   activeMenuId === "chat"
-                    ? "text-primary dark:text-primary"
-                    : "text-gray-600 dark:text-gray-400"
+                    ? "text-primary dark:text-gray-200"
+                    : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
                 "text-[11px] mt-1",
-                activeMenuId === "chat" && "text-primary dark:text-primary font-medium"
+                activeMenuId === "chat" && "text-primary dark:text-gray-200 font-medium"
               )}>聊天</span>
             </div>
           ) : (
@@ -267,15 +259,15 @@ export function Sidebar() {
               className={cn(
                 "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
                 activeMenuId === "chat"
-                  ? "bg-[#ECEDEE] text-primary dark:bg-gray-800 dark:text-primary"
-                  : "hover:bg-[#ECEDEE]/50 text-gray-700 dark:text-gray-300"
+                  ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
+                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
               )}
               onClick={() => setActiveMenu("chat")}
             >
               <MessageSquare className={cn(
                 "h-4 w-4 mr-3",
                 activeMenuId === "chat"
-                  ? "text-primary dark:text-primary"
+                  ? "text-primary dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
               )} />
               <span>聊天</span>
@@ -294,19 +286,19 @@ export function Sidebar() {
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
                 activeMenuId === "favorites" 
-                  ? "bg-[#ECEDEE]" 
-                  : "group-hover:bg-[#ECEDEE]/50"
+                  ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
+                  : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <Star className={cn(
                   "h-[18px] w-[18px]",
                   activeMenuId === "favorites"
-                    ? "text-primary dark:text-primary"
-                    : "text-gray-600 dark:text-gray-400"
+                    ? "text-primary dark:text-gray-200"
+                    : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
                 "text-[11px] mt-1",
-                activeMenuId === "favorites" && "text-primary dark:text-primary font-medium"
+                activeMenuId === "favorites" && "text-primary dark:text-gray-200 font-medium"
               )}>收藏</span>
             </div>
           ) : (
@@ -314,15 +306,15 @@ export function Sidebar() {
               className={cn(
                 "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
                 activeMenuId === "favorites"
-                  ? "bg-[#ECEDEE] text-primary dark:bg-gray-800 dark:text-primary"
-                  : "hover:bg-[#ECEDEE]/50 text-gray-700 dark:text-gray-300"
+                  ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
+                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
               )}
               onClick={() => setActiveMenu("favorites")}
             >
               <Star className={cn(
                 "h-4 w-4 mr-3",
                 activeMenuId === "favorites"
-                  ? "text-primary dark:text-primary"
+                  ? "text-primary dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
               )} />
               <span>收藏</span>
@@ -341,19 +333,19 @@ export function Sidebar() {
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
                 activeMenuId === "resource-library" 
-                  ? "bg-[#ECEDEE]" 
-                  : "group-hover:bg-[#ECEDEE]/50"
+                  ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
+                  : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <LibraryBig className={cn(
                   "h-[18px] w-[18px]",
                   activeMenuId === "resource-library"
-                    ? "text-primary dark:text-primary"
-                    : "text-gray-600 dark:text-gray-400"
+                    ? "text-primary dark:text-gray-200"
+                    : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
                 "text-[11px] mt-1",
-                activeMenuId === "resource-library" && "text-primary dark:text-primary font-medium"
+                activeMenuId === "resource-library" && "text-primary dark:text-gray-200 font-medium"
               )}>资源</span>
             </div>
           ) : (
@@ -361,15 +353,15 @@ export function Sidebar() {
               className={cn(
                 "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
                 activeMenuId === "resource-library"
-                  ? "bg-[#ECEDEE] text-primary dark:bg-gray-800 dark:text-primary"
-                  : "hover:bg-[#ECEDEE]/50 text-gray-700 dark:text-gray-300"
+                  ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
+                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
               )}
               onClick={() => setActiveMenu("resource-library")}
             >
               <LibraryBig className={cn(
                 "h-4 w-4 mr-3",
                 activeMenuId === "resource-library"
-                  ? "text-primary dark:text-primary"
+                  ? "text-primary dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
               )} />
               <span>资源</span>
@@ -394,7 +386,7 @@ export function Sidebar() {
             >
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
-                showMoreMenu ? "bg-[#ECEDEE]" : "hover:bg-[#ECEDEE]/50" 
+                showMoreMenu ? "bg-[#ECEDEE] dark:bg-[#27272A]" : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70" 
               )}>
                 <MoreHorizontal className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
               </div>
@@ -403,7 +395,7 @@ export function Sidebar() {
           ) : (
             <div
               ref={moreButtonRef}
-              className="w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium hover:bg-[#ECEDEE]/50 transition-colors cursor-pointer relative"
+              className="w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 transition-colors cursor-pointer relative"
               onMouseEnter={handleMenuShow}
               onMouseLeave={handleMenuHide}
             >
@@ -421,10 +413,10 @@ export function Sidebar() {
           ? "flex flex-col items-center space-y-3 px-0 py-3" 
           : "flex justify-around items-center px-1"
       )}>
-        <Link href="/" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+        <Link href="/" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] transition-colors">
           <Home className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
         </Link>
-        <div className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors">
+        <div className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] transition-colors">
           <HelpCircle className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
         </div>
         <ThemeToggle />
@@ -437,7 +429,6 @@ export function Sidebar() {
           aria-hidden="true"
         >
           <div
-            ref={moreMenuRef}
             className="absolute pointer-events-auto"
             style={{
               left: `${moreButtonRef.current?.getBoundingClientRect().right ?? 0}px`,
@@ -454,25 +445,25 @@ export function Sidebar() {
             />
             
             {/* 菜单内容 */}
-            <div className="py-3 px-2 bg-white dark:bg-gray-800 rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-60">
+            <div className="py-3 px-2 bg-white rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-60 dark:bg-[#202020]">
               {/* 以下为菜单项 */}
               
               <div className="block" onClick={() => setActiveMenu("documents")}>
                 <div className={cn(
                   "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
                   activeMenuId === "documents"
-                    ? "bg-primary/10"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    ? "bg-primary/10 dark:bg-[#27272A]"
+                    : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
                 )}>
                   <FileText className={cn(
                     "h-4 w-4",
                     activeMenuId === "documents"
-                      ? "text-primary"
-                      : "text-gray-500 group-hover:text-primary transition-colors"
+                      ? "text-primary dark:text-gray-200"
+                      : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
                   )} />
                   <span className={cn(
                     "text-sm",
-                    activeMenuId === "documents" && "text-primary font-medium"
+                    activeMenuId === "documents" && "text-primary dark:text-gray-200 font-medium"
                   )}>文档中心</span>
                 </div>
               </div>
@@ -481,18 +472,18 @@ export function Sidebar() {
                 <div className={cn(
                   "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
                   activeMenuId === "knowledge-base"
-                    ? "bg-primary/10"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    ? "bg-primary/10 dark:bg-[#27272A]"
+                    : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
                 )}>
                   <BookOpen className={cn(
                     "h-4 w-4",
                     activeMenuId === "knowledge-base"
-                      ? "text-primary"
-                      : "text-gray-500 group-hover:text-primary transition-colors"
+                      ? "text-primary dark:text-gray-200"
+                      : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
                   )} />
                   <span className={cn(
                     "text-sm",
-                    activeMenuId === "knowledge-base" && "text-primary font-medium"
+                    activeMenuId === "knowledge-base" && "text-primary dark:text-gray-200 font-medium"
                   )}>知识库</span>
                 </div>
               </div>
@@ -504,18 +495,18 @@ export function Sidebar() {
                 <div className={cn(
                   "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
                   activeMenuId === "feedback"
-                    ? "bg-primary/10"
-                    : "hover:bg-gray-50 dark:hover:bg-gray-700/50"
+                    ? "bg-primary/10 dark:bg-[#27272A]"
+                    : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
                 )}>
                   <MessageSquare className={cn(
                     "h-4 w-4",
                     activeMenuId === "feedback"
-                      ? "text-primary"
-                      : "text-gray-500 group-hover:text-primary transition-colors"
+                      ? "text-primary dark:text-gray-200"
+                      : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
                   )} />
                   <span className={cn(
                     "text-sm",
-                    activeMenuId === "feedback" && "text-primary font-medium"
+                    activeMenuId === "feedback" && "text-primary dark:text-gray-200 font-medium"
                   )}>反馈</span>
                 </div>
               </div>
