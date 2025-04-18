@@ -413,10 +413,10 @@ export function Sidebar() {
           ? "flex flex-col items-center space-y-3 px-0 py-3" 
           : "flex justify-around items-center px-1"
       )}>
-        <Link href="/" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] transition-colors">
+        <Link href="/" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer">
           <Home className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
         </Link>
-        <div className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] transition-colors">
+        <div className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer">
           <HelpCircle className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
         </div>
         <ThemeToggle />
