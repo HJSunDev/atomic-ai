@@ -11,9 +11,8 @@ import {
   FileText,
   BookOpen,
   History,
-  Star,
   MessageSquare,
-  LibraryBig,
+  Compass,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -274,100 +273,53 @@ export function Sidebar() {
             </div>
           )}
           
-          {/* 收藏夹 */}
+          {/* 发现 */}
           {collapsed ? (
             <div
               className={cn(
                 "flex flex-col items-center py-2 group cursor-pointer",
-                activeMenuId === "favorites" && "rounded-lg"
+                activeMenuId === "discovery" && "rounded-lg"
               )}
-              onClick={() => setActiveMenu("favorites")}
+              onClick={() => setActiveMenu("discovery")}
             >
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
-                activeMenuId === "favorites" 
+                activeMenuId === "discovery" 
                   ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
                   : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
-                <Star className={cn(
+                <Compass className={cn(
                   "h-[18px] w-[18px]",
-                  activeMenuId === "favorites"
+                  activeMenuId === "discovery"
                     ? "text-primary dark:text-gray-200"
                     : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
                 "text-[11px] mt-1",
-                activeMenuId === "favorites" && "text-primary dark:text-gray-200 font-medium"
-              )}>收藏</span>
+                activeMenuId === "discovery" && "text-primary dark:text-gray-200 font-medium"
+              )}>发现</span>
             </div>
           ) : (
             <div
               className={cn(
                 "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
-                activeMenuId === "favorites"
+                activeMenuId === "discovery"
                   ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
                   : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
               )}
-              onClick={() => setActiveMenu("favorites")}
+              onClick={() => setActiveMenu("discovery")}
             >
-              <Star className={cn(
+              <Compass className={cn(
                 "h-4 w-4 mr-3",
-                activeMenuId === "favorites"
+                activeMenuId === "discovery"
                   ? "text-primary dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
               )} />
-              <span>收藏</span>
+              <span>发现</span>
             </div>
           )}
           
-          {/* 资源库 */}
-          {collapsed ? (
-            <div
-              className={cn(
-                "flex flex-col items-center py-2 group cursor-pointer",
-                activeMenuId === "resource-library" && "rounded-lg"
-              )}
-              onClick={() => setActiveMenu("resource-library")}
-            >
-              <div className={cn(
-                "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
-                activeMenuId === "resource-library" 
-                  ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
-                  : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
-              )}>
-                <LibraryBig className={cn(
-                  "h-[18px] w-[18px]",
-                  activeMenuId === "resource-library"
-                    ? "text-primary dark:text-gray-200"
-                    : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
-                )} />
-              </div>
-              <span className={cn(
-                "text-[11px] mt-1",
-                activeMenuId === "resource-library" && "text-primary dark:text-gray-200 font-medium"
-              )}>资源</span>
-            </div>
-          ) : (
-            <div
-              className={cn(
-                "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
-                activeMenuId === "resource-library"
-                  ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
-                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
-              )}
-              onClick={() => setActiveMenu("resource-library")}
-            >
-              <LibraryBig className={cn(
-                "h-4 w-4 mr-3",
-                activeMenuId === "resource-library"
-                  ? "text-primary dark:text-gray-200"
-                  : "text-gray-600 dark:text-gray-400"
-              )} />
-              <span>资源</span>
-            </div>
-          )}
-
           {/* 分割线 */}
           <div className="py-1">
             <div className={cn(

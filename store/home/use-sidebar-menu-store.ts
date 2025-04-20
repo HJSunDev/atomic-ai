@@ -5,14 +5,12 @@ import { persist } from "zustand/middleware";
 export type MenuItemId = 
   | "prompt-studio" 
   | "chat"
+  | "discovery"
   | "settings" 
   | "profile" 
   | "documents" 
   | "knowledge-base" 
-  | "history" 
-  | "favorites" 
-  | "feedback" 
-  | "resource-library";
+  | "feedback";
 
 // 定义菜单项元数据接口
 export interface MenuItemMetadata {
@@ -25,11 +23,9 @@ export interface MenuItemMetadata {
 export const MENU_ITEMS_CONFIG: Record<MenuItemId, MenuItemMetadata> = {
   "prompt-studio": { id: "prompt-studio", showAiPanel: true },
   "chat": { id: "chat", showAiPanel: false }, // 聊天模块不需要AI面板
-  "favorites": { id: "favorites", showAiPanel: true },
-  "resource-library": { id: "resource-library", showAiPanel: true },
+  "discovery": { id: "discovery", showAiPanel: true }, // 发现模块
   "documents": { id: "documents", showAiPanel: true },
   "knowledge-base": { id: "knowledge-base", showAiPanel: true },
-  "history": { id: "history", showAiPanel: true },
   "feedback": { id: "feedback", showAiPanel: true },
   "settings": { id: "settings", showAiPanel: true },
   "profile": { id: "profile", showAiPanel: true },

@@ -29,12 +29,11 @@ export default function DashboardPage() {
     "prompt-studio": <PromptStudioModule />,
     // 聊天模块使用独立组件
     "chat": <ChatModule />,
+    // 发现模块
+    "discovery": <MenuPlaceholder title="发现" description="探索和发现更多有趣的内容和创意。" />,
     // 其他菜单项使用占位内容
-    "favorites": <MenuPlaceholder title="收藏夹" description="这里展示您收藏的内容。" />,
-    "resource-library": <MenuPlaceholder title="资源库" description="浏览和管理您的资源。" />,
     "documents": <MenuPlaceholder title="文档中心" description="查看和编辑您的文档。" />,
     "knowledge-base": <MenuPlaceholder title="知识库" description="探索和学习知识资源。" />,
-    "history": <MenuPlaceholder title="历史记录" description="查看您的操作历史。" />,
     "feedback": <MenuPlaceholder title="反馈中心" description="提供您的意见和建议。" />,
     "settings": <MenuPlaceholder title="系统设置" description="调整系统的各项设置和配置。" />,
     "profile": <MenuPlaceholder title="个人资料" description="管理您的个人信息和账户设置。" />,
