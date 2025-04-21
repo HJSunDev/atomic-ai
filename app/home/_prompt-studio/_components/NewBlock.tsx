@@ -29,6 +29,8 @@ import {
   type DragOverEvent,
 } from '@dnd-kit/core';
 import { CSS } from '@dnd-kit/utilities';
+// 引入 uuid 用于生成唯一 id
+import { v4 as uuidv4 } from 'uuid';
 
 // 定义网格项的数据类型
 interface GridItem {
@@ -76,18 +78,8 @@ function DragOverlayItem({ item }: { item: GridItem | null }) {
   );
 }
 
-// 创建操作区卡片组件
-function OperationAreaItem({ item }: { item: GridItem }) {
-  return (
-    <div className={`${item.color} p-4 rounded-lg shadow cursor-default border border-gray-300`}>
-      <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-      <p className="text-sm">{item.content}</p>
-    </div>
-  );
-}
-
 // 创建操作区组件，可以作为放置目标
-function OperationArea({ items }: { items: GridItem[] }) {
+function OperationArea({ items, onClear }: { items: GridItem[], onClear: () => void }) {
   // 使用useDroppable钩子使元素成为放置目标
   const { setNodeRef, isOver } = useDroppable({
     id: 'operation-area',
@@ -96,15 +88,25 @@ function OperationArea({ items }: { items: GridItem[] }) {
   return (
     <div
       ref={setNodeRef}
-      className={`bg-gray-50 p-6 rounded-lg border-2 ${isOver ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300'} transition-colors min-h-[200px] mb-8`}
+      className={`bg-gray-50 p-6 rounded-lg border-2 ${isOver ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300'} transition-colors min-h-[200px] mb-8 relative`}
     >
+      {/* 操作按钮区域，右上角 */}
+      <div className="absolute right-4 top-4 flex gap-2">
+        {/* 清空操作区按钮 */}
+        <button
+          className="px-3 py-1 bg-red-100 text-red-600 rounded hover:bg-red-200 text-sm border border-red-200 transition"
+          onClick={onClear}
+        >
+          清空操作区
+        </button>
+      </div>
       <h2 className="text-xl font-bold mb-4">操作区</h2>
       <p className="text-gray-500 mb-4">{items.length > 0 ? '已添加的功能卡片:' : '将功能卡片拖放到此区域'}</p>
-      
+      {/* 用 DraggableGridItem 渲染操作区的卡片，让它们也可以拖动 */}
       {items.length > 0 ? (
         <div className="flex flex-wrap gap-4">
           {items.map(item => (
-            <OperationAreaItem key={item.id} item={item} />
+            <DraggableGridItem key={item.id} item={item} />
           ))}
         </div>
       ) : (
@@ -167,7 +169,10 @@ export function NewBlock() {
   const [activeId, setActiveId] = useState<string | null>(null);
   
   // 获取当前被拖拽的项目数据
-  const activeItem = activeId ? items.find(item => item.id === activeId) || operationItems.find(item => item.id === activeId) || null : null;
+  // 由于操作区和网格区 id 可能不同，需分别查找
+  const activeItem = activeId
+    ? items.find(item => item.id === activeId) || operationItems.find(item => item.id === activeId) || null
+    : null;
   
   // 跟踪鼠标是否真正进入了操作区
   const [enteredOperationArea, setEnteredOperationArea] = useState(false);
@@ -208,12 +213,14 @@ export function NewBlock() {
     
     // 只有当鼠标真正进入过操作区并且释放时指针在操作区上方时才添加卡片
     if (enteredOperationArea) {
-      // 查找被拖拽的项目
+      // 查找被拖拽的项目（只允许从网格区拖拽副本到操作区）
       const draggedItem = items.find(item => item.id === active.id);
-      // 如果找到被拖拽的项目且它还不在操作区中
-      if (draggedItem && !operationItems.some(item => item.id === draggedItem.id)) {
-        // 将项目添加到操作区
-        setOperationItems(prevItems => [...prevItems, draggedItem]);
+      // 如果找到被拖拽的项目
+      if (draggedItem) {
+        // 生成副本，id 用 uuid 保证唯一
+        const copy = { ...draggedItem, id: uuidv4() };
+        // 将副本添加到操作区
+        setOperationItems(prevItems => [...prevItems, copy]);
       }
     }
     // 清除当前被拖拽项
@@ -271,8 +278,8 @@ export function NewBlock() {
         <h2 className="text-2xl font-bold mb-8">功能卡片</h2>
         <p className="mb-6 text-gray-600">将下方卡片拖动到上方操作区</p>
         
-        {/* 操作区 - 可放置区域 */}
-        <OperationArea items={operationItems} />
+        {/* 操作区 - 可放置区域，传递清空方法 */}
+        <OperationArea items={operationItems} onClear={() => setOperationItems([])} />
         
         {/* 使用网格布局显示卡片列表 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
