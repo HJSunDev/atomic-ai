@@ -19,6 +19,8 @@ import {
   PointerSensor,
   // 计算最近中心点的碰撞检测策略
   closestCenter,
+  // 使用指针位置检测策略
+  pointerWithin,
   // 拖拽开始事件类型
   type DragStartEvent,
   // 拖拽结束事件类型
@@ -74,6 +76,46 @@ function DragOverlayItem({ item }: { item: GridItem | null }) {
   );
 }
 
+// 创建操作区卡片组件
+function OperationAreaItem({ item }: { item: GridItem }) {
+  return (
+    <div className={`${item.color} p-4 rounded-lg shadow cursor-default border border-gray-300`}>
+      <h3 className="text-lg font-bold mb-2">{item.title}</h3>
+      <p className="text-sm">{item.content}</p>
+    </div>
+  );
+}
+
+// 创建操作区组件，可以作为放置目标
+function OperationArea({ items }: { items: GridItem[] }) {
+  // 使用useDroppable钩子使元素成为放置目标
+  const { setNodeRef, isOver } = useDroppable({
+    id: 'operation-area',
+  });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={`bg-gray-50 p-6 rounded-lg border-2 ${isOver ? 'border-blue-500 bg-blue-50' : 'border-dashed border-gray-300'} transition-colors min-h-[200px] mb-8`}
+    >
+      <h2 className="text-xl font-bold mb-4">操作区</h2>
+      <p className="text-gray-500 mb-4">{items.length > 0 ? '已添加的功能卡片:' : '将功能卡片拖放到此区域'}</p>
+      
+      {items.length > 0 ? (
+        <div className="flex flex-wrap gap-4">
+          {items.map(item => (
+            <OperationAreaItem key={item.id} item={item} />
+          ))}
+        </div>
+      ) : (
+        <div className="flex items-center justify-center h-[100px] text-gray-400">
+          <p>空操作区 - 拖放卡片到这里</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 export function NewBlock() {
   // 添加客户端渲染状态
   const [isMounted, setIsMounted] = useState(false);
@@ -118,11 +160,17 @@ export function NewBlock() {
     },
   ]);
 
+  // 存储操作区中的项目
+  const [operationItems, setOperationItems] = useState<GridItem[]>([]);
+
   // 当前被拖拽的项目状态
   const [activeId, setActiveId] = useState<string | null>(null);
   
   // 获取当前被拖拽的项目数据
-  const activeItem = activeId ? items.find(item => item.id === activeId) || null : null;
+  const activeItem = activeId ? items.find(item => item.id === activeId) || operationItems.find(item => item.id === activeId) || null : null;
+  
+  // 跟踪鼠标是否真正进入了操作区
+  const [enteredOperationArea, setEnteredOperationArea] = useState(false);
   
   // 在客户端加载后再渲染组件
   useEffect(() => {
@@ -150,12 +198,39 @@ export function NewBlock() {
   const handleDragStart = (event: DragStartEvent) => {
     // 设置当前被拖拽项的ID
     setActiveId(event.active.id as string);
+    // 重置操作区进入状态
+    setEnteredOperationArea(false);
   };
   
   // 处理拖拽结束事件
-  const handleDragEnd = () => {
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { over, active } = event;
+    
+    // 只有当鼠标真正进入过操作区并且释放时指针在操作区上方时才添加卡片
+    if (enteredOperationArea) {
+      // 查找被拖拽的项目
+      const draggedItem = items.find(item => item.id === active.id);
+      // 如果找到被拖拽的项目且它还不在操作区中
+      if (draggedItem && !operationItems.some(item => item.id === draggedItem.id)) {
+        // 将项目添加到操作区
+        setOperationItems(prevItems => [...prevItems, draggedItem]);
+      }
+    }
     // 清除当前被拖拽项
     setActiveId(null);
+  };
+
+  // 处理拖拽经过事件
+  const handleDragOver = (event: DragOverEvent) => {
+    const { over } = event;
+    // 当拖拽经过操作区时设置标志
+    if (over && over.id === 'operation-area') {
+      console.log('Entering operation area');
+      setEnteredOperationArea(true);
+    }else{
+      console.log('Leaving operation area');
+      setEnteredOperationArea(false);
+    }
   };
 
   // 服务端渲染时返回一个占位符
@@ -180,19 +255,24 @@ export function NewBlock() {
   return (
     <DndContext
       sensors={sensors}
-      // 使用内置的碰撞检测算法
-      collisionDetection={closestCenter}
+      // 使用指针位置检测策略
+      collisionDetection={pointerWithin}
       // 监听拖拽开始事件
       onDragStart={handleDragStart}
       // 监听拖拽结束事件
       onDragEnd={handleDragEnd}
+      // 监听拖拽经过事件
+      onDragOver={handleDragOver}
     >
       {/* 使用div包裹整个区域，作为全局放置区 */}
       <main
         className={`h-auto min-h-[800px] mb-[20px] mt-[20px] bg-gray-100 p-6 rounded-lg`}
       >
         <h2 className="text-2xl font-bold mb-8">功能卡片</h2>
-        <p className="mb-6 text-gray-600">拖动下方卡片可以移动它们的位置</p>
+        <p className="mb-6 text-gray-600">将下方卡片拖动到上方操作区</p>
+        
+        {/* 操作区 - 可放置区域 */}
+        <OperationArea items={operationItems} />
         
         {/* 使用网格布局显示卡片列表 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
