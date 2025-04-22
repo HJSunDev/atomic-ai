@@ -82,27 +82,66 @@ function GridItemContent({ item }: { item: GridItem }) {
   );
 }
 
-// 修改 DraggableGridItem 复用内容组件
-function DraggableGridItem({ item }: { item: GridItem }) {
-  // 使用useDraggable钩子使元素可拖拽
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+/**
+ * 可拖拽的网格卡片组件
+ *
+ * 该组件既可以作为拖拽源（可被拖动），也可以作为放置目标（可被拖拽的卡片放入，成为子模块）。
+ * 通过 isOperationAreaItem 控制是否启用 droppable 能力（仅操作区的卡片需要）。
+ *
+ * @param item - 当前渲染的网格项数据
+ * @param isOperationAreaItem - 是否为操作区的卡片，决定是否可作为放置目标
+ */
+function DraggableGridItem({ item, isOperationAreaItem = false }: { item: GridItem, isOperationAreaItem?: boolean }) {
+  // 1. 使当前卡片可拖拽，获取拖拽相关属性和方法
+  const { attributes, listeners, setNodeRef: setDragNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
   });
 
-  // 计算CSS变换样式
+  // 2. 仅操作区的卡片才需要 droppable 能力（可作为子模块放置目标）
+  //    setDropNodeRef 用于设置 droppable 区域的 ref
+  //    isOver 表示当前是否有拖拽项悬停在该卡片上
+  let setDropNodeRef: ((node: HTMLElement | null) => void) | undefined = undefined;
+  let isOver = false;
+  if (isOperationAreaItem) {
+    // 使该卡片成为 droppable 区域，id 唯一标识
+    const drop = useDroppable({ id: `operation-item-${item.id}` });
+    setDropNodeRef = drop.setNodeRef;
+    isOver = drop.isOver;
+  }
+
+  // 3. 计算拖拽过程中的样式
+  //    - 拖拽时应用 transform
+  //    - 被悬停时高亮边框
+  //    - 拖动中提升 zIndex
   const style = {
     transform: CSS.Translate.toString(transform),
+    boxShadow: isOver ? '0 0 0 3px #3b82f6' : undefined,
+    zIndex: isDragging ? 50 : undefined,
   };
+
+  // 4. 组合 ref：既要支持拖拽（draggable），又要支持放置（droppable）
+  //    需要将 setDragNodeRef 和 setDropNodeRef 同时作用于同一个 DOM 节点
+  function composedRef(node: any) {
+    setDragNodeRef(node);
+    if (setDropNodeRef) setDropNodeRef(node);
+  }
 
   return (
     <div
-      ref={setNodeRef}
+      ref={composedRef}
       style={style}
-      {...listeners}
-      {...attributes}
-      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col`}
+      {...listeners} // 绑定拖拽事件监听器
+      {...attributes} // 绑定拖拽相关属性
+      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative ${isOver ? 'ring-2 ring-blue-400' : ''}`}
     >
+      {/* 渲染卡片内容 */}
       <GridItemContent item={item} />
+      {/* 拖拽经过时的提示遮罩，仅在悬停时显示 */}
+      {isOver && (
+        <div className="absolute inset-0 bg-blue-100/40 flex items-center justify-center text-blue-600 text-sm font-bold pointer-events-none rounded-lg z-10">
+          松开以添加为子模块
+        </div>
+      )}
     </div>
   );
 }
@@ -146,7 +185,7 @@ function OperationArea({ items, onClear }: { items: GridItem[], onClear: () => v
       {items.length > 0 ? (
         <div className="flex flex-wrap gap-4">
           {items.map(item => (
-            <DraggableGridItem key={item.id} item={item} />
+            <DraggableGridItem key={item.id} item={item} isOperationAreaItem={true} />
           ))}
         </div>
       ) : (
