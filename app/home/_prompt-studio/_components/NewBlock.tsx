@@ -32,15 +32,57 @@ import { CSS } from '@dnd-kit/utilities';
 // 引入 uuid 用于生成唯一 id
 import { v4 as uuidv4 } from 'uuid';
 
-// 定义网格项的数据类型
+// 定义网格项的数据类型，支持最多两级结构
 interface GridItem {
   id: string;
   title: string;
   content: string;
   color: string;
+  children: GridItem[];
 }
 
-// 创建可拖拽的网格项组件
+// 抽取卡片内容组件，便于复用
+function GridItemContent({ item }: { item: GridItem }) {
+  return (
+    <>
+      <h3 className="text-lg font-bold mb-2">{item.title}</h3>
+      <p className="text-sm">{item.content}</p>
+      {/* 子模块预留区域，竖向排列，显示子模块列表 */}
+      <div
+        className="mt-4 flex flex-col items-stretch justify-start min-h-[48px] border-2 border-dashed border-gray-300 bg-gray-50 rounded px-2 py-2"
+      >
+        {/* 如果有子模块则渲染子模块列表，否则只显示占位 */}
+        {item.children && item.children.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {item.children.map(child => (
+              <div
+                key={child.id}
+                className="relative flex items-center justify-between bg-white border border-gray-200 rounded pl-4 pr-2 py-2 shadow-sm text-sm"
+              >
+                {/* 左侧竖线，突出层级关系 */}
+                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-200 rounded-l" style={{height: '100%'}}></div>
+                <div className="">
+                  <span className="font-medium text-gray-700">{child.title}</span>
+                  <span className="ml-2 text-gray-400">{child.content}</span>
+                </div>
+                {/* 右上角预留操作按钮空间 */}
+                <div className="ml-2 h-6 flex items-center justify-center opacity-30 bg-red-100">
+                  {/* 预留操作按钮，如编辑/删除等 */}
+                  <span className="material-icons text-base">more_vert</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          // 没有子模块时只显示占位
+          <div className="flex items-center justify-center h-10 text-gray-300 text-xs">暂无子模块</div>
+        )}
+      </div>
+    </>
+  );
+}
+
+// 修改 DraggableGridItem 复用内容组件
 function DraggableGridItem({ item }: { item: GridItem }) {
   // 使用useDraggable钩子使元素可拖拽
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
@@ -58,22 +100,20 @@ function DraggableGridItem({ item }: { item: GridItem }) {
       style={style}
       {...listeners}
       {...attributes}
-      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg`}
+      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col`}
     >
-      <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-      <p className="text-sm">{item.content}</p>
+      <GridItemContent item={item} />
     </div>
   );
 }
 
-// 创建用于拖拽时显示的覆盖层元素
+// 修改 DragOverlayItem 复用内容组件，外层加高亮和缩放
 function DragOverlayItem({ item }: { item: GridItem | null }) {
   if (!item) return null;
-  
   return (
-    <div className={`${item.color} p-4 rounded-lg shadow-xl scale-110 opacity-95 border-2 border-blue-500 cursor-grabbing`}>
-      <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-      <p className="text-sm">{item.content}</p>
+    <div className={`${item.color} p-4 rounded-lg shadow-xl scale-110 opacity-95 border-2 border-blue-500 cursor-grabbing flex flex-col`}
+    >
+      <GridItemContent item={item} />
     </div>
   );
 }
@@ -122,43 +162,64 @@ export function NewBlock() {
   // 添加客户端渲染状态
   const [isMounted, setIsMounted] = useState(false);
   
-  // 模拟数据 - 网格项列表
+  // 模拟数据 - 网格项列表，支持两级结构
   const [items] = useState<GridItem[]>([
-    { 
-      id: '1', 
-      title: '文本生成', 
-      content: '生成各种类型的创意文本', 
-      color: 'bg-blue-100' 
+    {
+      id: '1',
+      title: '文本生成',
+      content: '生成各种类型的创意文本',
+      color: 'bg-blue-100',
+      children: [
+        {
+          id: '1-1',
+          title: '短文本生成',
+          content: '快速生成短句',
+          color: 'bg-blue-50',
+          children: [], 
+        },
+        {
+          id: '1-2',
+          title: '长文本生成',
+          content: '生成长篇文章',
+          color: 'bg-blue-50',
+          children: [],
+        },
+      ],
     },
-    { 
-      id: '2', 
-      title: '图像描述', 
-      content: '从图像中提取文本描述', 
-      color: 'bg-green-100' 
+    {
+      id: '2',
+      title: '图像描述',
+      content: '从图像中提取文本描述',
+      color: 'bg-green-100',
+      children: [],
     },
-    { 
-      id: '3', 
-      title: '代码助手', 
-      content: '帮助编写和调试代码', 
-      color: 'bg-yellow-100' 
+    {
+      id: '3',
+      title: '代码助手',
+      content: '帮助编写和调试代码',
+      color: 'bg-yellow-100',
+      children: [], 
     },
-    { 
-      id: '4', 
-      title: '翻译工具', 
-      content: '在不同语言之间进行翻译', 
-      color: 'bg-purple-100' 
+    {
+      id: '4',
+      title: '翻译工具',
+      content: '在不同语言之间进行翻译',
+      color: 'bg-purple-100',
+      children: [],
     },
-    { 
-      id: '5', 
-      title: '摘要生成', 
-      content: '从长文本中提取关键信息', 
-      color: 'bg-pink-100' 
+    {
+      id: '5',
+      title: '摘要生成',
+      content: '从长文本中提取关键信息',
+      color: 'bg-pink-100',
+      children: [],
     },
-    { 
-      id: '6', 
-      title: '问答系统', 
-      content: '回答用户提出的各种问题', 
-      color: 'bg-orange-100' 
+    {
+      id: '6',
+      title: '问答系统',
+      content: '回答用户提出的各种问题',
+      color: 'bg-orange-100',
+      children: [],
     },
   ]);
 
