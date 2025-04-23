@@ -42,14 +42,26 @@ interface GridItem {
 }
 
 // 可拖拽的子模块组件（仅用于操作区）
-function DraggableChildItem({ child, parentId }: { child: GridItem, parentId: string }) {
+function DraggableChildItem({ child, parentId, index }: { child: GridItem, parentId: string, index: number }) {
   // 生成唯一id，格式为 child-父id-子id
   const dragId = `child-${parentId}-${child.id}`;
   // 使子模块可拖拽
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
     id: dragId,
-    data: { type: 'child', parentId, child },
+    data: { type: 'child', parentId, child, index },
   });
+  
+  // 创建可放置区域，用于子模块间排序
+  const { setNodeRef: setDropRef, isOver } = useDroppable({
+    id: `child-drop-${parentId}-${child.id}`,
+    data: {
+      type: 'child-drop',
+      parentId,
+      childId: child.id,
+      index
+    }
+  });
+  
   // 拖拽样式
   const style = {
     transform: CSS.Translate.toString(transform),
@@ -57,14 +69,25 @@ function DraggableChildItem({ child, parentId }: { child: GridItem, parentId: st
     zIndex: isDragging ? 50 : undefined,
     transition: isDragging ? 'none' : 'transform 0.2s',
   };
+  
+  // 组合 ref
+  const composedRef = (node: any) => {
+    setNodeRef(node);
+    setDropRef(node);
+  };
+  
   return (
     <div
-      ref={setNodeRef}
+      ref={composedRef}
       {...listeners}
       {...attributes}
       style={style}
-      className="relative flex items-center justify-between bg-white border border-gray-200 rounded pl-4 pr-2 py-2 shadow-sm text-sm cursor-grab hover:shadow-md transition"
+      className={`relative flex items-center justify-between bg-white border border-gray-200 rounded pl-4 pr-2 py-2 shadow-sm text-sm cursor-grab hover:shadow-md transition ${isOver && !isDragging ? 'ring-2 ring-blue-400' : ''}`}
     >
+      {/* 拖拽悬停时的指示器 */}
+      {isOver && !isDragging && (
+        <div className="absolute inset-x-0 -top-3 h-1.5 bg-blue-500 rounded-full z-10"></div>
+      )}
       {/* 左侧竖线，突出层级关系 */}
       <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-200 rounded-l" style={{height: '100%'}}></div>
       <div>
@@ -230,21 +253,70 @@ function insertChildModule(
   });
 }
 
+// 在同一父模块内重新排序子模块的辅助函数
+function reorderChildModules(
+  items: GridItem[],
+  parentId: string,
+  childId: string,
+  newIndex: number
+): GridItem[] {
+  return items.map(item => {
+    if (item.id === parentId) {
+      // 找到目标父模块
+      const currentChildren = [...item.children];
+      // 找到要移动的子模块
+      const childIndex = currentChildren.findIndex(child => child.id === childId);
+      
+      if (childIndex !== -1) {
+        // 删除原位置的子模块
+        const [movedChild] = currentChildren.splice(childIndex, 1);
+        // 插入到新位置
+        currentChildren.splice(newIndex, 0, movedChild);
+        
+        // 返回更新后的父模块
+        return {
+          ...item,
+          children: currentChildren,
+        };
+      }
+    }
+    return item;
+  });
+}
+
 function GridItemContent({ item, isOperationAreaItem = false, parentId }: { item: GridItem, isOperationAreaItem?: boolean, parentId?: string }) {
+  // 创建子模块区域的 droppable 区域
+  // 仅在操作区的模块中启用子模块排序功能
+  let setChildAreaRef: ((node: HTMLElement | null) => void) | undefined = undefined;
+  let isChildAreaOver = false;
+  
+  if (isOperationAreaItem) {
+    const { setNodeRef, isOver } = useDroppable({
+      id: `child-area-${item.id}`,
+      data: {
+        type: 'child-area',
+        parentId: item.id
+      }
+    });
+    setChildAreaRef = setNodeRef;
+    isChildAreaOver = isOver;
+  }
+
   return (
     <>
       <h3 className="text-lg font-bold mb-2">{item.title}</h3>
       <p className="text-sm">{item.content}</p>
       {/* 子模块区域 */}
       <div
-        className="mt-4 flex flex-col items-stretch justify-start min-h-[48px] border-2 border-dashed border-gray-300 bg-gray-50 rounded px-2 py-2"
+        ref={setChildAreaRef}
+        className={`mt-4 flex flex-col items-stretch justify-start min-h-[48px] border-2 border-dashed ${isChildAreaOver ? 'border-blue-400 bg-blue-50' : 'border-gray-300 bg-gray-50'} rounded px-2 py-2`}
       >
         {/* 操作区下的子模块渲染为可拖拽，否则保持原样 */}
         {item.children && item.children.length > 0 ? (
           <div className="flex flex-col gap-2">
-            {item.children.map(child => (
+            {item.children.map((child, index) => (
               isOperationAreaItem
-                ? <DraggableChildItem key={child.id} child={child} parentId={item.id} />
+                ? <DraggableChildItem key={child.id} child={child} parentId={item.id} index={index} />
                 : (
                   <div
                     key={child.id}
@@ -387,9 +459,21 @@ export function NewBlock() {
     // over 表示拖拽释放时鼠标悬停的目标区域信息（可能为 null，表示未悬停在任何 droppable 区域）
     // active 表示当前被拖拽的元素信息（即拖拽源）
     const { over, active } = event;
-
+    
+    // 处理子模块排序
+    if (active.id.toString().startsWith('child-') && over && over.id.toString().startsWith('child-drop-')) {
+      const activeData = active.data.current as { type: string; parentId: string; child: GridItem; index: number };
+      const overData = over.data.current as { type: string; parentId: string; childId: string; index: number };
+      
+      // 确保是同一个父模块内的排序
+      if (activeData.parentId === overData.parentId && activeData.child.id !== overData.childId) {
+        setOperationItems(prevItems => 
+          reorderChildModules(prevItems, overData.parentId, activeData.child.id, overData.index)
+        );
+      }
+    }
     // 如果拖拽释放目标为操作区的模块，则将模块插入到目标模块的children中
-    if (over && typeof over.id === 'string' && over.id.startsWith('operation-item-')) {
+    else if (over && typeof over.id === 'string' && over.id.startsWith('operation-item-')) {
       // 获取目标模块id
       const targetId = over.id.replace('operation-item-', '');
       // 判断拖拽源是网格区还是操作区
