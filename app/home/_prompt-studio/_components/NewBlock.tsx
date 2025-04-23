@@ -203,6 +203,27 @@ function OperationArea({ items, onClear }: { items: GridItem[], onClear: () => v
   );
 }
 
+// 插入子模块的辅助函数（仅支持两级结构）
+function insertChildModule(
+  items: GridItem[],
+  parentId: string,
+  child: GridItem
+): GridItem[] {
+  // 只在顶层查找目标父模块
+  return items.map(item => {
+    if (item.id === parentId) {
+      // 找到目标父模块，插入子模块到children末尾
+      return {
+        ...item,
+        children: [...item.children, child],
+      };
+    } else {
+      // 其他模块保持不变
+      return item;
+    }
+  });
+}
+
 export function NewBlock() {
   // 添加客户端渲染状态
   const [isMounted, setIsMounted] = useState(false);
@@ -315,11 +336,29 @@ export function NewBlock() {
   
   // 处理拖拽结束事件
   const handleDragEnd = (event: DragEndEvent) => {
+    // over 表示拖拽释放时鼠标悬停的目标区域信息（可能为 null，表示未悬停在任何 droppable 区域）
+    // active 表示当前被拖拽的元素信息（即拖拽源）
     const { over, active } = event;
-    
-    // 只有当鼠标真正进入过操作区并且释放时指针在操作区上方时才添加卡片
-    if (enteredOperationArea) {
-      // 查找被拖拽的项目（只允许从网格区拖拽副本到操作区）
+
+    // 如果拖拽释放目标为操作区的模块，则将模块插入到目标模块的children中
+    if (over && typeof over.id === 'string' && over.id.startsWith('operation-item-')) {
+      // 获取目标模块id
+      const targetId = over.id.replace('operation-item-', '');
+      // 判断拖拽源是网格区还是操作区
+      const draggedFromGrid = items.find(item => item.id === active.id);
+      const draggedFromOperation = operationItems.find(item => item.id === active.id);
+      if (draggedFromGrid) {
+        // 拖拽源来自网格区：生成副本，id用uuid，插入到目标模块children
+        const copy = { ...draggedFromGrid, id: uuidv4() };
+        setOperationItems(prevItems => insertChildModule(prevItems, targetId, copy));
+      } else if (draggedFromOperation && draggedFromOperation.id !== targetId) {
+        // 拖拽源来自操作区，且不是自己拖到自己：先移除，再插入
+        let newItems = operationItems.filter(item => item.id !== draggedFromOperation.id);
+        newItems = insertChildModule(newItems, targetId, draggedFromOperation);
+        setOperationItems(newItems);
+      }
+    } else if (enteredOperationArea) {
+      // 原有逻辑：从网格区拖拽副本到操作区
       const draggedItem = items.find(item => item.id === active.id);
       // 如果找到被拖拽的项目
       if (draggedItem) {
