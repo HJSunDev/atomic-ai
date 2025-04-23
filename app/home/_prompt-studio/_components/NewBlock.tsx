@@ -93,6 +93,7 @@ function GridItemContent({ item }: { item: GridItem }) {
  */
 function DraggableGridItem({ item, isOperationAreaItem = false }: { item: GridItem, isOperationAreaItem?: boolean }) {
   // 1. 使当前卡片可拖拽，获取拖拽相关属性和方法
+  //    isDragging 表示当前是否正在拖拽
   const { attributes, listeners, setNodeRef: setDragNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
   });
@@ -111,11 +112,10 @@ function DraggableGridItem({ item, isOperationAreaItem = false }: { item: GridIt
 
   // 3. 计算拖拽过程中的样式
   //    - 拖拽时应用 transform
-  //    - 被悬停时高亮边框
-  //    - 拖动中提升 zIndex
+  //    - 被悬停时高亮边框，且排除正在拖动的项目本身
   const style = {
     transform: CSS.Translate.toString(transform),
-    boxShadow: isOver ? '0 0 0 3px #3b82f6' : undefined,
+    boxShadow: isOver && !isDragging ? '0 0 0 3px #3b82f6' : undefined,
     zIndex: isDragging ? 50 : undefined,
   };
 
@@ -132,12 +132,12 @@ function DraggableGridItem({ item, isOperationAreaItem = false }: { item: GridIt
       style={style}
       {...listeners} // 绑定拖拽事件监听器
       {...attributes} // 绑定拖拽相关属性
-      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative ${isOver ? 'ring-2 ring-blue-400' : ''}`}
+      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative ${isOver && !isDragging ? 'ring-2 ring-blue-400' : ''}`}
     >
       {/* 渲染卡片内容 */}
       <GridItemContent item={item} />
-      {/* 拖拽经过时的提示遮罩，仅在悬停时显示 */}
-      {isOver && (
+      {/* 拖拽经过时的提示遮罩，仅在悬停时显示，且排除正在拖动的项目本身 */}
+      {isOver && !isDragging && (
         <div className="absolute inset-0 bg-blue-100/40 flex items-center justify-center text-blue-600 text-sm font-bold pointer-events-none rounded-lg z-10">
           松开以添加为子模块
         </div>
