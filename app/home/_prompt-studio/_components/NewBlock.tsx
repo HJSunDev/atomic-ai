@@ -100,19 +100,28 @@ function DraggableGridItem({ item, isOperationAreaItem = false }: { item: GridIt
   //    isOver 表示当前是否有拖拽项悬停在该卡片上
   let setDropNodeRef: ((node: HTMLElement | null) => void) | undefined = undefined;
   let isOver = false;
+  let activeDragInfo: any = undefined;
+  
   if (isOperationAreaItem) {
     // 使该卡片成为 droppable 区域，id 唯一标识
     const drop = useDroppable({ id: `operation-item-${item.id}` });
     setDropNodeRef = drop.setNodeRef;
     isOver = drop.isOver;
+    // 获取当前拖拽的元素信息
+    activeDragInfo = drop.active?.data?.current;
   }
+
+  // 检查当前拖拽的是否为该卡片自己的子模块
+  const isDraggingOwnChild = activeDragInfo && 
+    activeDragInfo.type === 'child' && 
+    activeDragInfo.parentId === item.id;
 
   // 3. 计算拖拽过程中的样式
   //    - 拖拽时应用 transform
-  //    - 被悬停时高亮边框，且排除正在拖动的项目本身
+  //    - 被悬停时高亮边框，且排除正在拖动的项目本身和自己的子模块
   const style = {
     transform: CSS.Translate.toString(transform),
-    boxShadow: isOver && !isDragging ? '0 0 0 3px #3b82f6' : undefined,
+    boxShadow: isOver && !isDragging && !isDraggingOwnChild ? '0 0 0 3px #3b82f6' : undefined,
     zIndex: isDragging ? 50 : undefined,
   };
 
@@ -129,12 +138,12 @@ function DraggableGridItem({ item, isOperationAreaItem = false }: { item: GridIt
       style={style}
       {...listeners} // 绑定拖拽事件监听器
       {...attributes} // 绑定拖拽相关属性
-      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative ${isOver && !isDragging ? 'ring-2 ring-blue-400' : ''}`}
+      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative ${isOver && !isDragging && !isDraggingOwnChild ? 'ring-2 ring-blue-400' : ''}`}
     >
       {/* 渲染卡片内容，传递 isOperationAreaItem */}
       <GridItemContent item={item} isOperationAreaItem={isOperationAreaItem} />
-      {/* 拖拽经过时的提示遮罩，仅在悬停时显示，且排除正在拖动的项目本身 */}
-      {isOver && !isDragging && (
+      {/* 拖拽经过时的提示遮罩，仅在悬停时显示，且排除正在拖动的项目本身和自己的子模块 */}
+      {isOver && !isDragging && !isDraggingOwnChild && (
         <div className="absolute inset-0 bg-blue-100/40 flex items-center justify-center text-blue-600 text-sm font-bold pointer-events-none rounded-lg z-10">
           松开以添加为子模块
         </div>
