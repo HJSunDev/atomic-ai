@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 // 拖拽排序核心功能导入
 import {
   // 拖拽上下文容器，提供拖拽功能的核心环境
@@ -94,9 +94,26 @@ function DraggableChildItem({ child, parentId, index }: { child: GridItem, paren
         <span className="font-medium text-gray-700">{child.title}</span>
         <span className="ml-2 text-gray-400">{child.content}</span>
       </div>
-      {/* 右上角预留操作按钮空间 */}
-      <div className="ml-2 h-6 flex items-center justify-center opacity-30 bg-red-100">
-        <span className="material-icons text-base">more_vert</span>
+      {/* 右侧操作按钮区域 */}
+      <div className="ml-2 flex items-center">
+        {/* 提升为顶层模块按钮 */}
+        <button
+          className="h-6 w-6 flex items-center justify-center text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
+          onClick={(e) => {
+            // 阻止事件冒泡，避免触发拖拽
+            e.stopPropagation();
+            // 将该事件暴露到 NewBlock 组件
+            window.dispatchEvent(new CustomEvent('promote-to-top', { 
+              detail: { parentId, childId: child.id }
+            }));
+          }}
+          title="提升为顶层模块"
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M5 12h14"></path>
+            <path d="M12 5v14"></path>
+          </svg>
+        </button>
       </div>
     </div>
   );
@@ -428,6 +445,52 @@ export function NewBlock() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // 使用useCallback记忆处理函数，没有依赖项
+  const handlePromoteToTop = useCallback((event: Event) => {
+    const { parentId, childId } = (event as CustomEvent).detail;
+    
+    // 使用函数式更新，确保总是基于最新的状态
+    setOperationItems(prevItems => {
+      // 查找要提升的子模块和其父模块
+      const parentModule = prevItems.find(item => item.id === parentId);
+      if (!parentModule) return prevItems; // 未找到则返回原状态
+      
+      const childModule = parentModule.children.find(child => child.id === childId);
+      if (!childModule) return prevItems; // 未找到则返回原状态
+      
+      // 从父模块中移除子模块
+      const updatedItems = prevItems.map(item => {
+        if (item.id === parentId) {
+          return {
+            ...item,
+            children: item.children.filter(child => child.id !== childId)
+          };
+        }
+        return item;
+      });
+      
+      // 为子模块创建一个新的顶层模块
+      const newTopModule: GridItem = {
+        ...childModule,
+        id: uuidv4() // 生成新ID避免冲突
+      };
+      
+      // 将新的顶层模块添加到操作区
+      return [...updatedItems, newTopModule];
+    });
+  }, []); // 空依赖数组，确保函数只创建一次
+
+  // 仅在组件挂载和卸载时设置/清除事件监听
+  useEffect(() => {
+    // 注册自定义事件监听
+    window.addEventListener('promote-to-top', handlePromoteToTop);
+    
+    // 清理函数
+    return () => {
+      window.removeEventListener('promote-to-top', handlePromoteToTop);
+    };
+  }, []); // 空依赖数组，确保效果只运行一次
 
   // 配置拖拽传感器
   // 使用useSensors组合多个传感器配置
