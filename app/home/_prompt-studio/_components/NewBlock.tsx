@@ -41,44 +41,41 @@ interface GridItem {
   children: GridItem[];
 }
 
-// 抽取卡片内容组件，便于复用
-function GridItemContent({ item }: { item: GridItem }) {
+// 可拖拽的子模块组件（仅用于操作区）
+function DraggableChildItem({ child, parentId }: { child: GridItem, parentId: string }) {
+  // 生成唯一id，格式为 child-父id-子id
+  const dragId = `child-${parentId}-${child.id}`;
+  // 使子模块可拖拽
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: dragId,
+    data: { type: 'child', parentId, child },
+  });
+  // 拖拽样式
+  const style = {
+    transform: CSS.Translate.toString(transform),
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 50 : undefined,
+    transition: isDragging ? 'none' : 'transform 0.2s',
+  };
   return (
-    <>
-      <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-      <p className="text-sm">{item.content}</p>
-      {/* 子模块预留区域，竖向排列，显示子模块列表 */}
-      <div
-        className="mt-4 flex flex-col items-stretch justify-start min-h-[48px] border-2 border-dashed border-gray-300 bg-gray-50 rounded px-2 py-2"
-      >
-        {/* 如果有子模块则渲染子模块列表，否则只显示占位 */}
-        {item.children && item.children.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {item.children.map(child => (
-              <div
-                key={child.id}
-                className="relative flex items-center justify-between bg-white border border-gray-200 rounded pl-4 pr-2 py-2 shadow-sm text-sm"
-              >
-                {/* 左侧竖线，突出层级关系 */}
-                <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-200 rounded-l" style={{height: '100%'}}></div>
-                <div className="">
-                  <span className="font-medium text-gray-700">{child.title}</span>
-                  <span className="ml-2 text-gray-400">{child.content}</span>
-                </div>
-                {/* 右上角预留操作按钮空间 */}
-                <div className="ml-2 h-6 flex items-center justify-center opacity-30 bg-red-100">
-                  {/* 预留操作按钮，如编辑/删除等 */}
-                  <span className="material-icons text-base">more_vert</span>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          // 没有子模块时只显示占位
-          <div className="flex items-center justify-center h-10 text-gray-300 text-xs">暂无子模块</div>
-        )}
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={style}
+      className="relative flex items-center justify-between bg-white border border-gray-200 rounded pl-4 pr-2 py-2 shadow-sm text-sm cursor-grab hover:shadow-md transition"
+    >
+      {/* 左侧竖线，突出层级关系 */}
+      <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-200 rounded-l" style={{height: '100%'}}></div>
+      <div>
+        <span className="font-medium text-gray-700">{child.title}</span>
+        <span className="ml-2 text-gray-400">{child.content}</span>
       </div>
-    </>
+      {/* 右上角预留操作按钮空间 */}
+      <div className="ml-2 h-6 flex items-center justify-center opacity-30 bg-red-100">
+        <span className="material-icons text-base">more_vert</span>
+      </div>
+    </div>
   );
 }
 
@@ -134,8 +131,8 @@ function DraggableGridItem({ item, isOperationAreaItem = false }: { item: GridIt
       {...attributes} // 绑定拖拽相关属性
       className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative ${isOver && !isDragging ? 'ring-2 ring-blue-400' : ''}`}
     >
-      {/* 渲染卡片内容 */}
-      <GridItemContent item={item} />
+      {/* 渲染卡片内容，传递 isOperationAreaItem */}
+      <GridItemContent item={item} isOperationAreaItem={isOperationAreaItem} />
       {/* 拖拽经过时的提示遮罩，仅在悬停时显示，且排除正在拖动的项目本身 */}
       {isOver && !isDragging && (
         <div className="absolute inset-0 bg-blue-100/40 flex items-center justify-center text-blue-600 text-sm font-bold pointer-events-none rounded-lg z-10">
@@ -222,6 +219,48 @@ function insertChildModule(
       return item;
     }
   });
+}
+
+function GridItemContent({ item, isOperationAreaItem = false, parentId }: { item: GridItem, isOperationAreaItem?: boolean, parentId?: string }) {
+  return (
+    <>
+      <h3 className="text-lg font-bold mb-2">{item.title}</h3>
+      <p className="text-sm">{item.content}</p>
+      {/* 子模块区域 */}
+      <div
+        className="mt-4 flex flex-col items-stretch justify-start min-h-[48px] border-2 border-dashed border-gray-300 bg-gray-50 rounded px-2 py-2"
+      >
+        {/* 操作区下的子模块渲染为可拖拽，否则保持原样 */}
+        {item.children && item.children.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {item.children.map(child => (
+              isOperationAreaItem
+                ? <DraggableChildItem key={child.id} child={child} parentId={item.id} />
+                : (
+                  <div
+                    key={child.id}
+                    className="relative flex items-center justify-between bg-white border border-gray-200 rounded pl-4 pr-2 py-2 shadow-sm text-sm"
+                  >
+                    {/* 左侧竖线，突出层级关系 */}
+                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-200 rounded-l" style={{height: '100%'}}></div>
+                    <div>
+                      <span className="font-medium text-gray-700">{child.title}</span>
+                      <span className="ml-2 text-gray-400">{child.content}</span>
+                    </div>
+                    {/* 右上角预留操作按钮空间 */}
+                    <div className="ml-2 h-6 flex items-center justify-center opacity-30 bg-red-100">
+                      <span className="material-icons text-base">more_vert</span>
+                    </div>
+                  </div>
+                )
+            ))}
+          </div>
+        ) : (
+          <div className="flex items-center justify-center h-10 text-gray-300 text-xs">暂无子模块</div>
+        )}
+      </div>
+    </>
+  );
 }
 
 export function NewBlock() {
