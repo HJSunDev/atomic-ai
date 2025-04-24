@@ -109,9 +109,10 @@ function DraggableChildItem({ child, parentId, index }: { child: GridItem, paren
           }}
           title="提升为顶层模块"
         >
+          {/* 使用 arrow-up-right 图标 */}
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M5 12h14"></path>
-            <path d="M12 5v14"></path>
+            <line x1="7" y1="17" x2="17" y2="7"></line>
+            <polyline points="7 7 17 7 17 17"></polyline>
           </svg>
         </button>
       </div>
@@ -128,7 +129,7 @@ function DraggableChildItem({ child, parentId, index }: { child: GridItem, paren
  * @param item - 当前渲染的网格项数据
  * @param isOperationAreaItem - 是否为操作区的卡片，决定是否可作为放置目标
  */
-function DraggableGridItem({ item, isOperationAreaItem = false }: { item: GridItem, isOperationAreaItem?: boolean }) {
+function DraggableGridItem({ item, isOperationAreaItem = false, onDelete }: { item: GridItem, isOperationAreaItem?: boolean, onDelete?: (id: string) => void }) {
   // 1. 使当前卡片可拖拽，获取拖拽相关属性和方法
   //    isDragging 表示当前是否正在拖拽
   const { attributes, listeners, setNodeRef: setDragNodeRef, transform, isDragging } = useDraggable({
@@ -180,6 +181,22 @@ function DraggableGridItem({ item, isOperationAreaItem = false }: { item: GridIt
       {...attributes} // 绑定拖拽相关属性
       className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative ${isOver && !isDragging && !isDraggingOwnChild ? 'ring-2 ring-blue-400' : ''}`}
     >
+      {/* 右上角删除按钮，仅操作区顶层模块显示 */}
+      {isOperationAreaItem && onDelete && (
+        <button
+          className="absolute top-2 right-2 h-7 w-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors z-20"
+          title="删除此模块"
+          onClick={e => {
+            e.stopPropagation();
+            onDelete(item.id);
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
+      )}
       {/* 渲染卡片内容，传递 isOperationAreaItem */}
       <GridItemContent item={item} isOperationAreaItem={isOperationAreaItem} />
       {/* 拖拽经过时的提示遮罩，仅在悬停时显示，且排除正在拖动的项目本身和自己的子模块 */}
@@ -210,7 +227,7 @@ function DragOverlayItem({ item }: { item: GridItem | null }) {
 }
 
 // 创建操作区组件，可以作为放置目标
-function OperationArea({ items, onClear }: { items: GridItem[], onClear: () => void }) {
+function OperationArea({ items, onClear, onDelete }: { items: GridItem[], onClear: () => void, onDelete: (id: string) => void }) {
   // 使用useDroppable钩子使元素成为放置目标
   const { setNodeRef, isOver } = useDroppable({
     id: 'operation-area',
@@ -237,7 +254,7 @@ function OperationArea({ items, onClear }: { items: GridItem[], onClear: () => v
       {items.length > 0 ? (
         <div className="flex flex-wrap gap-4">
           {items.map(item => (
-            <DraggableGridItem key={item.id} item={item} isOperationAreaItem={true} />
+            <DraggableGridItem key={item.id} item={item} isOperationAreaItem={true} onDelete={onDelete} />
           ))}
         </div>
       ) : (
@@ -580,6 +597,11 @@ export function NewBlock() {
     }
   };
 
+  // 删除操作区顶层模块
+  const handleDeleteOperationItem = useCallback((id: string) => {
+    setOperationItems(prev => prev.filter(item => item.id !== id));
+  }, []);
+
   // 服务端渲染时返回一个占位符
   if (!isMounted) {
     return (
@@ -618,8 +640,8 @@ export function NewBlock() {
         <h2 className="text-2xl font-bold mb-8">功能卡片</h2>
         <p className="mb-6 text-gray-600">将下方卡片拖动到上方操作区</p>
         
-        {/* 操作区 - 可放置区域，传递清空方法 */}
-        <OperationArea items={operationItems} onClear={() => setOperationItems([])} />
+        {/* 操作区 - 可放置区域，传递清空方法和删除方法 */}
+        <OperationArea items={operationItems} onClear={() => setOperationItems([])} onDelete={handleDeleteOperationItem} />
         
         {/* 使用网格布局显示卡片列表 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
