@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 // 拖拽排序核心功能导入
 import {
   // 拖拽上下文容器，提供拖拽功能的核心环境
@@ -461,10 +461,39 @@ export function NewBlock() {
   // 记录当前正在拖动的网格区模块ID（无拖动时为null）
   const [gridDraggingId, setGridDraggingId] = useState<string | null>(null);
   
+  // 控制操作区显示/隐藏
+  const [showOperationArea, setShowOperationArea] = useState(false);
+  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+
   // 在客户端加载后再渲染组件
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // 监听 gridDraggingId 和 operationItems 控制操作区显示/隐藏
+  useEffect(() => {
+    // 只要有拖拽或有内容就显示
+    if (gridDraggingId || operationItems.length > 0) {
+      setShowOperationArea(true);
+      // 有内容或拖拽时清除隐藏定时器
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+    } else {
+      // 没有内容且没有拖拽，延迟隐藏
+      hideTimerRef.current = setTimeout(() => {
+        setShowOperationArea(false);
+      }, 800); // 800ms后隐藏
+    }
+    // 组件卸载时清理定时器
+    return () => {
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+    };
+  }, [gridDraggingId, operationItems.length]);
 
   // 使用useCallback记忆处理函数，没有依赖项
   const handlePromoteToTop = useCallback((event: Event) => {
@@ -647,14 +676,18 @@ export function NewBlock() {
       onDragOver={handleDragOver}
     >
       {/* 使用div包裹整个区域，作为全局放置区 */}
-      <main
-        className={`h-auto bg-gray-100 p-6 rounded-lg`}
-      >
+      <main className={`h-auto bg-gray-100 p-6 rounded-lg`}>
         <h2 className="text-2xl font-bold mb-8">功能卡片</h2>
         <p className="mb-6 text-gray-600">将下方卡片拖动到上方操作区</p>
         
-        {/* 操作区 - 可放置区域，传递清空方法和删除方法 */}
-        <OperationArea items={operationItems} onClear={() => setOperationItems([])} onDelete={handleDeleteOperationItem} />
+        {/* 操作区显示控制 */}
+        {showOperationArea && (
+          <OperationArea
+            items={operationItems}
+            onClear={() => setOperationItems([])}
+            onDelete={handleDeleteOperationItem}
+          />
+        )}
         
         {/* 使用网格布局显示卡片列表 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
