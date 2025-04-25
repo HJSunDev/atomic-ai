@@ -458,6 +458,9 @@ export function NewBlock() {
   // 跟踪鼠标是否真正进入了操作区
   const [enteredOperationArea, setEnteredOperationArea] = useState(false);
   
+  // 记录当前正在拖动的网格区模块ID（无拖动时为null）
+  const [gridDraggingId, setGridDraggingId] = useState<string | null>(null);
+  
   // 在客户端加载后再渲染组件
   useEffect(() => {
     setIsMounted(true);
@@ -532,8 +535,17 @@ export function NewBlock() {
     setActiveId(event.active.id as string);
     // 重置操作区进入状态
     setEnteredOperationArea(false);
+
+    // 判断是否为网格区模块
+    const isGridItem = items.some(item => item.id === event.active.id);
+    if (isGridItem) {
+      setGridDraggingId(event.active.id as string);
+    }
   };
   
+  // 拖拽结束/取消时重置
+  const resetGridDragging = () => setGridDraggingId(null);
+
   // 处理拖拽结束事件
   const handleDragEnd = (event: DragEndEvent) => {
     // over 表示拖拽释放时鼠标悬停的目标区域信息（可能为 null，表示未悬停在任何 droppable 区域）
@@ -582,6 +594,7 @@ export function NewBlock() {
     }
     // 清除当前被拖拽项
     setActiveId(null);
+    resetGridDragging();
   };
 
   // 处理拖拽经过事件
@@ -635,7 +648,7 @@ export function NewBlock() {
     >
       {/* 使用div包裹整个区域，作为全局放置区 */}
       <main
-        className={`h-auto min-h-[800px] mb-[20px] mt-[20px] bg-gray-100 p-6 rounded-lg`}
+        className={`h-auto bg-gray-100 p-6 rounded-lg`}
       >
         <h2 className="text-2xl font-bold mb-8">功能卡片</h2>
         <p className="mb-6 text-gray-600">将下方卡片拖动到上方操作区</p>

@@ -9,10 +9,10 @@ export const PromptStudioModule = () => {
   return (
     <div className="w-full h-full bg-muted/20 overflow-y-auto flex justify-center bg-red-100">
       <div className="max-w-[70rem] w-full bg-blue-100">
-        <AtomicBlock />
+        {/* <AtomicBlock /> */}
         <NewBlock />
-        <HopeBlock />
-        <TestBlock />
+        {/* <HopeBlock /> */}
+        {/* <TestBlock /> */}
 
       </div>
     </div>
