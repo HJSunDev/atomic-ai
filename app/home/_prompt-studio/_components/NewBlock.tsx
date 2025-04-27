@@ -692,7 +692,18 @@ export function NewBlock() {
         {/* 使用网格布局显示卡片列表 */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map(item => (
-            <DraggableGridItem key={item.id} item={item} />
+            // 拖拽时在原位置渲染半透明占位卡片
+            activeId === item.id ? (
+              <div
+                key={item.id}
+                className="p-4 rounded-lg border-2 border-dashed border-gray-300 bg-gray-200 opacity-40 flex flex-col justify-center items-center min-h-[120px] transition-all"
+                style={{ minHeight: '120px', minWidth: '100%' }}
+              >
+                {/* 占位卡片内容，可为空或加提示 */}
+              </div>
+            ) : (
+              <DraggableGridItem key={item.id} item={item} />
+            )
           ))}
         </div>
       </main>
