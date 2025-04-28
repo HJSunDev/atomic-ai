@@ -129,7 +129,7 @@ function DraggableChildItem({ child, parentId, index }: { child: GridItem, paren
  * @param item - 当前渲染的网格项数据
  * @param isOperationAreaItem - 是否为操作区的卡片，决定是否可作为放置目标
  */
-function DraggableGridItem({ item, isOperationAreaItem = false, onDelete }: { item: GridItem, isOperationAreaItem?: boolean, onDelete?: (id: string) => void }) {
+function DraggableGridItem({ item, isOperationAreaItem = false, onDelete, onSave }: { item: GridItem, isOperationAreaItem?: boolean, onDelete?: (id: string) => void, onSave?: (item: GridItem) => void }) {
   // 1. 使当前卡片可拖拽，获取拖拽相关属性和方法
   //    isDragging 表示当前是否正在拖拽
   const { attributes, listeners, setNodeRef: setDragNodeRef, transform, isDragging } = useDraggable({
@@ -179,23 +179,64 @@ function DraggableGridItem({ item, isOperationAreaItem = false, onDelete }: { it
       style={style}
       {...listeners} // 绑定拖拽事件监听器
       {...attributes} // 绑定拖拽相关属性
-      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative ${isOver && !isDragging && !isDraggingOwnChild ? 'ring-2 ring-blue-400' : ''}`}
+      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative group ${isOver && !isDragging && !isDraggingOwnChild ? 'ring-2 ring-blue-400' : ''}`}
     >
-      {/* 右上角删除按钮，仅操作区顶层模块显示 */}
-      {isOperationAreaItem && onDelete && (
-        <button
-          className="absolute top-2 right-2 h-7 w-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors z-20"
-          title="删除此模块"
-          onClick={e => {
-            e.stopPropagation();
-            onDelete(item.id);
-          }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <line x1="18" y1="6" x2="6" y2="18" />
-            <line x1="6" y1="6" x2="18" y2="18" />
-          </svg>
-        </button>
+      {/* 右上角操作按钮区域 */}
+      {isOperationAreaItem ? (
+        <div className="absolute top-2 right-2 flex gap-2 z-20">
+          {/* 保存按钮 */}
+          {onSave && (
+            <button
+              className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-green-500 hover:bg-green-100 rounded-full transition-colors cursor-pointer"
+              title="保存到网格列表"
+              onClick={e => {
+                e.stopPropagation();
+                onSave(item);
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                <polyline points="7 3 7 8 15 8"></polyline>
+              </svg>
+            </button>
+          )}
+          {/* 删除按钮 */}
+          {onDelete && (
+            <button
+              className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors cursor-pointer"
+              title="删除此模块"
+              onClick={e => {
+                e.stopPropagation();
+                onDelete(item.id);
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          )}
+        </div>
+      ) : (
+        // 网格列表区的删除按钮，仅在hover状态显示
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+          {onDelete && (
+            <button
+              className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors cursor-pointer"
+              title="从列表中删除"
+              onClick={e => {
+                e.stopPropagation();
+                onDelete(item.id);
+              }}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <line x1="18" y1="6" x2="6" y2="18"></line>
+                <line x1="6" y1="6" x2="18" y2="18"></line>
+              </svg>
+            </button>
+          )}
+        </div>
       )}
       {/* 渲染卡片内容，传递 isOperationAreaItem */}
       <GridItemContent item={item} isOperationAreaItem={isOperationAreaItem} />
@@ -227,7 +268,7 @@ function DragOverlayItem({ item }: { item: GridItem | null }) {
 }
 
 // 创建操作区组件，可以作为放置目标
-function OperationArea({ items, onClear, onDelete }: { items: GridItem[], onClear: () => void, onDelete: (id: string) => void }) {
+function OperationArea({ items, onClear, onDelete, onSave }: { items: GridItem[], onClear: () => void, onDelete: (id: string) => void, onSave: (item: GridItem) => void }) {
   // 使用useDroppable钩子使元素成为放置目标
   const { setNodeRef, isOver } = useDroppable({
     id: 'operation-area',
@@ -250,11 +291,11 @@ function OperationArea({ items, onClear, onDelete }: { items: GridItem[], onClea
       </div>
       <h2 className="text-xl font-bold mb-4">操作区</h2>
       <p className="text-gray-500 mb-4">{items.length > 0 ? '已添加的功能卡片:' : '将功能卡片拖放到此区域'}</p>
-      {/* 用 DraggableGridItem 渲染操作区的卡片，让它们也可以拖动 */}
+      {/* 可以拖动的提示词模块卡片 */}
       {items.length > 0 ? (
         <div className="flex flex-wrap gap-4">
           {items.map(item => (
-            <DraggableGridItem key={item.id} item={item} isOperationAreaItem={true} onDelete={onDelete} />
+            <DraggableGridItem key={item.id} item={item} isOperationAreaItem={true} onDelete={onDelete} onSave={onSave} />
           ))}
         </div>
       ) : (
@@ -383,7 +424,7 @@ export function NewBlock() {
   const [isMounted, setIsMounted] = useState(false);
   
   // 模拟数据 - 网格项列表，支持两级结构
-  const [items] = useState<GridItem[]>([
+  const [items, setItems] = useState<GridItem[]>([
     {
       id: '1',
       title: '文本生成',
@@ -495,7 +536,7 @@ export function NewBlock() {
     };
   }, [gridDraggingId, operationItems.length]);
 
-  // 使用useCallback记忆处理函数，没有依赖项
+  // 处理操作区模块-子模块提升到顶层
   const handlePromoteToTop = useCallback((event: Event) => {
     const { parentId, childId } = (event as CustomEvent).detail;
     
@@ -644,6 +685,19 @@ export function NewBlock() {
     setOperationItems(prev => prev.filter(item => item.id !== id));
   }, []);
 
+  // 修改handleSaveToGrid函数，保存后同时从操作区移除
+  const handleSaveToGrid = useCallback((item: GridItem) => {
+    // 保存到网格列表
+    setItems((prevItems: GridItem[]) => [...prevItems, { ...item, id: uuidv4() }]);
+    // 从操作区移除
+    setOperationItems(prevItems => prevItems.filter(i => i.id !== item.id));
+  }, []);
+
+  // 新增handleDeleteGridItem函数，从网格列表中删除模块
+  const handleDeleteGridItem = useCallback((id: string) => {
+    setItems(prevItems => prevItems.filter(item => item.id !== id));
+  }, []);
+
   // 服务端渲染时返回一个占位符
   if (!isMounted) {
     return (
@@ -686,6 +740,7 @@ export function NewBlock() {
             items={operationItems}
             onClear={() => setOperationItems([])}
             onDelete={handleDeleteOperationItem}
+            onSave={handleSaveToGrid}
           />
         )}
         
@@ -702,7 +757,7 @@ export function NewBlock() {
                 {/* 占位卡片内容，可为空或加提示 */}
               </div>
             ) : (
-              <DraggableGridItem key={item.id} item={item} />
+              <DraggableGridItem key={item.id} item={item} onDelete={handleDeleteGridItem} />
             )
           ))}
         </div>
