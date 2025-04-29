@@ -31,6 +31,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 // 引入 uuid 用于生成唯一 id
 import { v4 as uuidv4 } from 'uuid';
+// 导入PromptDetailPanel组件
+import { PromptDetailPanel } from './PromptDetailPanel';
 
 // 定义网格项的数据类型，支持最多两级结构
 interface GridItem {
@@ -129,7 +131,19 @@ function DraggableChildItem({ child, parentId, index }: { child: GridItem, paren
  * @param item - 当前渲染的网格项数据
  * @param isOperationAreaItem - 是否为操作区的卡片，决定是否可作为放置目标
  */
-function DraggableGridItem({ item, isOperationAreaItem = false, onDelete, onSave }: { item: GridItem, isOperationAreaItem?: boolean, onDelete?: (id: string) => void, onSave?: (item: GridItem) => void }) {
+function DraggableGridItem({ 
+  item, 
+  isOperationAreaItem = false, 
+  onDelete, 
+  onSave,
+  onClick 
+}: { 
+  item: GridItem, 
+  isOperationAreaItem?: boolean, 
+  onDelete?: (id: string) => void, 
+  onSave?: (item: GridItem) => void,
+  onClick?: () => void 
+}) {
   // 1. 使当前卡片可拖拽，获取拖拽相关属性和方法
   //    isDragging 表示当前是否正在拖拽
   const { attributes, listeners, setNodeRef: setDragNodeRef, transform, isDragging } = useDraggable({
@@ -180,6 +194,13 @@ function DraggableGridItem({ item, isOperationAreaItem = false, onDelete, onSave
       {...listeners} // 绑定拖拽事件监听器
       {...attributes} // 绑定拖拽相关属性
       className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative group ${isOver && !isDragging && !isDraggingOwnChild ? 'ring-2 ring-blue-400' : ''}`}
+      onClick={(e) => {
+        // 如果点击的是按钮，不触发卡片点击事件
+        if ((e.target as HTMLElement).closest('button')) {
+          return;
+        }
+        onClick?.();
+      }}
     >
       {/* 右上角操作按钮区域 */}
       {isOperationAreaItem ? (
@@ -506,6 +527,11 @@ export function NewBlock() {
   const [showOperationArea, setShowOperationArea] = useState(false);
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
+  // 控制详情面板显示状态
+  const [showDetailPanel, setShowDetailPanel] = useState(false);
+  // 当前选中的模块
+  const [selectedItem, setSelectedItem] = useState<GridItem | null>(null);
+
   // 在客户端加载后再渲染组件
   useEffect(() => {
     setIsMounted(true);
@@ -698,6 +724,27 @@ export function NewBlock() {
     setItems(prevItems => prevItems.filter(item => item.id !== id));
   }, []);
 
+  // 处理模块点击事件
+  const handleItemClick = useCallback((item: GridItem) => {
+    setSelectedItem(item);
+    setShowDetailPanel(true);
+  }, []);
+
+  // 处理关闭详情面板
+  const handleCloseDetailPanel = useCallback(() => {
+    setShowDetailPanel(false);
+    setSelectedItem(null);
+  }, []);
+
+  // 处理保存编辑后的模块
+  const handleSaveItem = useCallback((updatedItem: GridItem) => {
+    setItems(prevItems => 
+      prevItems.map(item => 
+        item.id === updatedItem.id ? updatedItem : item
+      )
+    );
+  }, []);
+
   // 服务端渲染时返回一个占位符
   if (!isMounted) {
     return (
@@ -729,7 +776,6 @@ export function NewBlock() {
       // 监听拖拽经过事件
       onDragOver={handleDragOver}
     >
-      {/* 使用div包裹整个区域，作为全局放置区 */}
       <main className={`h-auto bg-gray-100 p-6 rounded-lg`}>
         <h2 className="text-2xl font-bold mb-8">功能卡片</h2>
         <p className="mb-6 text-gray-600">将下方卡片拖动到上方操作区</p>
@@ -757,10 +803,24 @@ export function NewBlock() {
                 {/* 占位卡片内容，可为空或加提示 */}
               </div>
             ) : (
-              <DraggableGridItem key={item.id} item={item} onDelete={handleDeleteGridItem} />
+              <DraggableGridItem 
+                key={item.id} 
+                item={item} 
+                onDelete={handleDeleteGridItem}
+                onClick={() => handleItemClick(item)}
+              />
             )
           ))}
         </div>
+
+        {/* 使用PromptDetailPanel组件 */}
+        {showDetailPanel && selectedItem && (
+          <PromptDetailPanel
+            item={selectedItem}
+            onClose={handleCloseDetailPanel}
+            onSave={handleSaveItem}
+          />
+        )}
       </main>
 
       {/* 拖拽时显示的覆盖层元素 */}
