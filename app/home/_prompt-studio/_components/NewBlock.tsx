@@ -33,6 +33,8 @@ import { CSS } from '@dnd-kit/utilities';
 import { v4 as uuidv4 } from 'uuid';
 // 导入PromptDetailPanel组件
 import { PromptDetailPanel } from './PromptDetailPanel';
+// 导入promptStore
+import { usePromptStore, PromptModule } from '@/store/home/promptStore';
 
 // 定义网格项的数据类型，支持最多两级结构
 interface GridItem {
@@ -144,6 +146,9 @@ function DraggableGridItem({
   onSave?: (item: GridItem) => void,
   onClick?: () => void 
 }) {
+  // 从store获取设置提示词的方法
+  const setSelectedPrompt = usePromptStore(state => state.setSelectedPrompt);
+
   // 1. 使当前卡片可拖拽，获取拖拽相关属性和方法
   //    isDragging 表示当前是否正在拖拽
   const { attributes, listeners, setNodeRef: setDragNodeRef, transform, isDragging } = useDraggable({
@@ -186,6 +191,13 @@ function DraggableGridItem({
     setDragNodeRef(node);
     if (setDropNodeRef) setDropNodeRef(node);
   }
+
+  // 处理引用按钮点击事件
+  const handleUsePrompt = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    // 将当前模块设置为全局选中的提示词
+    setSelectedPrompt(item as unknown as PromptModule);
+  };
 
   return (
     <div
@@ -240,8 +252,19 @@ function DraggableGridItem({
           )}
         </div>
       ) : (
-        // 网格列表区的删除按钮，仅在hover状态显示
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20">
+        // 网格列表区的按钮区域，仅在hover状态显示
+        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex gap-1">
+          {/* 引用按钮 */}
+          <button
+            className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-100 rounded-full transition-colors cursor-pointer"
+            title="引用此提示词模块"
+            onClick={handleUsePrompt}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+            </svg>
+          </button>
+          {/* 删除按钮 */}
           {onDelete && (
             <button
               className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors cursor-pointer"
@@ -532,6 +555,10 @@ export function NewBlock() {
   // 当前选中的模块
   const [selectedItem, setSelectedItem] = useState<GridItem | null>(null);
 
+  // 获取当前选择的提示词模块
+  const selectedPrompt = usePromptStore(state => state.selectedPrompt);
+  const clearSelectedPrompt = usePromptStore(state => state.clearSelectedPrompt);
+
   // 在客户端加载后再渲染组件
   useEffect(() => {
     setIsMounted(true);
@@ -779,6 +806,27 @@ export function NewBlock() {
       <main className={`h-auto bg-gray-100 p-6 rounded-lg`}>
         <h2 className="text-2xl font-bold mb-8">功能卡片</h2>
         <p className="mb-6 text-gray-600">将下方卡片拖动到上方操作区</p>
+        
+        {/* 当前选择的提示词模块指示器 */}
+        {selectedPrompt && (
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center justify-between">
+            <div>
+              <span className="text-sm text-blue-600 font-medium">当前选择的提示词模块：</span>
+              <span className="ml-2 font-bold">{selectedPrompt.title}</span>
+            </div>
+            <button
+              className="text-blue-500 hover:text-blue-700 text-sm flex items-center"
+              onClick={clearSelectedPrompt}
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+              </svg>
+              清除选择
+            </button>
+          </div>
+        )}
         
         {/* 操作区显示控制 */}
         {showOperationArea && (
