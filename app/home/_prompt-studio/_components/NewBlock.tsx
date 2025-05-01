@@ -203,6 +203,101 @@ function DraggableGridItem({
     setSelectedPrompt(item as unknown as PromptModule);
   };
 
+  // --- 按钮渲染逻辑 --- 
+  // 渲染操作区按钮
+  const renderOperationAreaButtons = () => (
+    <div className="absolute top-2 right-2 flex gap-2 z-20">
+      {/* 保存按钮 */}
+      {onSave && (
+        <button
+          className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-green-500 hover:bg-green-100 rounded-full transition-colors cursor-pointer"
+          title="保存到网格列表"
+          onClick={e => {
+            e.stopPropagation();
+            onSave(item);
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+            <polyline points="17 21 17 13 7 13 7 21"></polyline>
+            <polyline points="7 3 7 8 15 8"></polyline>
+          </svg>
+        </button>
+      )}
+      {/* 删除按钮 */}
+      {onDelete && (
+        <button
+          className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors cursor-pointer"
+          title="删除此模块"
+          onClick={e => {
+            e.stopPropagation();
+            onDelete(item.id);
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      )}
+    </div>
+  );
+
+  // 渲染网格区按钮
+  const renderGridAreaButtons = () => (
+    <>
+      {/* 左上角删除按钮 (hover时显示，带倾斜和透明度) */}
+      {onDelete && (
+        <div className="absolute -top-2 -left-2 opacity-0 group-hover:opacity-100 z-20 transition-opacity duration-200">
+          <button
+            className="h-7 w-7 flex items-center justify-center text-red-500 bg-white rounded-full transition-all duration-200 cursor-pointer shadow-md transform -rotate-12 opacity-75 hover:opacity-100 hover:rotate-0 hover:scale-110"
+            title="删除此模块"
+            onClick={e => {
+              e.stopPropagation();
+              onDelete(item.id);
+            }}
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+              <polyline points="3 6 5 6 21 6"></polyline>
+              <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+              <line x1="10" y1="11" x2="10" y2="17"></line>
+              <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {/* 右上角按钮区域 (固定显示) */}
+      <div className="absolute top-2 right-2 flex gap-1.5 z-20">
+        {/* 预览按钮 */}
+        <button
+          className="h-7 w-7 flex items-center justify-center text-gray-500 rounded-full transition-colors cursor-pointer hover:bg-teal-100 hover:text-teal-600"
+          title="预览完整提示词"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPreview?.();
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+
+        {/* 聊天按钮 */}
+        <button
+          className="h-7 w-7 flex items-center justify-center text-gray-500 rounded-full transition-colors cursor-pointer hover:bg-blue-100 hover:text-blue-600"
+          title="引用此提示词模块"
+          onClick={handleUsePrompt}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+          </svg>
+        </button>
+      </div>
+    </>
+  );
+
   return (
     <div
       ref={composedRef}
@@ -218,93 +313,12 @@ function DraggableGridItem({
         onClick?.();
       }}
     >
-      {/* 预览按钮 - 固定显示在右上角 */}
-      {!isOperationAreaItem && (
-        <button
-          className="absolute top-2 right-[80px] h-7 w-7 flex items-center justify-center text-gray-400 hover:text-teal-500 hover:bg-teal-100 rounded-full transition-colors cursor-pointer z-20"
-          title="预览完整提示词"
-          onClick={(e) => {
-            e.stopPropagation();
-            onPreview?.();
-          }}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-            <circle cx="12" cy="12" r="3"></circle>
-          </svg>
-        </button>
-      )}
-
-      {/* 右上角操作按钮区域 */}
-      {isOperationAreaItem ? (
-        <div className="absolute top-2 right-2 flex gap-2 z-20">
-          {/* 保存按钮 */}
-          {onSave && (
-            <button
-              className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-green-500 hover:bg-green-100 rounded-full transition-colors cursor-pointer"
-              title="保存到网格列表"
-              onClick={e => {
-                e.stopPropagation();
-                onSave(item);
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
-                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                <polyline points="7 3 7 8 15 8"></polyline>
-              </svg>
-            </button>
-          )}
-          {/* 删除按钮 */}
-          {onDelete && (
-            <button
-              className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors cursor-pointer"
-              title="删除此模块"
-              onClick={e => {
-                e.stopPropagation();
-                onDelete(item.id);
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          )}
-        </div>
-      ) : (
-        // 网格列表区的按钮区域，仅在hover状态显示
-        <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity z-20 flex gap-1">
-          {/* 引用按钮 */}
-          <button
-            className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-blue-500 hover:bg-blue-100 rounded-full transition-colors cursor-pointer"
-            title="引用此提示词模块"
-            onClick={handleUsePrompt}
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
-            </svg>
-          </button>
-          {/* 删除按钮 */}
-          {onDelete && (
-            <button
-              className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors cursor-pointer"
-              title="从列表中删除"
-              onClick={e => {
-                e.stopPropagation();
-                onDelete(item.id);
-              }}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          )}
-        </div>
-      )}
+      {/* 根据区域渲染不同的按钮 */}
+      {isOperationAreaItem ? renderOperationAreaButtons() : renderGridAreaButtons()}
+      
       {/* 渲染卡片内容，传递 isOperationAreaItem */}
       <GridItemContent item={item} isOperationAreaItem={isOperationAreaItem} />
+      
       {/* 拖拽经过时的提示遮罩，仅在悬停时显示，且排除正在拖动的项目本身和自己的子模块 */}
       {isOver && !isDragging && !isDraggingOwnChild && (
         <div className="absolute inset-0 bg-blue-100/40 flex items-center justify-center text-blue-600 text-sm font-bold pointer-events-none rounded-lg z-10">
