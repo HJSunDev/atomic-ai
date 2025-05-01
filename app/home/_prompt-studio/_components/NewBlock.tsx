@@ -35,6 +35,8 @@ import { v4 as uuidv4 } from 'uuid';
 import { PromptDetailPanel } from './PromptDetailPanel';
 // 导入promptStore
 import { usePromptStore, PromptModule } from '@/store/home/promptStore';
+// 导入预览面板组件
+import { PromptPreviewPanel } from './PromptPreviewPanel';
 
 // 定义网格项的数据类型，支持最多两级结构
 interface GridItem {
@@ -138,13 +140,15 @@ function DraggableGridItem({
   isOperationAreaItem = false, 
   onDelete, 
   onSave,
-  onClick 
+  onClick,
+  onPreview
 }: { 
   item: GridItem, 
   isOperationAreaItem?: boolean, 
   onDelete?: (id: string) => void, 
   onSave?: (item: GridItem) => void,
-  onClick?: () => void 
+  onClick?: () => void,
+  onPreview?: () => void
 }) {
   // 从store获取设置提示词的方法
   const setSelectedPrompt = usePromptStore(state => state.setSelectedPrompt);
@@ -214,6 +218,23 @@ function DraggableGridItem({
         onClick?.();
       }}
     >
+      {/* 预览按钮 - 固定显示在右上角 */}
+      {!isOperationAreaItem && (
+        <button
+          className="absolute top-2 right-[80px] h-7 w-7 flex items-center justify-center text-gray-400 hover:text-teal-500 hover:bg-teal-100 rounded-full transition-colors cursor-pointer z-20"
+          title="预览完整提示词"
+          onClick={(e) => {
+            e.stopPropagation();
+            onPreview?.();
+          }}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+            <circle cx="12" cy="12" r="3"></circle>
+          </svg>
+        </button>
+      )}
+
       {/* 右上角操作按钮区域 */}
       {isOperationAreaItem ? (
         <div className="absolute top-2 right-2 flex gap-2 z-20">
@@ -554,6 +575,11 @@ export function NewBlock() {
   const [showDetailPanel, setShowDetailPanel] = useState(false);
   // 当前选中的模块
   const [selectedItem, setSelectedItem] = useState<GridItem | null>(null);
+  
+  // 控制预览面板显示状态
+  const [showPreviewPanel, setShowPreviewPanel] = useState(false);
+  // 当前预览的模块
+  const [previewItem, setPreviewItem] = useState<GridItem | null>(null);
 
   // 获取当前选择的提示词模块
   const selectedPrompt = usePromptStore(state => state.selectedPrompt);
@@ -772,6 +798,18 @@ export function NewBlock() {
     );
   }, []);
 
+  // 处理预览按钮点击事件
+  const handlePreviewClick = useCallback((item: GridItem) => {
+    setPreviewItem(item);
+    setShowPreviewPanel(true);
+  }, []);
+  
+  // 处理关闭预览面板
+  const handleClosePreviewPanel = useCallback(() => {
+    setShowPreviewPanel(false);
+    setPreviewItem(null);
+  }, []);
+
   // 服务端渲染时返回一个占位符
   if (!isMounted) {
     return (
@@ -856,6 +894,7 @@ export function NewBlock() {
                 item={item} 
                 onDelete={handleDeleteGridItem}
                 onClick={() => handleItemClick(item)}
+                onPreview={() => handlePreviewClick(item)}
               />
             )
           ))}
@@ -867,6 +906,14 @@ export function NewBlock() {
             item={selectedItem}
             onClose={handleCloseDetailPanel}
             onSave={handleSaveItem}
+          />
+        )}
+        
+        {/* 使用PromptPreviewPanel组件 */}
+        {showPreviewPanel && previewItem && (
+          <PromptPreviewPanel
+            item={previewItem}
+            onClose={handleClosePreviewPanel}
           />
         )}
       </main>
