@@ -175,7 +175,7 @@ const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boolean; o
           messagesEndRef, 
           handleInputChange, 
           handlePromptClick, 
-          handleSendMessage,
+          handleSendMessage
         }) => (
           <>
             {/* 内容区域 - 让内容区域占满宽度并允许滚动 */}

@@ -12,27 +12,30 @@ export interface Message {
   model?: string; // 可选，用于AI消息展示模型信息
 }
 
+// 定义传递给子组件的props类型
+export interface AiChatRenderProps {
+  messages: Message[];
+  inputValue: string;
+  // 我们使用React.RefObject，这是React内置类型
+  textareaRef: React.RefObject<HTMLTextAreaElement>;
+  messagesEndRef: React.RefObject<HTMLDivElement>;
+  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  handlePromptClick: (promptText: string) => void;
+  handleSendMessage: () => void;
+}
+
 // 核心组件属性类型
 export interface AiChatCoreProps {
-  children: (props: {
-    messages: Message[];
-    inputValue: string;
-    textareaRef: React.RefObject<HTMLTextAreaElement>;
-    messagesEndRef: React.RefObject<HTMLDivElement>;
-    handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-    handlePromptClick: (promptText: string) => void;
-    handleSendMessage: () => void;
-  }) => React.ReactNode;
+  children: (props: AiChatRenderProps) => React.ReactNode;
 }
 
 export function AiChatCore({ children }: AiChatCoreProps) {
   // 添加状态来跟踪输入内容
   const [inputValue, setInputValue] = useState("");
   
-  // 创建一个ref用于消息列表底部的元素
+  // 创建DOM元素引用的ref用于消息列表底部的元素
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  
-  // 创建一个ref用于textarea元素
+  // 创建DOM元素引用的ref用于textarea元素
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
   // 模拟对话数据，参考OpenAI格式
@@ -77,7 +80,7 @@ export function AiChatCore({ children }: AiChatCoreProps) {
     setInputValue(e.target.value);
   };
   
-  // 滚动到底部的函数 - 使用auto实现即时滚动
+  // 滚动到底部的函数 - 内部使用，不需要暴露给子组件，使用auto实现即时滚动
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
   };
@@ -151,16 +154,18 @@ export function AiChatCore({ children }: AiChatCoreProps) {
     }, 1000);
   };
   
-  // 因为TypeScript推断类型不准确，我们需要明确类型转换
-  const childrenProps = {
+  // 构建传递给子组件的属性
+  // 使用类型断言（as）解决类型兼容性问题
+  // 这是安全的，因为React的ref对象在运行时行为一致
+  const renderProps: AiChatRenderProps = {
     messages,
     inputValue,
-    textareaRef,
-    messagesEndRef,
+    textareaRef: textareaRef as React.RefObject<HTMLTextAreaElement>, 
+    messagesEndRef: messagesEndRef as React.RefObject<HTMLDivElement>,
     handleInputChange,
     handlePromptClick,
-    handleSendMessage,
+    handleSendMessage
   };
   
-  return children(childrenProps as any);
+  return children(renderProps);
 } 

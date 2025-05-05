@@ -28,7 +28,7 @@ export function AiChatPanel() {
           messagesEndRef, 
           handleInputChange, 
           handlePromptClick, 
-          handleSendMessage,
+          handleSendMessage
         }) => (
           <>
             {/* 内容区域 */}
