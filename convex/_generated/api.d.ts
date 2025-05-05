@@ -13,6 +13,12 @@ import type {
   FilterApi,
   FunctionReference,
 } from "convex/server";
+import type * as ai_chat_actions from "../ai/chat/actions.js";
+import type * as ai_index from "../ai/index.js";
+import type * as ai_utils_aiClient from "../ai/utils/aiClient.js";
+import type * as ai_utils_errorHandler from "../ai/utils/errorHandler.js";
+import type * as ai_utils_promptTemplates from "../ai/utils/promptTemplates.js";
+import type * as ai_utils_types from "../ai/utils/types.js";
 import type * as config_index from "../config/index.js";
 import type * as config_models from "../config/models.js";
 
@@ -25,6 +31,12 @@ import type * as config_models from "../config/models.js";
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "ai/chat/actions": typeof ai_chat_actions;
+  "ai/index": typeof ai_index;
+  "ai/utils/aiClient": typeof ai_utils_aiClient;
+  "ai/utils/errorHandler": typeof ai_utils_errorHandler;
+  "ai/utils/promptTemplates": typeof ai_utils_promptTemplates;
+  "ai/utils/types": typeof ai_utils_types;
   "config/index": typeof config_index;
   "config/models": typeof config_models;
 }>;

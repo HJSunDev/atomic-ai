@@ -22,7 +22,6 @@ export interface AiChatCoreProps {
     handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
     handlePromptClick: (promptText: string) => void;
     handleSendMessage: () => void;
-    scrollToBottom: () => void;
   }) => React.ReactNode;
 }
 
@@ -161,7 +160,6 @@ export function AiChatCore({ children }: AiChatCoreProps) {
     handleInputChange,
     handlePromptClick,
     handleSendMessage,
-    scrollToBottom
   };
   
   return children(childrenProps as any);

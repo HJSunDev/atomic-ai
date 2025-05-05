@@ -29,7 +29,6 @@ export function AiChatPanel() {
           handleInputChange, 
           handlePromptClick, 
           handleSendMessage,
-          scrollToBottom 
         }) => (
           <>
             {/* 内容区域 */}
