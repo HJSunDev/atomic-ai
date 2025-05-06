@@ -20,7 +20,9 @@ export function AiChatPanel() {
   return (
     // AI聊天面板 - 固定占据右侧宽度
     <div className="w-[45%] h-full border-l bg-background flex flex-col overflow-hidden">
-      <AiChatCore>
+      <AiChatCore 
+        systemPrompt="你是一个专业的开发助手，擅长解答技术问题，尤其是关于Web开发、React和TypeScript的问题。"
+      >
         {({ 
           messages, 
           inputValue, 
@@ -28,7 +30,8 @@ export function AiChatPanel() {
           messagesEndRef, 
           handleInputChange, 
           handlePromptClick, 
-          handleSendMessage
+          handleSendMessage,
+          isLoading
         }) => (
           <>
             {/* 内容区域 */}
@@ -53,6 +56,7 @@ export function AiChatPanel() {
               textareaRef={textareaRef}
               handleInputChange={handleInputChange}
               handleSendMessage={handleSendMessage}
+              isLoading={isLoading}
             />
           </>
         )}

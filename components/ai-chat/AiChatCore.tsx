@@ -1,7 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
 
 // 定义消息类型
-export type MessageRole = "user" | "assistant";
+export type MessageRole = "user" | "assistant" | "system";
 
 // 定义消息数据结构
 export interface Message {
@@ -12,10 +14,24 @@ export interface Message {
   model?: string; // 可选，用于AI消息展示模型信息
 }
 
+// AiChatCore接收的属性，支持自定义服务调用
+export interface AiChatCoreProps {
+  children: (props: AiChatRenderProps) => React.ReactNode;
+  // 自定义初始消息，可选
+  initialMessages?: Message[];
+  // 自定义系统提示，可选
+  systemPrompt?: string;
+  // 自定义模型ID，可选
+  modelId?: string;
+  // 传入的API密钥，可选，如果不提供则使用环境变量中的API密钥
+  apiKey?: string;
+}
+
 // 定义传递给子组件的props类型
 export interface AiChatRenderProps {
   messages: Message[];
   inputValue: string;
+  isLoading: boolean; // 添加加载状态
   // 我们使用React.RefObject，这是React内置类型
   textareaRef: React.RefObject<HTMLTextAreaElement>;
   messagesEndRef: React.RefObject<HTMLDivElement>;
@@ -24,56 +40,39 @@ export interface AiChatRenderProps {
   handleSendMessage: () => void;
 }
 
-// 核心组件属性类型
-export interface AiChatCoreProps {
-  children: (props: AiChatRenderProps) => React.ReactNode;
-}
-
-export function AiChatCore({ children }: AiChatCoreProps) {
+export function AiChatCore({ 
+  children, 
+  initialMessages,
+  systemPrompt,
+  modelId,
+  apiKey
+}: AiChatCoreProps) {
   // 添加状态来跟踪输入内容
   const [inputValue, setInputValue] = useState("");
+  // 添加加载状态
+  const [isLoading, setIsLoading] = useState(false);
   
   // 创建DOM元素引用的ref用于消息列表底部的元素
   const messagesEndRef = useRef<HTMLDivElement>(null);
   // 创建DOM元素引用的ref用于textarea元素
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // 模拟对话数据，参考OpenAI格式
-  const [messages, setMessages] = useState<Message[]>([
+  // 使用 Convex 的 chatCompletion action
+  const callChatAI = useAction(api.ai.chat.actions.chatCompletion);
+
+  // 初始默认消息
+  const defaultMessages: Message[] = [
     {
       id: "1",
       role: "assistant",
-      content: "您好！我是OmniAid智能助手，很高兴为您提供帮助。您可以向我咨询任何关于开发的问题，我会尽力为您解答。",
-      timestamp: new Date(Date.now() - 300000),
-      model: "GPT-4o"
-    },
-    {
-      id: "2",
-      role: "user",
-      content: "你能帮我解释一下React中的useMemo和useCallback钩子的区别吗？",
-      timestamp: new Date(Date.now() - 240000)
-    },
-    {
-      id: "3",
-      role: "assistant",
-      content: "useMemo和useCallback都是React的性能优化钩子，它们的主要区别如下：\n\n**useMemo**：\n- 用于缓存计算结果\n- 当依赖项改变时，重新计算结果\n- 返回的是计算值本身\n- 适用于计算密集型操作\n\n**useCallback**：\n- 用于缓存函数\n- 当依赖项改变时，重新创建函数\n- 返回的是缓存的函数引用\n- 适用于防止子组件不必要的重渲染\n\n两者的语法相似，但用途不同。简单来说，useMemo缓存值，useCallback缓存函数。",
-      timestamp: new Date(Date.now() - 180000),
-      model: "GPT-4o"
-    },
-    {
-      id: "4",
-      role: "user",
-      content: "谢谢！那么什么情况下应该优先使用useCallback而不是useMemo？",
-      timestamp: new Date(Date.now() - 120000)
-    },
-    {
-      id: "5",
-      role: "assistant",
-      content: "应该优先使用useCallback而不是useMemo的情况：\n\n1. **传递函数给子组件时**：当你需要将函数作为props传递给使用React.memo或shouldComponentUpdate优化的子组件时，useCallback能确保函数引用不变，避免子组件不必要的重渲染。\n\n2. **事件处理函数**：对于事件处理函数，尤其是在列表渲染时创建的事件处理函数，使用useCallback可以避免每次渲染创建新函数。\n\n3. **依赖于函数引用的钩子**：当其他钩子(如useEffect)依赖于某个函数时，使用useCallback可以避免因函数引用变化导致的不必要执行。\n\n4. **函数本身很简单但被频繁创建**：如果函数很简单(如一行箭头函数)，使用useMemo不划算，因为缓存开销可能大于重新创建函数的开销。\n\n记住，过早优化可能是有害的。只有当性能分析表明有必要时，才应该应用这些优化技术。在大多数情况下，React足够快，不需要这些微优化。",
-      timestamp: new Date(Date.now() - 60000),
-      model: "GPT-4o"
+      content: "您好！我是OmniAid智能助手，很高兴为您提供帮助。您可以向我咨询任何问题，我会尽力为您解答。",
+      timestamp: new Date(),
+      model: modelId ? undefined : "GPT-4o"
     }
-  ]);
+  ];
+  
+  // 使用传入的初始消息或默认消息
+  const [messages, setMessages] = useState<Message[]>(initialMessages || defaultMessages);
   
   // 处理输入变化
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
@@ -120,9 +119,18 @@ export function AiChatCore({ children }: AiChatCoreProps) {
     }
   };
   
+  // 将消息历史格式化为AI服务所需的格式
+  const formatMessagesForAI = (messages: Message[]) => {
+    return messages.map(msg => ({
+      role: msg.role,
+      content: msg.content,
+      timestamp: msg.timestamp.toISOString()
+    }));
+  };
+  
   // 发送消息
-  const handleSendMessage = () => {
-    if (!inputValue.trim()) return;
+  const handleSendMessage = async () => {
+    if (!inputValue.trim() || isLoading) return;
     
     // 创建新的用户消息
     const newUserMessage: Message = {
@@ -133,25 +141,73 @@ export function AiChatCore({ children }: AiChatCoreProps) {
     };
     
     // 添加消息到列表
-    setMessages([...messages, newUserMessage]);
+    setMessages(prev => [...prev, newUserMessage]);
     
     // 清空输入框
     setInputValue("");
     
-    // 这里应该有发送到后端的逻辑，并等待回复
-    // 模拟AI回复
-    const currentInput = newUserMessage.content;
-    setTimeout(() => {
-      const aiResponse: Message = {
-        id: (Date.now() + 1).toString(),
+    // 设置加载状态
+    setIsLoading(true);
+    
+    try {
+      // 准备聊天历史
+      const chatHistory = formatMessagesForAI(messages);
+      
+      // 调用AI服务
+      const response = await callChatAI({
+        userMessage: newUserMessage.content,
+        chatHistory,
+        modelId,
+        apiKey,
+        systemPrompt
+      });
+      
+      // 创建AI回复消息
+      if (response.status === "success") {
+        const aiResponse: Message = {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: response.content as string,
+          timestamp: new Date(),
+          model: response.modelUsed?.name
+        };
+        
+        // 添加AI回复到消息列表
+        setMessages(prev => [...prev, aiResponse]);
+      } else {
+        // 错误处理 - 使用安全的类型转换
+        const errorContent = typeof response.error === 'string' 
+          ? response.error 
+          : "未知错误";
+        
+        const errorMessage: Message = {
+          id: Date.now().toString(),
+          role: "assistant",
+          content: `抱歉，我遇到了一些问题：${errorContent}`,
+          timestamp: new Date(),
+          model: response.modelUsed?.name
+        };
+        
+        // 添加错误消息到列表
+        setMessages(prev => [...prev, errorMessage]);
+      }
+    } catch (error) {
+      // 处理异常
+      console.error("AI服务调用失败:", error);
+      
+      // 添加错误消息到列表
+      const errorMessage: Message = {
+        id: Date.now().toString(),
         role: "assistant",
-        content: `已收到您的消息："${currentInput}"。这是一个模拟回复。`,
-        timestamp: new Date(),
-        model: "GPT-4o"
+        content: `抱歉，我遇到了一些技术问题，请稍后再试。`,
+        timestamp: new Date()
       };
       
-      setMessages(prev => [...prev, aiResponse]);
-    }, 1000);
+      setMessages(prev => [...prev, errorMessage]);
+    } finally {
+      // 重置加载状态
+      setIsLoading(false);
+    }
   };
   
   // 构建传递给子组件的属性
@@ -160,6 +216,7 @@ export function AiChatCore({ children }: AiChatCoreProps) {
   const renderProps: AiChatRenderProps = {
     messages,
     inputValue,
+    isLoading,
     textareaRef: textareaRef as React.RefObject<HTMLTextAreaElement>, 
     messagesEndRef: messagesEndRef as React.RefObject<HTMLDivElement>,
     handleInputChange,

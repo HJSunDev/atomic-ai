@@ -167,7 +167,9 @@ const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boolean; o
         </div>
       )}
       
-      <AiChatCore>
+      <AiChatCore 
+        systemPrompt="你是一个智能的AI助手，能够提供友好、准确和富有帮助的回答。"
+      >
         {({ 
           messages, 
           inputValue, 
@@ -175,7 +177,8 @@ const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boolean; o
           messagesEndRef, 
           handleInputChange, 
           handlePromptClick, 
-          handleSendMessage
+          handleSendMessage,
+          isLoading
         }) => (
           <>
             {/* 内容区域 - 让内容区域占满宽度并允许滚动 */}
@@ -204,6 +207,7 @@ const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boolean; o
                 textareaRef={textareaRef}
                 handleInputChange={handleInputChange}
                 handleSendMessage={handleSendMessage}
+                isLoading={isLoading}
               />
             </div>
           </>
