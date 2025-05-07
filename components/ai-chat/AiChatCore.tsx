@@ -67,7 +67,7 @@ export function AiChatCore({
       role: "assistant",
       content: "您好！我是OmniAid智能助手，很高兴为您提供帮助。您可以向我咨询任何问题，我会尽力为您解答。",
       timestamp: new Date(),
-      model: modelId ? undefined : "GPT-4o"
+      model: modelId ? undefined : "deepseek-v3"
     }
   ];
   
