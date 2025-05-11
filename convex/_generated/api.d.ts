@@ -21,6 +21,7 @@ import type * as ai_utils_promptTemplates from "../ai/utils/promptTemplates.js";
 import type * as ai_utils_types from "../ai/utils/types.js";
 import type * as config_index from "../config/index.js";
 import type * as config_models from "../config/models.js";
+import type * as prompt_mutations from "../prompt/mutations.js";
 
 /**
  * A utility for referencing Convex functions in your app's API.
@@ -39,6 +40,7 @@ declare const fullApi: ApiFromModules<{
   "ai/utils/types": typeof ai_utils_types;
   "config/index": typeof config_index;
   "config/models": typeof config_models;
+  "prompt/mutations": typeof prompt_mutations;
 }>;
 export declare const api: FilterApi<
   typeof fullApi,
