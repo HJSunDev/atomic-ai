@@ -1,5 +1,3 @@
-"use node";
-
 import { ChatOpenAI } from "@langchain/openai";
 import { ModelConfig } from "../../config/models";
 
@@ -7,6 +5,7 @@ import { ModelConfig } from "../../config/models";
 interface AIClientOptions {
   apiKey: string;
   modelConfig: ModelConfig;
+  streaming?: boolean;
 }
 
 /**
@@ -14,7 +13,7 @@ interface AIClientOptions {
  * 封装ChatOpenAI的创建逻辑，提供统一的接口
  */
 export function createChatModel(options: AIClientOptions) {
-  const { apiKey, modelConfig } = options;
+  const { apiKey, modelConfig, streaming = false } = options;
   
   // 创建并返回ChatOpenAI实例
   return new ChatOpenAI({
@@ -26,6 +25,7 @@ export function createChatModel(options: AIClientOptions) {
     modelName: modelConfig.modelName,
     temperature: modelConfig.temperature,
     maxTokens: modelConfig.maxTokens,
+    streaming: streaming,
   });
 }
 

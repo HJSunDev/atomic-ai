@@ -1,5 +1,3 @@
-"use node";
-
 import { PromptTemplate } from "@langchain/core/prompts";
 
 /**

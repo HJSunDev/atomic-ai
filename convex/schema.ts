@@ -29,9 +29,9 @@ export default defineSchema({
     // 消息的文本内容
     content: v.string(),
   })
-    // 按会话ID和消息创建时间（Convex自动维护的_creationTime字段）索引
-    // 确保消息能按正确顺序加载，并能快速获取指定会话的消息列表
-    .index("by_conversationId_creationTime", ["conversationId", "_creationTime"]),
+    // 按会话ID索引，确保消息能快速获取指定会话的消息列表
+    // _creationTime会自动添加到索引末尾，不需要显式指定
+    .index("by_conversationId", ["conversationId"]),
 
   // 新增 AI回复表
   aiResponses: defineTable({
@@ -52,8 +52,8 @@ export default defineSchema({
   })
     // 主要用于获取某用户消息的所有AI回复
     .index("by_userMessageId", ["userMessageId"]) 
-    // 用于按时间顺序获取会话的所有AI回复（如果需要独立查看或排序）
-    .index("by_conversationId_creationTime", ["conversationId", "_creationTime"]),
+    // 用于获取会话的所有AI回复（_creationTime会自动添加）
+    .index("by_conversationId", ["conversationId"]),
 
   // 提示词模块表
   // 用于管理和维护模块化的提示词
