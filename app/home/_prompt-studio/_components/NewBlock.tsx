@@ -37,6 +37,8 @@ import { PromptDetailPanel } from './PromptDetailPanel';
 import { usePromptStore, PromptModule } from '@/store/home/promptStore';
 // 导入预览面板组件
 import { PromptPreviewPanel } from './PromptPreviewPanel';
+// 导入 toast 提示
+import { toast } from 'sonner';
 
 // 定义网格项的数据类型，支持最多两级结构
 interface GridItem {
@@ -165,9 +167,6 @@ function DraggableGridItem({
   let setDropNodeRef: ((node: HTMLElement | null) => void) | undefined = undefined;
   let isOver = false;
   let activeDragInfo: any = undefined;
-  
-  // 检查当前模块是否已有子模块
-  const hasChildren = item.children && item.children.length > 0;
   
   if (isOperationAreaItem) {
     // 使该卡片成为 droppable 区域，id 唯一标识
@@ -602,16 +601,6 @@ export function NewBlock() {
   const selectedPrompt = usePromptStore(state => state.selectedPrompt);
   const clearSelectedPrompt = usePromptStore(state => state.clearSelectedPrompt);
 
-  // 添加提示信息状态
-  const [notification, setNotification] = useState<{ message: string; type: 'success' | 'error' | 'info' } | null>(null);
-
-  // 显示提示信息的函数
-  const showNotification = useCallback((message: string, type: 'success' | 'error' | 'info' = 'info') => {
-    setNotification({ message, type });
-    // 3秒后自动隐藏
-    setTimeout(() => setNotification(null), 3000);
-  }, []);
-
   // 在客户端加载后再渲染组件
   useEffect(() => {
     setIsMounted(true);
@@ -744,8 +733,6 @@ export function NewBlock() {
     else if (over && typeof over.id === 'string' && over.id.startsWith('operation-item-')) {
       // 获取目标模块id
       const targetId = over.id.replace('operation-item-', '');
-      // 找到目标模块
-      const targetModule = operationItems.find(item => item.id === targetId);
       
       // 判断拖拽源是网格区还是操作区
       const draggedFromGrid = items.find(item => item.id === active.id);
@@ -753,10 +740,14 @@ export function NewBlock() {
       
       // 检查层级限制：只检查被拖拽模块是否有子模块，如果有则不能作为子模块
       if (draggedFromGrid && draggedFromGrid.children && draggedFromGrid.children.length > 0) {
-        showNotification('有子模块的模块不能作为其他模块的子模块', 'error');
+        toast.error('暂不支持多级嵌套', {
+          position: 'top-center',
+        });
       }
       else if (draggedFromOperation && draggedFromOperation.children && draggedFromOperation.children.length > 0) {
-        showNotification('有子模块的模块不能作为其他模块的子模块', 'error');
+        toast.error('暂不支持多级嵌套', {
+          position: 'top-center',
+        });
       }
       else if (draggedFromGrid) {
         // 拖拽源来自网格区：生成副本，id用uuid，插入到目标模块children
@@ -777,7 +768,6 @@ export function NewBlock() {
         const copy = { ...draggedItem, id: uuidv4() };
         // 将副本添加到操作区
         setOperationItems(prevItems => [...prevItems, copy]);
-        showNotification('模块已添加到操作区', 'success');
       }
     }
     // 清除当前被拖拽项
@@ -954,34 +944,6 @@ export function NewBlock() {
             item={previewItem}
             onClose={handleClosePreviewPanel}
           />
-        )}
-        
-        {/* 通知提示组件 */}
-        {notification && (
-          <div className={`fixed top-4 right-4 px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-300 ${
-            notification.type === 'success' ? 'bg-green-100 text-green-800 border border-green-200' :
-            notification.type === 'error' ? 'bg-red-100 text-red-800 border border-red-200' :
-            'bg-blue-100 text-blue-800 border border-blue-200'
-          }`}>
-            <div className="flex items-center">
-              {notification.type === 'success' && (
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
-                </svg>
-              )}
-              {notification.type === 'error' && (
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path>
-                </svg>
-              )}
-              {notification.type === 'info' && (
-                <svg className="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              )}
-              <span className="font-medium">{notification.message}</span>
-            </div>
-          </div>
         )}
       </main>
 
