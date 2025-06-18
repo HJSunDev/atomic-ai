@@ -94,6 +94,7 @@ export default function PersistentStreamingPage() {
               <li>• 多用户实时同步</li>
               <li>• 断线重连恢复</li>
               <li>• WebSocket 响应式</li>
+              <li>• AI光标视觉反馈</li>
             </ul>
           </div>
           <div>
@@ -103,6 +104,7 @@ export default function PersistentStreamingPage() {
               <li>• 实时内容生成</li>
               <li>• 多用户协作</li>
               <li>• 长时间流式处理</li>
+              <li>• 打字机效果展示</li>
             </ul>
           </div>
         </div>
@@ -175,8 +177,14 @@ export default function PersistentStreamingPage() {
              persistentStreamId={persistentStreamId}
              isDriven={isDriven}
              getConvexHttpUrl={getConvexHttpUrl}
+             cursorOptions={{
+               type: 'line',
+               speed: 'normal',
+               color: '#10b981', // 绿色主题
+               show: true
+             }}
            >
-             {({ persistentText, persistentStatus }) => (
+             {({ persistentText, persistentStatus, textWithCursor }) => (
                <div className="flex gap-3">
                  <Button 
                    onClick={testPersistentStream} 
@@ -199,14 +207,20 @@ export default function PersistentStreamingPage() {
         </CardContent>
       </Card>
 
-             {/* 流式传输结果展示 */}
+       {/* 流式传输结果展示 */}
        {persistentStreamId && (
          <PersistentStreamComponent
            persistentStreamId={persistentStreamId}
            isDriven={isDriven}
            getConvexHttpUrl={getConvexHttpUrl}
+           cursorOptions={{
+             type: 'line',
+             speed: 'normal',
+             color: '#3b82f6', // 蓝色主题
+             show: true
+           }}
          >
-           {({ persistentText, persistentStatus }) => (
+           {({ persistentText, persistentStatus, textWithCursor }) => (
              <Card className="border-2 border-blue-200">
                <CardHeader className="bg-blue-50">
                  <CardTitle className="text-blue-800">流式传输状态</CardTitle>
@@ -235,11 +249,13 @@ export default function PersistentStreamingPage() {
                  <div className="p-6 bg-gradient-to-br from-green-50 to-blue-50 rounded-lg border-2 border-green-200">
                    <h4 className="font-semibold mb-3 text-green-800 flex items-center">
                      <span className="mr-2">📝</span>
-                     实时内容展示 (Persistent)
+                     实时内容展示 (带AI光标效果)
                    </h4>
                    <div className="bg-white p-4 rounded-lg border min-h-[80px] max-h-[300px] overflow-y-auto">
                      <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                       {persistentText || (
+                       {persistentText || textWithCursor ? (
+                         textWithCursor
+                       ) : (
                          <span className="text-gray-400 italic">等待内容传输...</span>
                        )}
                      </p>
@@ -256,7 +272,38 @@ export default function PersistentStreamingPage() {
                      <li>• <strong>刷新恢复:</strong> 流式传输过程中刷新页面，状态会自动恢复到当前进度</li>
                      <li>• <strong>持久存储:</strong> 即使关闭浏览器，重新打开后内容仍然保持</li>
                      <li>• <strong>多用户协作:</strong> 多个用户可以同时观看同一个流的实时进度</li>
+                     <li>• <strong>AI光标效果:</strong> 流式传输时显示闪烁光标，提升用户体验</li>
                    </ul>
+                 </div>
+                 
+                 {/* AI光标样式演示区域 */}
+                 <div className="p-4 bg-purple-50 rounded-lg border border-purple-200">
+                   <h4 className="font-semibold text-purple-800 text-sm mb-3 flex items-center">
+                     <span className="mr-2">✨</span>
+                     AI光标样式预览
+                   </h4>
+                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                     <div className="space-y-3">
+                       <div className="flex items-center gap-2">
+                         <span className="text-purple-700 w-20">竖线光标:</span>
+                         <span className="bg-white px-3 py-2 rounded border flex items-center text-base">正在输入<span className="inline-block w-[2px] h-[1.2em] bg-blue-500 animate-pulse-cursor ml-[2px]"></span></span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <span className="text-purple-700 w-20">下划线:</span>
+                         <span className="bg-white px-3 py-2 rounded border flex items-baseline text-base">正在输入<span className="inline-block w-[0.8em] h-[3px] bg-green-500 animate-pulse-cursor ml-[2px] translate-y-[2px]"></span></span>
+                       </div>
+                     </div>
+                     <div className="space-y-3">
+                       <div className="flex items-center gap-2">
+                         <span className="text-purple-700 w-20">方块光标:</span>
+                         <span className="bg-white px-3 py-2 rounded border flex items-center text-base">正在输入<span className="inline-block w-[0.5em] h-[1.1em] bg-orange-500 animate-pulse-cursor ml-[2px]"></span></span>
+                       </div>
+                       <div className="flex items-center gap-2">
+                         <span className="text-purple-700 w-20">自定义符号:</span>
+                         <span className="bg-white px-3 py-2 rounded border flex items-center text-base">正在输入<span className="inline-block animate-pulse-cursor ml-[2px] text-purple-500 text-lg">●</span></span>
+                       </div>
+                     </div>
+                   </div>
                  </div>
                </CardContent>
              </Card>
@@ -277,6 +324,7 @@ export default function PersistentStreamingPage() {
                 <li>• <code className="bg-gray-100 px-2 py-1 rounded">@convex-dev/persistent-text-streaming</code></li>
                 <li>• <code className="bg-gray-100 px-2 py-1 rounded">useStream</code> React Hook</li>
                 <li>• <code className="bg-gray-100 px-2 py-1 rounded">PersistentTextStreaming</code> 服务端组件</li>
+                <li>• <code className="bg-gray-100 px-2 py-1 rounded">TypingCursor</code> AI光标组件</li>
                 <li>• WebSocket 响应式订阅</li>
               </ul>
             </div>
@@ -318,10 +366,15 @@ export default function PersistentStreamingPage() {
                     <td className="p-2">❌ 仅在内存</td>
                     <td className="p-2">✅ 数据库存储</td>
                   </tr>
-                  <tr>
+                  <tr className="border-b">
                     <td className="p-2 font-medium">实时同步</td>
                     <td className="p-2">⚠️ 有限支持</td>
                     <td className="p-2">✅ WebSocket 响应式</td>
+                  </tr>
+                  <tr>
+                    <td className="p-2 font-medium">视觉反馈</td>
+                    <td className="p-2">❌ 无光标效果</td>
+                    <td className="p-2">✅ AI打字光标</td>
                   </tr>
                 </tbody>
               </table>

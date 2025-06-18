@@ -209,3 +209,22 @@
   width: 32px;  /* 默认大小稍大一些 */
   height: 32px;
 }
+
+/* 打字光标动画样式 */
+@keyframes pulse-cursor {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.animate-pulse-cursor {
+  animation: pulse-cursor 1s infinite;
+}
+
+/* 不同速度的光标动画 */
+.animate-pulse-cursor-slow {
+  animation: pulse-cursor 1.5s infinite;
+}
+
+.animate-pulse-cursor-fast {
+  animation: pulse-cursor 0.5s infinite;
+}
