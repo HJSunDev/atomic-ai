@@ -24,12 +24,6 @@ export function TypingCursor({
   show = true,
   className
 }: TypingCursorProps) {
-  // 根据速度设置动画持续时间
-  const speedMap = {
-    slow: '1.5s',
-    normal: '1s',
-    fast: '0.5s'
-  };
 
   // 根据速度获取对应的CSS类名
   const getAnimationClass = () => {
@@ -53,7 +47,7 @@ export function TypingCursor({
         return (
           <span
             className={cn(
-              'inline-block w-[2px] h-[1.2em] bg-current ml-[2px]',
+              'inline-block w-[2px] h-[1.2em] bg-current ml-[2px] translate-y-[4px]',
               animationClass,
               className
             )}
@@ -77,7 +71,7 @@ export function TypingCursor({
         return (
           <span
             className={cn(
-              'inline-block w-[0.5em] h-[1.1em] bg-current ml-[2px]',
+              'inline-block w-[0.5em] h-[1.1em] bg-current ml-[2px] translate-y-[4px]',
               animationClass,
               className
             )}

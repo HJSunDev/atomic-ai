@@ -7,21 +7,33 @@ import { useMutation } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import dynamic from "next/dynamic";
 
-// 动态导入 useStream hook，禁用 SSR
+// 动态导入组件，避免服务端渲染问题
+// dynamic 是 Next.js 提供的代码分割功能，用于懒加载组件
+// 当组件包含浏览器特定 API 或需要客户端环境时，使用 dynamic 导入可以避免 SSR 错误
 const PersistentStreamComponent = dynamic(
   () => import("./components/StreamComponent"),
   { 
-    ssr: false,
-    loading: () => <div className="p-4 text-center text-gray-500">加载流式组件中...</div>
+    ssr: false, // 禁用服务端渲染，确保组件只在客户端渲染
+    loading: () => <div className="p-4 text-center text-gray-500">加载流式组件中...</div> // 加载时显示的占位内容
   }
 );
 
 export default function PersistentStreamingPage() {
   // Persistent Text Streaming 相关状态
+  
+  // 持久化流的唯一标识符，用于跨会话和多用户共享同一个流实例
   const [persistentStreamId, setPersistentStreamId] = useState<string | null>(null);
+  
+  // 用户输入的要进行流式传输的文本内容，模拟AI生成的响应内容
   const [persistentStreamContent, setPersistentStreamContent] = useState<string>("");
+  
+  // 每次流式传输的字符块大小，控制打字机效果的粒度（1-10字符）
   const [persistentChunkSize, setPersistentChunkSize] = useState<number>(2);
+  
+  // 流式传输的延迟间隔（毫秒），模拟AI生成内容的速度
   const [persistentDelay, setPersistentDelay] = useState<number>(150);
+  
+  // 流式传输驱动标志，控制是否启动HTTP请求进行流式传输
   const [isDriven, setIsDriven] = useState<boolean>(false);
   
   // Convex mutations
@@ -253,9 +265,8 @@ export default function PersistentStreamingPage() {
                    </h4>
                    <div className="bg-white p-4 rounded-lg border min-h-[80px] max-h-[300px] overflow-y-auto">
                      <p className="text-sm whitespace-pre-wrap leading-relaxed">
-                       {persistentText || textWithCursor ? (
-                         textWithCursor
-                       ) : (
+                       {/* 优先显示带光标效果的文本，其次显示纯文本，最后显示占位文本 */}
+                       {textWithCursor || persistentText || (
                          <span className="text-gray-400 italic">等待内容传输...</span>
                        )}
                      </p>
