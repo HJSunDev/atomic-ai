@@ -10,6 +10,8 @@
 
 import type * as ai_chat_actions from "../ai/chat/actions.js";
 import type * as ai_index from "../ai/index.js";
+import type * as ai_streaming_aiStreamingAction from "../ai/streaming/aiStreamingAction.js";
+import type * as ai_streaming_index from "../ai/streaming/index.js";
 import type * as ai_utils_aiClient from "../ai/utils/aiClient.js";
 import type * as ai_utils_errorHandler from "../ai/utils/errorHandler.js";
 import type * as ai_utils_promptTemplates from "../ai/utils/promptTemplates.js";
@@ -37,6 +39,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   "ai/chat/actions": typeof ai_chat_actions;
   "ai/index": typeof ai_index;
+  "ai/streaming/aiStreamingAction": typeof ai_streaming_aiStreamingAction;
+  "ai/streaming/index": typeof ai_streaming_index;
   "ai/utils/aiClient": typeof ai_utils_aiClient;
   "ai/utils/errorHandler": typeof ai_utils_errorHandler;
   "ai/utils/promptTemplates": typeof ai_utils_promptTemplates;
