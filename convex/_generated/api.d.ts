@@ -21,6 +21,8 @@ import type * as config_models from "../config/models.js";
 import type * as http from "../http.js";
 import type * as prompt_mutations from "../prompt/mutations.js";
 import type * as streaming from "../streaming.js";
+import type * as userModelPreferences_mutations from "../userModelPreferences/mutations.js";
+import type * as userModelPreferences_queries from "../userModelPreferences/queries.js";
 
 import type {
   ApiFromModules,
@@ -50,6 +52,8 @@ declare const fullApi: ApiFromModules<{
   http: typeof http;
   "prompt/mutations": typeof prompt_mutations;
   streaming: typeof streaming;
+  "userModelPreferences/mutations": typeof userModelPreferences_mutations;
+  "userModelPreferences/queries": typeof userModelPreferences_queries;
 }>;
 declare const fullApiWithMounts: typeof fullApi;
 
