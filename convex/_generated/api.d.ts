@@ -15,8 +15,11 @@ import type * as ai_utils_errorHandler from "../ai/utils/errorHandler.js";
 import type * as ai_utils_promptTemplates from "../ai/utils/promptTemplates.js";
 import type * as ai_utils_types from "../ai/utils/types.js";
 import type * as http from "../http.js";
+import type * as persistent_stream_demo_http from "../persistent_stream_demo/http.js";
+import type * as persistent_stream_demo_httpActions from "../persistent_stream_demo/httpActions.js";
+import type * as persistent_stream_demo_mutations from "../persistent_stream_demo/mutations.js";
+import type * as persistent_stream_demo_queries from "../persistent_stream_demo/queries.js";
 import type * as prompt_mutations from "../prompt/mutations.js";
-import type * as streaming from "../streaming.js";
 import type * as userModelPreferences_mutations from "../userModelPreferences/mutations.js";
 import type * as userModelPreferences_queries from "../userModelPreferences/queries.js";
 
@@ -42,8 +45,11 @@ declare const fullApi: ApiFromModules<{
   "ai/utils/promptTemplates": typeof ai_utils_promptTemplates;
   "ai/utils/types": typeof ai_utils_types;
   http: typeof http;
+  "persistent_stream_demo/http": typeof persistent_stream_demo_http;
+  "persistent_stream_demo/httpActions": typeof persistent_stream_demo_httpActions;
+  "persistent_stream_demo/mutations": typeof persistent_stream_demo_mutations;
+  "persistent_stream_demo/queries": typeof persistent_stream_demo_queries;
   "prompt/mutations": typeof prompt_mutations;
-  streaming: typeof streaming;
   "userModelPreferences/mutations": typeof userModelPreferences_mutations;
   "userModelPreferences/queries": typeof userModelPreferences_queries;
 }>;

@@ -1,6 +1,6 @@
 import { httpRouter } from "convex/server";
 import { httpAction } from "./_generated/server";
-import { streamText, streamTextOptions } from "./streaming";
+import { registerPersistentStreamDemoRoutes } from "./persistent_stream_demo/http";
 
 // 创建 HTTP 路由
 const http = httpRouter();
@@ -240,21 +240,6 @@ http.route({
     }
   }),
 });
-
-// 新的 Persistent Text Streaming 接口
-http.route({
-  path: "/persistent-stream",
-  method: "POST",
-  handler: streamText,
-});
-
-// OPTIONS 预检请求处理 - 流式传输接口
-http.route({
-  path: "/persistent-stream",
-  method: "OPTIONS",
-  handler: streamTextOptions,
-});
-
 // OPTIONS 预检请求处理 - 流式传输接口
 http.route({
   path: "/text-stream",
@@ -270,5 +255,8 @@ http.route({
     });
   }),
 });
+
+// 集成 persistent_stream_demo 模块的路由
+registerPersistentStreamDemoRoutes(http);
 
 export default http; 

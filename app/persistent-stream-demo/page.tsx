@@ -37,7 +37,7 @@ export default function PersistentStreamingPage() {
   const [isDriven, setIsDriven] = useState<boolean>(false);
   
   // Convex mutations
-  const createStream = useMutation(api.streaming.createStream);
+  const createStream = useMutation(api.persistent_stream_demo.mutations.createStream);
   
   // 获取 Convex HTTP 接口基础 URL
   const getConvexHttpUrl = () => {
