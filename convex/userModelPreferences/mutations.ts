@@ -1,6 +1,6 @@
 import { mutation } from "../_generated/server";
 import { v } from "convex/values";
-import { AVAILABLE_MODELS } from "../config/models";
+import { AVAILABLE_MODELS } from "../_lib/models";
 
 /**
  * 置顶一个模型到用户偏好列表

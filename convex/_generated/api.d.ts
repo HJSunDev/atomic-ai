@@ -8,16 +8,12 @@
  * @module
  */
 
+import type * as _lib_models from "../_lib/models.js";
 import type * as ai_chat_actions from "../ai/chat/actions.js";
-import type * as ai_index from "../ai/index.js";
-import type * as ai_streaming_aiStreamingAction from "../ai/streaming/aiStreamingAction.js";
-import type * as ai_streaming_index from "../ai/streaming/index.js";
 import type * as ai_utils_aiClient from "../ai/utils/aiClient.js";
 import type * as ai_utils_errorHandler from "../ai/utils/errorHandler.js";
 import type * as ai_utils_promptTemplates from "../ai/utils/promptTemplates.js";
 import type * as ai_utils_types from "../ai/utils/types.js";
-import type * as config_index from "../config/index.js";
-import type * as config_models from "../config/models.js";
 import type * as http from "../http.js";
 import type * as prompt_mutations from "../prompt/mutations.js";
 import type * as streaming from "../streaming.js";
@@ -39,16 +35,12 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "_lib/models": typeof _lib_models;
   "ai/chat/actions": typeof ai_chat_actions;
-  "ai/index": typeof ai_index;
-  "ai/streaming/aiStreamingAction": typeof ai_streaming_aiStreamingAction;
-  "ai/streaming/index": typeof ai_streaming_index;
   "ai/utils/aiClient": typeof ai_utils_aiClient;
   "ai/utils/errorHandler": typeof ai_utils_errorHandler;
   "ai/utils/promptTemplates": typeof ai_utils_promptTemplates;
   "ai/utils/types": typeof ai_utils_types;
-  "config/index": typeof config_index;
-  "config/models": typeof config_models;
   http: typeof http;
   "prompt/mutations": typeof prompt_mutations;
   streaming: typeof streaming;

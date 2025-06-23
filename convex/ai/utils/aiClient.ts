@@ -1,5 +1,5 @@
 import { ChatOpenAI } from "@langchain/openai";
-import { ModelConfig } from "../../config/models";
+import { ModelConfig } from "../../_lib/models";
 
 // AI客户端选项接口
 interface AIClientOptions {

@@ -110,7 +110,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
 };
 
 // 获取所有可用模型的函数
-export function getAllModels(): Record<string, ModelConfig> {
+function getAllModels(): Record<string, ModelConfig> {
   const allModels: Record<string, ModelConfig> = {};
   
   // 合并所有服务商的付费和免费模型

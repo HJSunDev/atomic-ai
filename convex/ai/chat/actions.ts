@@ -6,7 +6,7 @@ import { StringOutputParser } from "@langchain/core/output_parsers";
 import { StructuredOutputParser } from "langchain/output_parsers";
 import { z } from "zod";
 
-import { AVAILABLE_MODELS, DEFAULT_MODEL_ID } from "../../config/models";
+import { AVAILABLE_MODELS, DEFAULT_MODEL_ID } from "../../_lib/models";
 import { 
   createChatModel, 
   getApiKey, 

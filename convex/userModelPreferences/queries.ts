@@ -1,6 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
-import { AVAILABLE_MODELS, DEFAULT_MODEL_ID } from "../config/models";
+import { AVAILABLE_MODELS, DEFAULT_MODEL_ID } from "../_lib/models";
 
 /**
  * 获取用户的模型偏好列表
