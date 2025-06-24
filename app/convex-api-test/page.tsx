@@ -153,7 +153,7 @@ export default function ConvexApiTestPage() {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          content: streamContent || "这是一个流式传输的示例文本，用于测试 NextJS + Convex 技术栈下的 Persistent Text Streaming 方案。通过这个接口，我们可以验证服务端分块传输数据的能力，以及前端实时接收和展示数据的效果。",
+          content: streamContent || "这是一个流式传输的示例文本，用于测试 Convex HTTP Actions 的流式数据传输功能。接口会将文本按指定大小分块，并通过 ReadableStream 实时发送到前端，演示服务端流式响应和客户端实时接收的效果。",
           chunkSize: streamChunkSize,
           delay: streamDelay,
         }),
@@ -244,7 +244,7 @@ export default function ConvexApiTestPage() {
           <strong>流式接口:</strong> <code className="bg-white px-2 py-1 rounded">/text-stream</code>
         </p>
         <p className="text-sm mt-1 text-blue-600">
-          这些接口通过 Convex HTTP Actions 提供，支持标准 HTTP 请求和流式数据传输
+          这些接口通过 Convex HTTP Actions 提供，支持标准 HTTP 请求和基于 ReadableStream 的流式数据传输
         </p>
       </div>
       
@@ -446,12 +446,13 @@ export default function ConvexApiTestPage() {
         <CardContent>
           <div className="space-y-4">
             <div className="p-4 bg-yellow-50 rounded-lg">
-              <h4 className="font-semibold text-yellow-800">Convex 流式传输的优势:</h4>
+              <h4 className="font-semibold text-yellow-800">Convex 流式传输的特点:</h4>
               <ul className="text-sm text-yellow-700 mt-2 space-y-1">
-                <li>• 支持 Persistent Text Streaming，适合实时数据传输</li>
+                <li>• 基于标准 ReadableStream API 实现流式数据传输</li>
+                <li>• 支持自定义分块大小和传输延迟控制</li>
+                <li>• 提供完整的传输进度和状态反馈</li>
                 <li>• 可以直接访问 Convex 数据库进行实时数据处理</li>
-                <li>• 内置的错误处理和恢复机制</li>
-                <li>• 支持复杂的业务逻辑和数据转换</li>
+                <li>• 内置跨域支持和错误处理机制</li>
                 <li>• 可以与其他 Convex 服务无缝集成</li>
               </ul>
             </div>

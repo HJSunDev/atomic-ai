@@ -14,6 +14,8 @@ import type * as ai_utils_aiClient from "../ai/utils/aiClient.js";
 import type * as ai_utils_errorHandler from "../ai/utils/errorHandler.js";
 import type * as ai_utils_promptTemplates from "../ai/utils/promptTemplates.js";
 import type * as ai_utils_types from "../ai/utils/types.js";
+import type * as convex_api_demo_http from "../convex_api_demo/http.js";
+import type * as convex_api_demo_httpActions from "../convex_api_demo/httpActions.js";
 import type * as http from "../http.js";
 import type * as persistent_stream_demo_http from "../persistent_stream_demo/http.js";
 import type * as persistent_stream_demo_httpActions from "../persistent_stream_demo/httpActions.js";
@@ -44,6 +46,8 @@ declare const fullApi: ApiFromModules<{
   "ai/utils/errorHandler": typeof ai_utils_errorHandler;
   "ai/utils/promptTemplates": typeof ai_utils_promptTemplates;
   "ai/utils/types": typeof ai_utils_types;
+  "convex_api_demo/http": typeof convex_api_demo_http;
+  "convex_api_demo/httpActions": typeof convex_api_demo_httpActions;
   http: typeof http;
   "persistent_stream_demo/http": typeof persistent_stream_demo_http;
   "persistent_stream_demo/httpActions": typeof persistent_stream_demo_httpActions;
