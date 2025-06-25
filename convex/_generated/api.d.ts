@@ -14,6 +14,8 @@ import type * as ai_utils_aiClient from "../ai/utils/aiClient.js";
 import type * as ai_utils_errorHandler from "../ai/utils/errorHandler.js";
 import type * as ai_utils_promptTemplates from "../ai/utils/promptTemplates.js";
 import type * as ai_utils_types from "../ai/utils/types.js";
+import type * as chat_mutations from "../chat/mutations.js";
+import type * as chat_queries from "../chat/queries.js";
 import type * as convex_api_demo_http from "../convex_api_demo/http.js";
 import type * as convex_api_demo_httpActions from "../convex_api_demo/httpActions.js";
 import type * as http from "../http.js";
@@ -45,6 +47,8 @@ declare const fullApi: ApiFromModules<{
   "ai/utils/errorHandler": typeof ai_utils_errorHandler;
   "ai/utils/promptTemplates": typeof ai_utils_promptTemplates;
   "ai/utils/types": typeof ai_utils_types;
+  "chat/mutations": typeof chat_mutations;
+  "chat/queries": typeof chat_queries;
   "convex_api_demo/http": typeof convex_api_demo_http;
   "convex_api_demo/httpActions": typeof convex_api_demo_httpActions;
   http: typeof http;
