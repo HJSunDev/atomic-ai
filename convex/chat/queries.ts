@@ -43,7 +43,9 @@ export const getConversationMessages = query({
 
     const messages = await ctx.db
       .query("messages")
-      .withIndex("by_conversationId", (q) => q.eq("conversationId", args.conversationId))
+      .withIndex("by_conversationId_and_isChosenReply", (q) =>
+        q.eq("conversationId", args.conversationId).eq("isChosenReply", true)
+      )
       .order("asc")
       .collect();
     

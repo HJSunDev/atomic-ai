@@ -8,12 +8,14 @@
  * @module
  */
 
+import type * as _lib_chatUtils from "../_lib/chatUtils.js";
 import type * as _lib_models from "../_lib/models.js";
 import type * as ai_chat_actions from "../ai/chat/actions.js";
 import type * as ai_utils_aiClient from "../ai/utils/aiClient.js";
 import type * as ai_utils_errorHandler from "../ai/utils/errorHandler.js";
 import type * as ai_utils_promptTemplates from "../ai/utils/promptTemplates.js";
 import type * as ai_utils_types from "../ai/utils/types.js";
+import type * as chat_action from "../chat/action.js";
 import type * as chat_mutations from "../chat/mutations.js";
 import type * as chat_queries from "../chat/queries.js";
 import type * as convex_api_demo_http from "../convex_api_demo/http.js";
@@ -41,12 +43,14 @@ import type {
  * ```
  */
 declare const fullApi: ApiFromModules<{
+  "_lib/chatUtils": typeof _lib_chatUtils;
   "_lib/models": typeof _lib_models;
   "ai/chat/actions": typeof ai_chat_actions;
   "ai/utils/aiClient": typeof ai_utils_aiClient;
   "ai/utils/errorHandler": typeof ai_utils_errorHandler;
   "ai/utils/promptTemplates": typeof ai_utils_promptTemplates;
   "ai/utils/types": typeof ai_utils_types;
+  "chat/action": typeof chat_action;
   "chat/mutations": typeof chat_mutations;
   "chat/queries": typeof chat_queries;
   "convex_api_demo/http": typeof convex_api_demo_http;

@@ -38,10 +38,19 @@ export const chatSchema = {
   
     /**
      * 父消息ID，指向本表中的另一条消息，用于构建对话的层级关系。
-     * 它定义了一条消息是否为另一条消息的直接回复，是实现“对话树”和“一对多”回复的关键。
+     * 它定义了一条消息是否为另一条消息的直接回复，是实现"对话树"和"一对多"回复的关键。
      * - 对于开启一个新对话回合（thread）的消息，此字段为空。在当前设计中，这通常是用户的提问。
      * - 对于AI的回复，此字段必须指向它所回答的那条用户消息的_id。
      * 可选字段。
+     * 
+     * 示例结构：
+     * 会话 (Conversation)
+     * └── 用户提问: "你好吗？" (id: msg_1, parentMessageId: null)  <-- 根
+     *     └── AI 回复: "我很好！" (id: msg_2, parentMessageId: msg_1) <-- 子
+     * 
+     * └── 用户提问: "给我讲个笑话" (id: msg_3, parentMessageId: null) <-- 新的根
+     *     ├── AI 回复1 (GPT): "..." (id: msg_4, parentMessageId: msg_3) <-- 子
+     *     └── AI 回复2 (Claude): "..." (id: msg_5, parentMessageId: msg_3) <-- 另一个子
      */
     parentMessageId: v.optional(v.id("messages")),
   
@@ -67,11 +76,12 @@ export const chatSchema = {
     // -- 高级功能支持字段 --
   
     /**
-     * 是否为用户选定的、进入主时间线的官方回复。
-     * - 在单AI回复场景下，该AI回复此字段默认为 true。
-     * - 在多AI回复场景下，只有一个回复的此字段能为 true，用户可以切换。
-     * 这是保证主对话列表干净、线性的决定性字段。
-     * 可选字段。
+     * 考虑到对单条用户消息进行多个ai回复的场景
+     * 这个字段是保证对话主线清晰、线性的决定性标志。
+     * - 对于 user 和 system 消息，此字段在创建时即为 true。
+     * - 对于 assistant 消息，在多AI回复场景下，只有一个回复的此字段能为 true，用户可以切换。
+     *   在单AI回复场景下，该AI回复此字段默认为 true。
+     * 可选字段，但建议对于非主线AI回复明确设为 false。
      */
     isChosenReply: v.optional(v.boolean()),
   
@@ -101,8 +111,17 @@ export const chatSchema = {
     .index("by_conversationId", ["conversationId"])
   
     /**
+     * 按会话ID和选择状态索引。
+     * 用于高效地获取一个会话的主线消息（即被选中的回复）。
+     */
+    .index(
+      "by_conversationId_and_isChosenReply",
+      ["conversationId", "isChosenReply"]
+    )
+  
+    /**
      * 按父消息ID索引。
-     * 用于高效地查询某条用户消息下的所有AI回复，是实现“对比多个回复”功能的核心性能保障。
+     * 用于高效地查询某条用户消息下的所有AI回复，是实现"对比多个回复"功能的核心性能保障。
      */
     .index("by_parentMessageId", ["parentMessageId"]),
 
