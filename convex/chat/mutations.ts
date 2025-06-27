@@ -171,4 +171,43 @@ export const updateConversationTitle = mutation({
       title: args.title,
     });
   },
+});
+
+/**
+ * 删除一个会话及其所有相关的消息。
+ * @param conversationId - 要删除的会话的ID。
+ */
+export const deleteConversation = mutation({
+  args: { conversationId: v.id("conversations") },
+  handler: async (ctx, { conversationId }) => {
+    // 1. 验证用户身份
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("用户未认证，无法删除");
+    }
+    const userId = identity.subject;
+
+    // 2. 验证会话所有权
+    const conversation = await ctx.db.get(conversationId);
+    if (!conversation) {
+      throw new Error("会话未找到");
+    }
+    if (conversation.userId !== userId) {
+      throw new Error("无权删除此会话");
+    }
+
+    // 3. 查询与该会话相关的所有消息
+    const messages = await ctx.db
+      .query("messages")
+      .withIndex("by_conversationId", (q) => q.eq("conversationId", conversationId))
+      .collect();
+
+    // 4. 批量删除所有相关消息
+    await Promise.all(messages.map((message) => ctx.db.delete(message._id)));
+
+    // 5. 删除会话本身
+    await ctx.db.delete(conversationId);
+
+    return { success: true };
+  },
 }); 
