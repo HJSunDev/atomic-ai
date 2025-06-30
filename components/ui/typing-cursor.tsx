@@ -114,12 +114,12 @@ export const AICursor = () => (
   />
 );
 
-export const ThinkingCursor = () => (
+export const ThinkingCursor = ({ color = "#10b981" }: { color?: string }) => (
   <TypingCursor
     type="custom"
     customText="●"
     speed="slow"
-    color="#10b981"
+    color={color}
     className="text-green-500"
   />
 );

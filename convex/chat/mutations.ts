@@ -1,64 +1,7 @@
 import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
-
-/**
- * 开始新会话
- * 用户发起新聊天时创建对话记录
- */
-export const createConversation = mutation({
-  args: {
-    title: v.optional(v.string()),
-    promptModuleId: v.optional(v.id("promptModules")),
-  },
-  handler: async (ctx, args) => {
-    // 从认证上下文获取用户ID
-    const userId = (await ctx.auth.getUserIdentity())?.subject;
-    if (!userId) throw new Error("未授权访问");
-
-    const conversationId = await ctx.db.insert("conversations", {
-      userId: userId,
-      title: args.title,
-      promptModuleId: args.promptModuleId,
-    });
-    
-    return conversationId;
-  },
-});
-
-/**
- * 发送消息到对话
- * 保存用户问题或AI回复到数据库
- */
-export const createMessage = mutation({
-  args: {
-    conversationId: v.id("conversations"),
-    parentMessageId: v.optional(v.id("messages")),
-    role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system")),
-    content: v.string(),
-    isChosenReply: v.optional(v.boolean()),
-    metadata: v.optional(v.object({
-      aiModel: v.optional(v.string()),
-      tokensUsed: v.optional(v.number()),
-      durationMs: v.optional(v.number()),
-    })),
-  },
-  handler: async (ctx, args) => {
-    // 验证用户身份
-    const userId = (await ctx.auth.getUserIdentity())?.subject;
-    if (!userId) throw new Error("未授权访问");
-    
-    const messageId = await ctx.db.insert("messages", {
-      conversationId: args.conversationId,
-      parentMessageId: args.parentMessageId,
-      role: args.role,
-      content: args.content,
-      isChosenReply: args.isChosenReply,
-      metadata: args.metadata,
-    });
-    
-    return messageId;
-  },
-});
+import { generateConversationTitle } from "../_lib/chatUtils";
+import { Id } from "../_generated/dataModel";
 
 /**
  * 更新消息内容
@@ -209,5 +152,68 @@ export const deleteConversation = mutation({
     await ctx.db.delete(conversationId);
 
     return { success: true };
+  },
+});
+
+/**
+ * 开启一轮对话
+ */
+export const startNewChatRound = mutation({
+  args: {
+    userMessage: v.string(),
+    conversationId: v.optional(v.id("conversations")),
+  },
+  handler: async (
+    ctx,
+    args
+  ): Promise<{
+    conversationId: Id<"conversations">;
+    userMessageId: Id<"messages">;
+    assistantMessageId: Id<"messages">;
+  }> => {
+    // 1. 验证用户身份
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    let convId = args.conversationId;
+
+    // 2. 如果没有会话ID，创建新会话
+    if (!convId) {
+      const title = generateConversationTitle(args.userMessage);
+      convId = await ctx.db.insert("conversations", {
+        userId: userId,
+        title: title,
+      });
+    }
+
+    // 3. 创建用户消息
+    // 注意：用户消息永远是对话树的根节点，parentMessageId 总是 undefined
+    // 系统消息和用户消息的isChosenReply字段默认都是true，以简化查询
+    const userMessageId = await ctx.db.insert("messages", {
+      conversationId: convId,
+      parentMessageId: undefined,
+      role: "user",
+      content: args.userMessage,
+      isChosenReply: true,
+    });
+
+    // 4. 创建空的AI消息作为占位符
+    const assistantMessageId = await ctx.db.insert("messages", {
+      conversationId: convId,
+      parentMessageId: userMessageId,
+      role: "assistant",
+      content: "", // 内容为空，等待action填充
+      isChosenReply: true,
+      metadata: {
+        // 初始元数据，表示正在处理
+        aiModel: "pending...",
+      },
+    });
+
+    return {
+      conversationId: convId,
+      userMessageId,
+      assistantMessageId,
+    };
   },
 }); 

@@ -20,6 +20,7 @@ import {
   Trash2
 } from "lucide-react";
 import { AVAILABLE_MODELS, DEFAULT_MODEL_ID } from "@/convex/_lib/models";
+import { ThinkingCursor, TypingCursor } from "@/components/ui/typing-cursor";
 
 
 export default function StreamChatTestPage() {
@@ -43,8 +44,10 @@ export default function StreamChatTestPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // --- Convex Data Hooks ---
+  // Convex mutation: 用于准备聊天，快速创建消息占位符
+  const startNewChatRound = useMutation(api.chat.mutations.startNewChatRound);
   // Convex action: 用于调用后端流式聊天逻辑
-  const streamChat = useAction(api.chat.action.streamChat);
+  const streamAssistantResponse = useAction(api.chat.action.streamAssistantResponse);
   
   // Convex mutation: 用于删除会话
   const deleteConversation = useMutation(api.chat.mutations.deleteConversation);
@@ -78,8 +81,8 @@ export default function StreamChatTestPage() {
 
     // 如果找到了这条消息，并且它已经包含了元数据（metadata），
     // 这就明确地标志着后端的流式处理和元数据更新已全部完成。
-    if (streamingMessage && streamingMessage.metadata) {
-      // 清除流式状态，这将导致UI上的"流式传输中"指示器消失
+    if (streamingMessage && streamingMessage.metadata?.durationMs) {
+      // 清除流式状态，这将导致UI上的光标消失
       setStreamingMessageId(null);
     }
   }, [messages, streamingMessageId]); // 当消息列表或流式ID变化时重新运行此效果
@@ -97,44 +100,54 @@ export default function StreamChatTestPage() {
   // --- Event Handlers ---
   // 处理发送消息的逻辑
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading || !isSignedIn) return;
+    // 如果输入为空、未登录或正在等待上一条消息响应，则不执行任何操作
+    if (!inputValue.trim() || isLoading || !isSignedIn || streamingMessageId) return;
 
     const userMessage = inputValue;
     setInputValue("");
+    // 设置加载状态，短暂禁用输入框，防止在prepareChat完成前重复发送
     setIsLoading(true);
 
     try {
-      // 不等待streamChat完成，而是启动流式处理
-      streamChat({
+      // 步骤 1: 调用 mutation 快速创建消息并获取ID。这是一个快速的、同步的操作。
+      const result = await startNewChatRound({
         userMessage,
         conversationId: currentConversationId || undefined,
-        modelId: selectedModel,
-        userApiKey: apiKey || undefined,
-        systemPrompt: systemPrompt || undefined,
-      }).then((result) => {
-        if (result.success) {
-          // 如果这是新会话，设置当前会话ID
-          if (!currentConversationId && result.conversationId) {
-            setCurrentConversationId(result.conversationId);
-          }
-          // 设置正在流式传输的消息ID，以启动UI上的流式效果
-          if (result.assistantMessageId) {
-            setStreamingMessageId(result.assistantMessageId);
-          }
-        } else {
-          console.error("流式聊天失败:", result.error);
-        }
-      })
-      .catch((error) => {
-        console.error("发送消息失败:", error);
-      })
-      .finally(() => {
-        // 无论成功还是失败，最终都将加载状态设置为false
-        setIsLoading(false);
       });
 
+      // 如果 prepareChat 成功并返回了结果
+      if (result) {
+        const { conversationId, assistantMessageId } = result;
+        
+        // 如果这是一个新会话, 更新UI状态以反映新的会话ID
+        if (!currentConversationId) {
+          setCurrentConversationId(conversationId);
+        }
+        
+        // 设置正在流式传输的消息ID, 这会触发UI上的"流式传输中"指示器
+        setStreamingMessageId(assistantMessageId);
+
+        // 步骤 2: 异步调用 action 来获取AI的实际流式响应。
+        // 这是一个"即发即忘"的调用，我们不使用await来等待它完成，
+        // 而是附加一个.catch来处理可能的错误。
+        streamAssistantResponse({
+          conversationId,
+          assistantMessageId,
+          modelId: selectedModel,
+          userApiKey: apiKey || undefined,
+          systemPrompt: systemPrompt || undefined,
+        }).catch((error) => {
+          console.error("流式聊天处理失败:", error);
+          // 错误处理：后端的action已经将错误信息更新到了消息记录中，
+          // 前端在这里只需要确保清除流式状态，以允许用户再次交互。
+          setStreamingMessageId(null);
+        });
+      }
     } catch (error) {
-      console.error("发送消息失败:", error);
+      console.error("准备聊天失败:", error);
+      // 在这里可以添加用户反馈，例如使用Toast组件显示错误提示
+    } finally {
+      // 无论成功与否, 立即解除输入框的锁定状态，允许用户输入下一条消息
       setIsLoading(false);
     }
   };
@@ -333,23 +346,16 @@ export default function StreamChatTestPage() {
                                     {message.metadata.aiModel}
                                   </span>
                                 )}
-                                {/* 流式传输指示器 */}
-                                {streamingMessageId === message._id && (
-                                  <div className="flex items-center gap-1">
-                                    <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                                    <span className="text-xs text-green-600 dark:text-green-400">流式传输中</span>
-                                  </div>
-                                )}
                               </div>
                               <p className="text-sm whitespace-pre-wrap">
                                 {message.content}
-                                {/* 如果是正在流式传输的消息且内容为空，显示占位符 */}
+                                {/* 如果是正在流式传输的消息且内容为空，显示思考光标 */}
                                 {streamingMessageId === message._id && !message.content && (
-                                  <span className="text-gray-400 italic">正在生成回复...</span>
+                                  <ThinkingCursor color="#947DF2" />
                                 )}
-                                {/* 流式传输中的光标效果 */}
+                                {/* 如果正在流式传输且有内容，显示打字光标 */}
                                 {streamingMessageId === message._id && message.content && (
-                                  <span className="inline-block w-2 h-4 bg-blue-500 ml-1 animate-pulse"></span>
+                                  <TypingCursor />
                                 )}
                               </p>
                               {message.metadata && !streamingMessageId && (
