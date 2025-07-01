@@ -1,18 +1,19 @@
 import React from "react";
-import { Search, ChevronDown, PanelLeftClose, Star, MoreVertical } from "lucide-react";
+import { Search, ChevronDown, Star, MoreVertical } from "lucide-react";
+import { Input } from "@/components/ui/input";
 
 // 聊天侧边栏组件
 export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
   return (
-    <div className="w-[13.5rem] h-full border-r bg-white dark:bg-[#202020] flex flex-col">
+    <main className="w-[13.5rem] h-full border-r bg-white dark:bg-[#202020] flex flex-col overflow-y-auto">
       {/* 顶部搜索和折叠区域 */}
-      <div className="p-3 flex items-center justify-between">
+      <header className="sticky top-0 z-10 bg-white dark:bg-[#202020] pt-3 pb-3 pl-3 pr-1 flex items-center justify-between">
         <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
-          <input 
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-600 dark:text-gray-400 h-4 w-4" />
+          <Input 
             type="text" 
-            placeholder="搜索智能体或聊天" 
-            className="w-full pl-9 pr-3 py-2 bg-gray-100 dark:bg-[#27272A] rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-[#947CF1] focus:border-[#947CF1]"
+            placeholder="搜索聊天记录" 
+            className="h-[2rem] pl-9 pr-3 py-1.5 bg-gray-100 dark:bg-[#27272A] text-sm placeholder:text-xs border-0 focus-visible:ring-1 focus-visible:ring-[#947CF1] focus-visible:border-[#947CF1]"
           />
         </div>
         <button 
@@ -20,12 +21,21 @@ export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
           className="ml-2 p-1 rounded-md hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer"
           title="收起聊天侧边栏"
         >
-          <PanelLeftClose className="h-5 w-5 text-gray-500 dark:text-gray-400" />
+          <svg className="h-5 w-5 text-gray-500 dark:text-gray-400" width="20" height="20" fill="none" viewBox="0 0 20 20">
+            <g>
+              <path 
+                fillRule="evenodd" 
+                clipRule="evenodd" 
+                d="M2.167 6.667A2.833 2.833 0 0 1 5 3.833h2.708v12.334H5a2.833 2.833 0 0 1-2.833-2.834V6.667ZM9.042 17.5H5a4.167 4.167 0 0 1-4.167-4.167V6.667A4.167 4.167 0 0 1 5 2.5h10a4.167 4.167 0 0 1 4.167 4.167v6.666A4.167 4.167 0 0 1 15 17.5H9.042Zm0-13.667H15a2.833 2.833 0 0 1 2.833 2.834v6.666A2.833 2.833 0 0 1 15 16.167H9.042V3.833ZM3.583 6.5c0-.368.336-.667.75-.667H5.75c.414 0 .75.299.75.667 0 .368-.336.667-.75.667H4.333c-.414 0-.75-.299-.75-.667Zm.75 1.833c-.414 0-.75.299-.75.667 0 .368.336.667.75.667H5.75c.414 0 .75-.299.75-.667 0-.368-.336-.667-.75-.667H4.333Z" 
+                fill="currentColor"
+              />
+            </g>
+          </svg>
         </button>
-      </div>
+      </header>
       
       {/* AI模型列表 */}
-      <div className="overflow-y-auto">
+      <section>
         {/* Monica */}
         <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
           <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mr-2">
@@ -72,10 +82,10 @@ export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
           <span className="text-sm text-gray-500 pl-1">更多</span>
           <ChevronDown className="w-4 h-4 ml-1 text-gray-500" />
         </div>
-      </div>
+      </section>
       
       {/* 收藏区域 */}
-      <div className="mt-5">
+      <section className="mt-5">
         <div className="px-3 py-2 text-sm font-medium">收藏</div>
         <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
           <span className="text-sm">购房财务报告</span>
@@ -84,10 +94,10 @@ export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
           <span className="text-sm text-gray-500 pl-1">更多</span>
           <ChevronDown className="w-4 h-4 ml-1 text-gray-500" />
         </div>
-      </div>
+      </section>
       
       {/* 最近聊天区域 */}
-      <div className="mt-5 flex-1 overflow-y-auto">
+      <section className="mt-5 mb-3">
         <div className="px-3 py-2 text-sm font-medium flex items-center justify-between">
           <span>最近</span>
           <MoreVertical className="w-4 h-4 text-gray-500" />
@@ -132,7 +142,7 @@ export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
         <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
           <span className="text-sm">和室友沟通</span>
         </div>
-      </div>
-    </div>
+      </section>
+    </main>
   );
 }; 
