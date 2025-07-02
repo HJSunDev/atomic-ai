@@ -2,7 +2,7 @@
 
 import { useStream } from "@convex-dev/persistent-text-streaming/react";
 import { api } from "../../../convex/_generated/api";
-import { TypingCursor } from "@/components/ui/typing-cursor";
+import { TypingCursor } from "@/components/custom";
 
 // 流式传输组件的属性接口定义
 interface StreamComponentProps {

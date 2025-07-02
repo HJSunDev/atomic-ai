@@ -20,7 +20,7 @@ import {
   Trash2
 } from "lucide-react";
 import { AVAILABLE_MODELS, DEFAULT_MODEL_ID } from "@/convex/_lib/models";
-import { ThinkingCursor, TypingCursor } from "@/components/ui/typing-cursor";
+import { ThinkingCursor, TypingCursor } from "@/components/custom";
 
 
 export default function StreamChatTestPage() {

@@ -1,11 +1,21 @@
 import React from "react";
 import { Search, ChevronDown, Star, MoreVertical } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { ScrollView } from "@/components/custom";
 
 // 聊天侧边栏组件
 export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
   return (
-    <main className="w-[13.5rem] h-full border-r bg-white dark:bg-[#202020] flex flex-col overflow-y-auto">
+    <ScrollView
+      as="main"
+      className="w-[13.5rem] h-full border-r bg-white dark:bg-[#202020] flex flex-col"
+      scrollbarConfig={{
+        thumbWidth: 5,
+        thumbColor: "rgba(156, 163, 175, 0.6)",
+        trackColor: "transparent",
+        autoHide: true,
+      }}
+    >
       {/* 顶部搜索和折叠区域 */}
       <header className="sticky top-0 z-10 bg-white dark:bg-[#202020] pt-3 pb-3 pl-3 pr-1 flex items-center justify-between">
         <div className="relative flex-1">
@@ -143,6 +153,6 @@ export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
           <span className="text-sm">和室友沟通</span>
         </div>
       </section>
-    </main>
+    </ScrollView>
   );
 }; 

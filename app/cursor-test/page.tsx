@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TypingCursor, AICursor, ThinkingCursor, WritingCursor } from "@/components/ui/typing-cursor";
+import { TypingCursor, AICursor, ThinkingCursor, WritingCursor } from "@/components/custom";
 
 export default function CursorTestPage() {
   const [showCursor, setShowCursor] = useState(true);
@@ -160,7 +160,7 @@ export default function CursorTestPage() {
           <div className="prose text-sm">
             <h4 className="font-medium mb-2">光标组件使用方法:</h4>
             <pre className="bg-gray-100 p-3 rounded text-xs overflow-x-auto">
-{`import { TypingCursor } from "@/components/ui/typing-cursor";
+{`import { TypingCursor } from "@/components/custom";
 
 // 基础使用
 <TypingCursor 
