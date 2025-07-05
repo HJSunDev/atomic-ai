@@ -1,7 +1,8 @@
 import React from "react";
-import { Search, ChevronDown, Star, MoreVertical } from "lucide-react";
+import { Search, ChevronDown, MoreVertical } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollView } from "@/components/custom";
+import { AiModelList } from "./AiModelList";
 
 // 聊天侧边栏组件
 export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
@@ -45,54 +46,7 @@ export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
       </header>
       
       {/* AI模型列表 */}
-      <section>
-        {/* Monica */}
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <div className="w-6 h-6 rounded-full bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center mr-2">
-            <div className="w-4 h-4 rounded-full border-2 border-purple-500"></div>
-          </div>
-          <span className="text-sm font-medium">Monica</span>
-        </div>
-        
-        {/* Claude 3.7 Sonnet */}
-        <div className="flex items-center p-3 bg-gray-50 dark:bg-[#27272A] cursor-pointer">
-          <div className="w-6 h-6 rounded-full bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center mr-2">
-            <div className="w-3 h-3 bg-orange-400 rounded-full"></div>
-          </div>
-          <span className="text-sm font-medium">Claude 3.7 Sonnet</span>
-          <Star className="w-4 h-4 ml-auto text-blue-500 fill-blue-500 dark:text-gray-300 dark:fill-gray-300" />
-        </div>
-        
-        {/* DeepSeek R1 */}
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-2">
-            <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-          </div>
-          <span className="text-sm font-medium">DeepSeek R1</span>
-          <Star className="w-4 h-4 ml-auto text-blue-500 fill-blue-500 dark:text-gray-300 dark:fill-gray-300" />
-        </div>
-        
-        {/* DeepSeek V3 */}
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <div className="w-6 h-6 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center mr-2">
-            <div className="w-3 h-3 bg-blue-400 rounded-full"></div>
-          </div>
-          <span className="text-sm font-medium">DeepSeek V3</span>
-          <Star className="w-4 h-4 ml-auto text-blue-500 fill-blue-500 dark:text-gray-300 dark:fill-gray-300" />
-        </div>
-        
-        {/* GPT-4o */}
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <div className="w-6 h-6 rounded-full bg-gray-800 dark:bg-gray-700 flex items-center justify-center mr-2"></div>
-          <span className="text-sm font-medium">GPT-4o</span>
-        </div>
-        
-        {/* 更多 */}
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm text-gray-500 pl-1">更多</span>
-          <ChevronDown className="w-4 h-4 ml-1 text-gray-500" />
-        </div>
-      </section>
+      <AiModelList />
       
       {/* 收藏区域 */}
       <section className="mt-5">
