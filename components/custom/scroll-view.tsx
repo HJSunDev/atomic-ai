@@ -125,6 +125,7 @@ export const ScrollView = forwardRef<HTMLElement, ScrollViewProps>(
     // DOM元素引用
     const containerRef = useRef<HTMLElement>(null);  // 容器元素引用
     const contentRef = useRef<HTMLDivElement>(null);  // 内容区域引用
+    const contentWrapperRef = useRef<HTMLDivElement>(null); // 内容包装器引用 - 用于监听内容尺寸变化
     const verticalThumbRef = useRef<HTMLDivElement>(null);  // 滚动条滑块引用
 
     // 组件状态管理
@@ -342,6 +343,23 @@ export const ScrollView = forwardRef<HTMLElement, ScrollViewProps>(
       return () => window.removeEventListener('resize', handleResize);
     }, [updateScrollbar]);
 
+    // 使用 ResizeObserver 监听内容包装器尺寸变化
+    useEffect(() => {
+      const contentWrapperEl = contentWrapperRef.current;
+      if (!contentWrapperEl) return;
+
+      // 当内容尺寸变化时，调用 updateScrollbar
+      const observer = new ResizeObserver(() => {
+        updateScrollbar();
+      });
+
+      // 开始观察内容包装器元素
+      observer.observe(contentWrapperEl);
+
+      // 组件卸载时，停止观察
+      return () => observer.disconnect();
+    }, [updateScrollbar]);
+
     // 组件挂载时初始化滚动条
     useEffect(() => {
       updateScrollbar();
@@ -408,7 +426,7 @@ export const ScrollView = forwardRef<HTMLElement, ScrollViewProps>(
             msOverflowStyle: 'none'  // IE/Edge
           }}
         >
-          {children}
+          <div ref={contentWrapperRef}>{children}</div>
         </div>
 
         {/* 自定义垂直滚动条 */}
