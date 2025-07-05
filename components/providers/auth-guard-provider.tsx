@@ -47,15 +47,11 @@ export const AuthGuardProvider = ({ children }: AuthGuardProviderProps) => {
     }
   }, [isSignedIn, isLoaded, isPublicPath, router]); // 将isPublicPath加入依赖项
 
-  // 在Clerk JS脚本加载和认证状态确定之前，显示一个加载界面。
-  // 这可以防止在认证状态未知时渲染页面内容，避免页面闪烁或渲染不一致。
+  // 在Clerk JS脚本加载和认证状态确定之前，不渲染任何内容。
+  // 这个过程通常只需要几十到几百毫秒，用户几乎感觉不到。
+  // 这可以防止在认证状态未知时渲染页面内容，避免状态不一致导致的错误。
   if (!isLoaded) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        {/* 这里可以放置一个更美观的加载动画 */}
-        <div>Loading...</div>
-      </div>
-    );
+    return null;
   }
   
   // 如果用户未登录并且正在访问受保护的路由，
