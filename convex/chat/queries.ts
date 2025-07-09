@@ -1,5 +1,6 @@
 import { query } from "../_generated/server";
 import { v } from "convex/values";
+import { groupConversationsByTime } from "../_lib/timeUtils";
 
 /**
  * 获取用户的对话列表
@@ -71,5 +72,39 @@ export const getMessageReplies = query({
       .collect();
     
     return replies;
+  },
+});
+
+/**
+ * 获取当前用户的所有会话，并按时间分组
+ * 分组规则：今天、昨天、7天内、30天内、更早
+ * 只有存在会话的分组才会被返回
+ */
+export const listGroupedByTime = query({
+  args: {},
+  handler: async (ctx) => {
+    // 1. 获取认证用户信息
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      // 如果用户未认证，根据业务需求可以抛出错误或返回空数组。
+      // 在这里我们选择返回空数组，因为前端可能需要优雅地处理未登录状态。
+      return [];
+    }
+
+    // 2. 从数据库查询该用户的所有会话
+    // 使用在 schema 中定义的 `by_userId` 索引来高效查询，并按创建时间降序排列。
+    const conversations = await ctx.db
+      .query("conversations")
+      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .order("desc")
+      .collect();
+
+    // 3. 如果没有会话，直接返回空数组
+    if (conversations.length === 0) {
+      return [];
+    }
+    
+    // 4. 使用抽离的工具函数进行分组，保持本函数职责单一
+    return groupConversationsByTime(conversations);
   },
 });
