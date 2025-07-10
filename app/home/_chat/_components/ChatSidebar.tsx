@@ -1,8 +1,9 @@
 import React from "react";
-import { Search, ChevronDown, MoreVertical } from "lucide-react";
+import { Search, MoreVertical } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollView } from "@/components/custom";
 import { AiModelList } from "./AiModelList";
+import { RecentChatList } from "./RecentChatList";
 
 // 聊天侧边栏组件
 export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
@@ -48,65 +49,9 @@ export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
       {/* AI模型列表 */}
       <AiModelList />
       
-      {/* 收藏区域 */}
-      <section className="mt-5">
-        <div className="px-3 py-2 text-sm font-medium">收藏</div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">购房财务报告</span>
-        </div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm text-gray-500 pl-1">更多</span>
-          <ChevronDown className="w-4 h-4 ml-1 text-gray-500" />
-        </div>
-      </section>
-      
-      {/* 最近聊天区域 */}
-      <section className="mt-5 mb-3">
-        <div className="px-3 py-2 text-sm font-medium flex items-center justify-between">
-          <span>最近</span>
-          <MoreVertical className="w-4 h-4 text-gray-500" />
-        </div>
-        
-        {/* 7天内 */}
-        <div className="px-3 py-1 text-xs text-gray-500">7天内</div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">帮助commit信息</span>
-          <MoreVertical className="w-4 h-4 ml-auto text-gray-400 opacity-0 group-hover:opacity-100" />
-        </div>
-        
-        {/* 30天内 */}
-        <div className="px-3 py-1 text-xs text-gray-500">30天内</div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">专业人事顾问服务</span>
-        </div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">dnd-kit 拖拽库使用介绍</span>
-        </div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">Zustand 在 Next.js 应用中的...</span>
-        </div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">@dnd-kit/core 模块介绍</span>
-        </div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">前端开发工作产品构思</span>
-        </div>
-        
-        {/* 更远 */}
-        <div className="px-3 py-1 text-xs text-gray-500">更远</div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">使用Tailwind CSS实现响应式...</span>
-        </div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">心理需求与情绪分析</span>
-        </div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">soulpilot应用git</span>
-        </div>
-        <div className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer">
-          <span className="text-sm">和室友沟通</span>
-        </div>
-      </section>
+      {/* 聊天记录列表 */}
+      <RecentChatList />
+
     </ScrollView>
   );
 }; 
