@@ -165,9 +165,11 @@ export const ScrollView = forwardRef<HTMLElement, ScrollViewProps>(
         return;
       }
 
-      // 无论是否自动隐藏，只要内容需要滚动就应该能够显示滚动条
-      // 隐藏逻辑由其他函数处理
-      setShowScrollbar(true);
+      // 只有当 autoHide 为 false 时，才无条件显示滚动条。
+      // 当 autoHide 为 true 时，滚动条的显示将由 handleMouseEnter 和 handleScroll 等事件来触发。
+      if (!config.autoHide) {
+        setShowScrollbar(true);
+      }
 
       // 计算滚动条滑块高度
       // 公式：滑块高度 = max(容器高度比例 × 容器高度, 最小滑块高度)
