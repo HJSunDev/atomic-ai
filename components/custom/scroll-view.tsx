@@ -141,6 +141,30 @@ export const ScrollView = forwardRef<HTMLElement, ScrollViewProps>(
     const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
     /**
+     * @description 工具函数：安排一个延迟任务来隐藏滚动条
+     * 仅在 `autoHide` 配置启用时生效。
+     * 它会设置一个计时器，如果在计时器结束前没有其他交互（如鼠标悬停），滚动条就会被隐藏。
+     * 任何新的滚动或鼠标悬停都会重置这个计时器。
+     */
+    const scheduleHide = useCallback(() => {
+      // 如果禁用自动隐藏或正在拖拽，则不隐藏
+      if (!config.autoHide || isDragging) return;
+      
+      // 清除之前的定时器
+      if (hideTimeoutRef.current) {
+        clearTimeout(hideTimeoutRef.current);
+      }
+      
+      // 设置新的隐藏定时器
+      hideTimeoutRef.current = setTimeout(() => {
+        // 如果鼠标不在容器内且不在拖拽状态，则隐藏滚动条
+        if (!isHovering && !isDragging) {
+          setShowScrollbar(false);
+        }
+      }, config.hideDelay);
+    }, [config.autoHide, config.hideDelay, isHovering, isDragging]);
+
+    /**
      * @description 核心计算函数：根据内容滚动状态，更新滚动条的尺寸和位置
      * 这是同步UI状态和DOM状态的关键。它会被多种操作触发（如内容滚动、窗口大小变化）。
      * 1. 计算滑块的高度：内容越长，滑块越短。
@@ -165,10 +189,13 @@ export const ScrollView = forwardRef<HTMLElement, ScrollViewProps>(
         return;
       }
 
-      // 只有当 autoHide 为 false 时，才无条件显示滚动条。
-      // 当 autoHide 为 true 时，滚动条的显示将由 handleMouseEnter 和 handleScroll 等事件来触发。
-      if (!config.autoHide) {
-        setShowScrollbar(true);
+      // 当内容溢出时，我们需要确保滚动条是可见的，以便用户知道可以滚动。
+      // 即使启用了 autoHide，也应在此时刻（例如，内容动态加载后）短暂显示滚动条。
+      setShowScrollbar(true);
+      
+      // 如果启用了 autoHide，则安排一个延迟任务来隐藏它
+      if (config.autoHide) {
+        scheduleHide();
       }
 
       // 计算滚动条滑块高度
@@ -186,30 +213,7 @@ export const ScrollView = forwardRef<HTMLElement, ScrollViewProps>(
       const maxThumbTop = containerHeight - thumbH;  // 滑块在轨道中的最大可移动距离
       const thumbT = scrollRatio * maxThumbTop;  // 根据滚动比例计算滑块当前位置
       setThumbTop(thumbT);
-    }, [config.minThumbSize]);
-
-    /**
-     * @description 工具函数：安排一个延迟任务来隐藏滚动条
-     * 仅在 `autoHide` 配置启用时生效。
-     * 它会设置一个计时器，如果在计时器结束前没有其他交互（如鼠标悬停），滚动条就会被隐藏。
-     * 任何新的滚动或鼠标悬停都会重置这个计时器。
-     */
-    const scheduleHide = useCallback(() => {
-      // 如果禁用自动隐藏或正在拖拽，则不隐藏
-      if (!config.autoHide || isDragging) return;
-      
-      // 清除之前的定时器
-      if (hideTimeoutRef.current) {
-        clearTimeout(hideTimeoutRef.current);
-      }
-      
-      // 设置新的隐藏定时器
-      hideTimeoutRef.current = setTimeout(() => {
-        if (!isHovering && !isDragging) {
-          setShowScrollbar(false);
-        }
-      }, config.hideDelay);
-    }, [config.autoHide, config.hideDelay, isHovering, isDragging]);
+    }, [config.minThumbSize, config.autoHide, scheduleHide]);
 
     /**
      * @description 场景一: 内容区域滚动 -> 更新滚动条位置
