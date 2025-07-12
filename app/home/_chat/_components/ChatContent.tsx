@@ -20,7 +20,7 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
     <div className="flex-1 h-full flex flex-col bg-white dark:bg-[#202020]">
       {/* 当侧边栏收起时，显示展开按钮 */}
       {!showSidebar && (
-        <div className="absolute top-4 left-4 z-10">
+        <section className="absolute top-4 left-4 z-10">
           <button 
             onClick={onToggleSidebar}
             className="p-2 rounded-md bg-white dark:bg-gray-800 shadow-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-all cursor-pointer"
@@ -28,7 +28,7 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
           >
             <PanelLeftOpen className="h-5 w-5 text-gray-500 dark:text-gray-400" />
           </button>
-        </div>
+        </section>
       )}
       
       <AiChatCore 
