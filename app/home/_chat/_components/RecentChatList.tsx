@@ -1,9 +1,15 @@
 import React, { useState } from "react";
-import { Loader2, MoreVertical, ChevronDown } from "lucide-react";
+import { Loader2, MoreVertical, ChevronDown, Edit, Star, Trash2 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { Id, Doc } from "@/convex/_generated/dataModel";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 // 最近聊天记录列表组件
 export function RecentChatList() {
@@ -12,34 +18,83 @@ export function RecentChatList() {
   
   // 2. 维护当前选中的会话ID (后续可接入全局状态管理)
   const [selectedConversationId, setSelectedConversationId] = useState<Id<"conversations"> | null>(null);
+  
+  // 3. 维护当前打开下拉菜单的会话ID
+  const [openMenuConversationId, setOpenMenuConversationId] = useState<Id<"conversations"> | null>(null);
+
+  // 处理编辑对话标题
+  const handleEditTitle = (conversationId: Id<"conversations">) => {
+    console.log("编辑对话标题:", conversationId);
+    // TODO: 实现编辑标题功能
+  };
+
+  // 处理添加到收藏
+  const handleAddToFavorites = (conversationId: Id<"conversations">) => {
+    console.log("添加到收藏:", conversationId);
+    // TODO: 实现收藏功能
+  };
+
+  // 处理删除对话
+  const handleDeleteConversation = (conversationId: Id<"conversations">) => {
+    console.log("删除对话:", conversationId);
+    // TODO: 实现删除功能
+  };
 
   // 渲染单个会话项的函数, 样式参考 AiModelList
   const renderConversationItem = (conversation: Doc<"conversations">) => {
     const isSelected = selectedConversationId === conversation._id;
+    const isMenuOpen = openMenuConversationId === conversation._id;
+    
     return (
       <div
         key={conversation._id}
         className={cn(
           "group flex items-center p-[7px] mx-2 my-0.5 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-[#27272A]",
-          isSelected && "bg-gray-100 dark:bg-[#27272A]"
+          isSelected && "bg-gray-100 dark:bg-[#27272A]",
+          isMenuOpen && "bg-gray-100 dark:bg-[#27272A]" // 菜单打开时保持激活状态
         )}
         onClick={() => setSelectedConversationId(conversation._id)}
       >
         <span className="text-xs font-medium flex-1 truncate">
           {conversation.title || "无标题对话"}
         </span>
-        <div
-          className={cn(
-            "ml-auto p-[7px] rounded-md transition-all opacity-0 group-hover:opacity-100",
-            "hover:bg-gray-200 dark:hover:bg-gray-700"
-          )}
-          onClick={(e) => {
-            e.stopPropagation(); // 防止触发外层div的onClick
-            // TODO: 在此实现更多操作菜单功能
-          }}
-        >
-          <MoreVertical className="w-3 h-3 text-gray-400" />
-        </div>
+        
+        {/* 操作下拉菜单 */}
+        <DropdownMenu onOpenChange={(open) => {
+          setOpenMenuConversationId(open ? conversation._id : null);
+        }}>
+          <DropdownMenuTrigger asChild>
+            <div
+              className={cn(
+                "ml-auto p-[7px] rounded-md transition-all opacity-0 group-hover:opacity-100",
+                "hover:bg-gray-200 dark:hover:bg-gray-700",
+                isMenuOpen && "opacity-100 bg-gray-200 dark:bg-gray-700" // 菜单打开时保持激活状态
+              )}
+              onClick={(e) => {
+                e.stopPropagation(); // 防止触发外层div的onClick
+              }}
+            >
+              <MoreVertical className="w-3 h-3 text-gray-400" />
+            </div>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-36">
+            <DropdownMenuItem onClick={() => handleEditTitle(conversation._id)}>
+              <Edit className="w-4 h-4 mr-2" />
+              编辑对话标题
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleAddToFavorites(conversation._id)}>
+              <Star className="w-4 h-4 mr-2" />
+              添加到收藏
+            </DropdownMenuItem>
+            <DropdownMenuItem 
+              onClick={() => handleDeleteConversation(conversation._id)}
+              className="text-red-600 focus:text-red-600"
+            >
+              <Trash2 className="w-4 h-4 mr-2" />
+              删除对话
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
     );
   };
