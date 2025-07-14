@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Loader2, MoreVertical, ChevronDown, Edit, Star, Trash2 } from "lucide-react";
+import { MoreVertical, ChevronDown, Edit, Star, Trash2 } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // 最近聊天记录列表组件
 export function RecentChatList() {
@@ -39,7 +40,7 @@ export function RecentChatList() {
     console.log("删除对话:", conversationId);
     // TODO: 实现删除功能
   };
-
+  
   // 渲染单个会话项的函数, 样式参考 AiModelList
   const renderConversationItem = (conversation: Doc<"conversations">) => {
     const isSelected = selectedConversationId === conversation._id;
@@ -77,18 +78,18 @@ export function RecentChatList() {
               <MoreVertical className="w-3 h-3 text-gray-400" />
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-36">
-            <DropdownMenuItem onClick={() => handleEditTitle(conversation._id)}>
+          <DropdownMenuContent align="center" className="w-36 py-2">
+            <DropdownMenuItem onClick={() => handleEditTitle(conversation._id)} className="cursor-pointer">
               <Edit className="w-4 h-4 mr-2" />
               编辑对话标题
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => handleAddToFavorites(conversation._id)}>
+            <DropdownMenuItem onClick={() => handleAddToFavorites(conversation._id)} className="cursor-pointer">
               <Star className="w-4 h-4 mr-2" />
               添加到收藏
             </DropdownMenuItem>
             <DropdownMenuItem 
               onClick={() => handleDeleteConversation(conversation._id)}
-              className="text-red-600 focus:text-red-600"
+              className="text-red-600 focus:text-red-600 cursor-pointer"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               删除对话
@@ -98,6 +99,89 @@ export function RecentChatList() {
       </div>
     );
   };
+  
+  let recentChatsContent;
+  // 处理加载状态
+  if (groupedConversations === undefined) {
+    recentChatsContent = (
+      <section className="mt-5 mb-3">
+        {/* 标题区域骨架屏 */}
+        <div className="px-3 py-2 flex items-center justify-between">
+          <Skeleton className="h-4 w-8 bg-gray-300 dark:bg-gray-600" />
+          <Skeleton className="h-4 w-4 bg-gray-300 dark:bg-gray-600" />
+        </div>
+        
+        {/* 模拟分组骨架屏 */}
+        <div className="space-y-4">
+          {/* 第一个分组 */}
+          <div>
+            {/* 分组标题骨架屏 */}
+            <div className="px-3 py-1">
+              <Skeleton className="h-3 w-8 bg-gray-300 dark:bg-gray-600" />
+            </div>
+            {/* 会话项骨架屏 */}
+            <div className="space-y-1">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="flex items-center p-[7px] mx-2">
+                  <Skeleton className="h-3 w-24 flex-1 bg-gray-300 dark:bg-gray-600" />
+                  <Skeleton className="h-3 w-3 ml-2 bg-gray-300 dark:bg-gray-600" />
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          {/* 第二个分组 */}
+          <div>
+            {/* 分组标题骨架屏 */}
+            <div className="px-3 py-1">
+              <Skeleton className="h-3 w-12 bg-gray-300 dark:bg-gray-600" />
+            </div>
+            {/* 会话项骨架屏 */}
+            <div className="space-y-1">
+              {[...Array(2)].map((_, i) => (
+                <div key={i} className="flex items-center p-[7px] mx-2">
+                  <Skeleton className="h-3 w-20 flex-1 bg-gray-300 dark:bg-gray-600" />
+                  <Skeleton className="h-3 w-3 ml-2 bg-gray-300 dark:bg-gray-600" />
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+    );
+  } 
+  // 处理无聊天记录的情况
+  else if (groupedConversations.length === 0) {
+    recentChatsContent = (
+      <section className="mt-5 mb-3">
+        <div className="px-3 py-2 text-sm font-medium">最近</div>
+        <div className="p-3 text-center text-xs text-gray-500">
+          暂无聊天记录
+        </div>
+      </section>
+    );
+  } 
+  // 处理有数据的情况
+  else {
+    recentChatsContent = (
+      <section className="mt-5 mb-3">
+        <div className="px-3 py-2 text-sm font-medium flex items-center justify-between">
+          <span>最近</span>
+          <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
+        </div>
+        
+        {groupedConversations.map((group) => (
+          <div key={group.groupName}>
+            {/* 渲染分组标题, e.g., '今天', '7天内' */}
+            <div className="px-3 py-1 text-xs text-gray-500">{group.groupName}</div>
+            
+            {/* 渲染该分组下的所有会话 */}
+            {group.conversations.map(renderConversationItem)}
+          </div>
+        ))}
+      </section>
+    );
+  }
 
   return (
     <>
@@ -114,51 +198,7 @@ export function RecentChatList() {
       </section>
 
       {/* 最近聊天区域 */}
-      {(() => {
-        // 3. 处理加载状态
-        if (groupedConversations === undefined) {
-          return (
-            <section className="mt-5 mb-3">
-              <div className="px-3 py-2 text-sm font-medium">最近</div>
-              <div className="flex items-center justify-center p-4">
-                <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
-                <span className="ml-2 text-sm text-gray-500">加载中...</span>
-              </div>
-            </section>
-          );
-        }
-        
-        // 4. 处理无聊天记录的情况
-        if (groupedConversations.length === 0) {
-          return (
-            <section className="mt-5 mb-3">
-              <div className="px-3 py-2 text-sm font-medium">最近</div>
-              <div className="p-3 text-center text-xs text-gray-500">
-                暂无聊天记录
-              </div>
-            </section>
-          );
-        }
-
-        return (
-          <section className="mt-5 mb-3">
-            <div className="px-3 py-2 text-sm font-medium flex items-center justify-between">
-              <span>最近</span>
-              <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
-            </div>
-            
-            {groupedConversations.map((group) => (
-              <div key={group.groupName}>
-                {/* 渲染分组标题, e.g., '今天', '7天内' */}
-                <div className="px-3 py-1 text-xs text-gray-500">{group.groupName}</div>
-                
-                {/* 渲染该分组下的所有会话 */}
-                {group.conversations.map(renderConversationItem)}
-              </div>
-            ))}
-          </section>
-        );
-      })()}
+      {recentChatsContent}
     </>
   );
 } 

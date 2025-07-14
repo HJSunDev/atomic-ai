@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from "react";
-import { Loader2, ChevronDown, Pin } from "lucide-react";
+import { ChevronDown, Pin } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 
 // AI模型列表组件
 export function AiModelList() {
@@ -54,10 +55,32 @@ export function AiModelList() {
   // 数据加载中状态
   if (allModels === undefined) {
     return (
-      <div className="flex items-center justify-center p-4">
-        <Loader2 className="h-5 w-5 animate-spin text-gray-500" />
-        <span className="ml-2 text-sm text-gray-500">加载模型...</span>
-      </div>
+      <section className="pt-2">
+        {/* 模型项骨架屏 */}
+        <div className="space-y-1">
+          {[...Array(4)].map((_, i) => (
+            <div key={i} className="flex items-center p-[7px] mx-2">
+              {/* 圆形头像骨架屏 */}
+              <Skeleton className="w-5 h-5 rounded-full bg-gray-300 dark:bg-gray-600 flex-shrink-0 mr-2" />
+              {/* 模型名称骨架屏 */}
+              <Skeleton className="h-3 flex-1 bg-gray-300 dark:bg-gray-600" style={{ width: `${60 + i * 10}%` }} />
+              {/* Pin 图标骨架屏 */}
+              <Skeleton className="w-3 h-3 ml-2 bg-gray-300 dark:bg-gray-600" />
+            </div>
+          ))}
+        </div>
+        
+        {/* 更多按钮骨架屏 */}
+        <div className="flex items-center p-3">
+          <Skeleton className="h-3 w-8 bg-gray-300 dark:bg-gray-600" />
+          <Skeleton className="w-4 h-4 ml-1 bg-gray-300 dark:bg-gray-600" />
+        </div>
+        
+        {/* 分隔线骨架屏 */}
+        <div className="mx-2 my-2">
+          <Skeleton className="h-px w-full bg-gray-300 dark:bg-gray-600" />
+        </div>
+      </section>
     );
   }
 
