@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { ChevronDown, Pin } from "lucide-react";
+import { ChevronDown, Pin, Plus } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
@@ -18,6 +18,17 @@ export function AiModelList() {
   const [isMoreVisible, setIsMoreVisible] = useState(false);
   // 当前选中的模型 (这里暂时用一个假数据，后续可以接入全局状态)
   const [selectedModelId, setSelectedModelId] = useState("claude-3.5-sonnet");
+
+  // 新建聊天点击事件处理
+  const handleNewChat = () => {
+    console.log("创建新的聊天");
+    // TODO: 实现创建新聊天的逻辑
+    // 1. 可能需要调用一个mutation来创建新的会话
+    // 2. 清空当前聊天界面的状态
+    // 3. 将selectedConversationId设置为新创建的会话ID
+    setSelectedModelId(""); // 示例：取消模型选择
+  };
+
 
   // 在前端对模型列表进行排序：置顶的在前，未置顶的在后
   const sortedModels = useMemo(() => {
@@ -131,6 +142,23 @@ export function AiModelList() {
 
   return (
     <section className="pt-2">
+      {/* 新建聊天按钮 */}
+      <div className="px-2 pb-3">
+        <button
+          onClick={handleNewChat}
+          className={cn(
+            "w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg transition-all duration-200",
+            "bg-gray-50 dark:bg-gray-800/50",
+            "hover:bg-[#947CF1]/10 dark:hover:bg-[#947CF1]/15",
+            "text-gray-600 dark:text-gray-400 hover:text-[#947CF1] dark:hover:text-[#947CF1]",
+            "cursor-pointer group"
+          )}
+        >
+          <Plus className="w-4 h-4 transition-transform group-hover:scale-110" />
+          <span className="text-xs font-medium">新建聊天</span>
+        </button>
+      </div>
+      
       {/* 渲染要显示的模型项 */}
       {modelsToShow.map(model => renderModelItem(model))}
 
