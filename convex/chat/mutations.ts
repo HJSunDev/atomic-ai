@@ -216,4 +216,40 @@ export const startNewChatRound = mutation({
       assistantMessageId,
     };
   },
+});
+
+/**
+ * 切换会话的收藏状态。
+ * @param conversationId - 要操作的会话的ID。
+ * @param isFavorited - 目标收藏状态 (true 或 false)。
+ */
+export const toggleConversationFavorite = mutation({
+  args: {
+    conversationId: v.id("conversations"),
+    isFavorited: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    // 1. 验证用户身份
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("用户未认证，无法进行操作");
+    }
+    const userId = identity.subject;
+
+    // 2. 验证会话所有权
+    const conversation = await ctx.db.get(args.conversationId);
+    if (!conversation || conversation.userId !== userId) {
+      throw new Error("无权操作此会话");
+    }
+
+    // 3. 更新收藏状态
+    await ctx.db.patch(args.conversationId, {
+      isFavorited: args.isFavorited,
+    });
+
+    return { success: true };
+  },
 }); 
+
+
+

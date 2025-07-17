@@ -11,11 +11,15 @@ export const chatSchema = {
     title: v.optional(v.string()),
     // 如果会话是从特定提示词模块开始的，记录其ID
     promptModuleId: v.optional(v.id("promptModules")),
+    // 标识会话是否被收藏
+    isFavorited: v.optional(v.boolean()),
   })
     // 按用户ID索引，方便查询用户的所有会话
     .index("by_userId", ["userId"])
     // 按用户ID和提示词模块ID索引，方便查询用户从特定模块发起的会话
-    .index("by_userId_promptModuleId", ["userId", "promptModuleId"]),
+    .index("by_userId_promptModuleId", ["userId", "promptModuleId"])
+    // 用于高效查询用户的收藏会话
+    .index("by_userId_isFavorited", ["userId", "isFavorited"]),
 
   /**
    * 消息表 (messages)

@@ -79,6 +79,7 @@ export const getMessageReplies = query({
  * 获取当前用户的所有会话，并按时间分组
  * 分组规则：今天、昨天、7天内、30天内、更早
  * 只有存在会话的分组才会被返回
+ * 返回一个对象，包含 "favorited" 和 "grouped" 两个部分
  */
 export const listGroupedByTime = query({
   args: {},
@@ -86,25 +87,36 @@ export const listGroupedByTime = query({
     // 1. 获取认证用户信息
     const identity = await ctx.auth.getUserIdentity();
     if (!identity) {
-      // 如果用户未认证，根据业务需求可以抛出错误或返回空数组。
-      // 在这里我们选择返回空数组，因为前端可能需要优雅地处理未登录状态。
-      return [];
+      // 返回一个空结构，前端处理未登录状态
+      return { favorited: [], grouped: [] };
     }
+    const userId = identity.subject;
 
-    // 2. 从数据库查询该用户的所有会话
-    // 使用在 schema 中定义的 `by_userId` 索引来高效查询，并按创建时间降序排列。
-    const conversations = await ctx.db
+    // 2. 查询该用户的所有已收藏会话
+    const favoritedConversations = await ctx.db
       .query("conversations")
-      .withIndex("by_userId", (q) => q.eq("userId", identity.subject))
+      .withIndex("by_userId_isFavorited", (q) =>
+        q.eq("userId", userId).eq("isFavorited", true)
+      )
       .order("desc")
       .collect();
 
-    // 3. 如果没有会话，直接返回空数组
-    if (conversations.length === 0) {
-      return [];
-    }
-    
-    // 4. 使用抽离的工具函数进行分组，保持本函数职责单一
-    return groupConversationsByTime(conversations);
+    // 3. 查询该用户的所有未收藏会话
+    const regularConversations = await ctx.db
+      .query("conversations")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      // 过滤掉 isFavorited 为 true 的会话，正确处理 undefined 和 false 的情况
+      .filter((q) => q.neq(q.field("isFavorited"), true))
+      .order("desc")
+      .collect();
+
+    // 4. 使用工具函数对常规会话进行分组
+    const groupedConversations = groupConversationsByTime(regularConversations);
+
+    // 5. 返回最终的数据结构
+    return {
+      favorited: favoritedConversations,
+      grouped: groupedConversations,
+    };
   },
 });
