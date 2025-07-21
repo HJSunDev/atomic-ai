@@ -10,6 +10,7 @@
 
 import type * as _lib_chatUtils from "../_lib/chatUtils.js";
 import type * as _lib_models from "../_lib/models.js";
+import type * as _lib_taskUtils from "../_lib/taskUtils.js";
 import type * as _lib_timeUtils from "../_lib/timeUtils.js";
 import type * as ai_chat_actions from "../ai/chat/actions.js";
 import type * as ai_utils_aiClient from "../ai/utils/aiClient.js";
@@ -46,6 +47,7 @@ import type {
 declare const fullApi: ApiFromModules<{
   "_lib/chatUtils": typeof _lib_chatUtils;
   "_lib/models": typeof _lib_models;
+  "_lib/taskUtils": typeof _lib_taskUtils;
   "_lib/timeUtils": typeof _lib_timeUtils;
   "ai/chat/actions": typeof ai_chat_actions;
   "ai/utils/aiClient": typeof ai_utils_aiClient;
