@@ -97,22 +97,33 @@ export const markMessageAsChosen = mutation({
 export const updateConversationTitle = mutation({
   args: {
     conversationId: v.id("conversations"),
-    title: v.string(),
+    newTitle: v.string(),
   },
   handler: async (ctx, args) => {
-    // 验证用户身份
-    const userId = (await ctx.auth.getUserIdentity())?.subject;
-    if (!userId) throw new Error("未授权访问");
-
-    // 验证会话属于当前用户
-    const conversation = await ctx.db.get(args.conversationId);
-    if (!conversation || conversation.userId !== userId) {
-      throw new Error("无权访问此会话");
+    // 权限校验：确保只有会话所有者才能修改
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("用户未认证，无法更新会话标题。");
     }
 
-    await ctx.db.patch(args.conversationId, {
-      title: args.title,
-    });
+    const existingConversation = await ctx.db.get(args.conversationId);
+
+    // 检查会话是否存在
+    if (!existingConversation) {
+      throw new Error("会话未找到。");
+    }
+
+    // 检查当前用户是否是会话的所有者
+    if (existingConversation.userId.toString() !== identity.subject) {
+      throw new Error("无权修改此会话的标题。");
+    }
+    
+    // 更新标题
+    await ctx.db.patch(args.conversationId, { title: args.newTitle });
+
+
+    // 可选：返回成功状态或更新后的文档
+    return { success: true };
   },
 });
 

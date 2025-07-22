@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { MoreVertical, ChevronDown, Edit, Star, StarOff, Trash2 } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { MoreVertical, ChevronDown, Edit, Star, StarOff, Trash2, Wand2 } from "lucide-react";
 import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Input } from "@/components/ui/input"; 
 
 // 最近聊天记录列表组件
 export function RecentChatList() {
@@ -22,6 +23,13 @@ export function RecentChatList() {
   
   // 3. 维护当前打开下拉菜单的会话ID
   const [openMenuConversationId, setOpenMenuConversationId] = useState<Id<"conversations"> | null>(null);
+  
+  // 维护正在编辑的会话ID
+  const [editingConversationId, setEditingConversationId] = useState<Id<"conversations"> | null>(null);
+  // 维护正在编辑的标题内容
+  const [editingTitle, setEditingTitle] = useState("");
+  
+  const inputRef = useRef<HTMLInputElement>(null);
 
   // 4. 控制收藏区域的展开/收起状态
   const [showAllFavorites, setShowAllFavorites] = useState(false);
@@ -29,11 +37,52 @@ export function RecentChatList() {
   // 5. 切换收藏状态功能的 mutation、删除对话功能的 mutation
   const toggleFavorite = useMutation(api.chat.mutations.toggleConversationFavorite);
   const deleteConversation = useMutation(api.chat.mutations.deleteConversation);
+  const updateTitle = useMutation(api.chat.mutations.updateConversationTitle);
+
+
+  // 监听 editingConversationId 变化，自动聚焦
+  useEffect(() => {
+    if (editingConversationId && inputRef.current) {
+      inputRef.current.focus();
+      inputRef.current.select(); // 全选内容方便修改
+    }
+  }, [editingConversationId]);
+
 
   // 处理编辑对话标题
-  const handleEditTitle = (conversationId: Id<"conversations">) => {
-    console.log("编辑对话标题:", conversationId);
-    // TODO: 实现编辑标题功能
+  const handleEditTitle = (conversation: Doc<"conversations">) => {
+    setEditingConversationId(conversation._id);
+    setEditingTitle(conversation.title || "");
+  };
+  
+  // 提交标题修改
+  const handleTitleSubmit = async () => {
+    if (!editingConversationId || !editingTitle.trim()) {
+      // 如果标题为空，则恢复原状或不修改
+      setEditingConversationId(null);
+      return;
+    }
+
+    try {
+      await updateTitle({
+        conversationId: editingConversationId,
+        newTitle: editingTitle,
+      });
+    } catch (error) {
+      console.error("更新标题失败:", error);
+      // TODO: 这里可以添加用户提示，例如 toast
+    } finally {
+      setEditingConversationId(null); // 退出编辑模式
+    }
+  };
+
+  // 处理键盘事件
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      handleTitleSubmit();
+    } else if (event.key === "Escape") {
+      setEditingConversationId(null); // 取消编辑
+    }
   };
 
   // 处理收藏/取消收藏
@@ -62,69 +111,96 @@ export function RecentChatList() {
     const isSelected = selectedConversationId === conversation._id;
     const isMenuOpen = openMenuConversationId === conversation._id;
     const isFavorited = conversation.isFavorited || false;
-    
+    const isEditing = editingConversationId === conversation._id;
+
     return (
       <div
         key={conversation._id}
         className={cn(
           "group flex items-center p-[7px] mx-2 my-0.5 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-[#27272A]",
-          isSelected && "bg-gray-100 dark:bg-[#27272A]",
-          isMenuOpen && "bg-gray-100 dark:bg-[#27272A]" // 菜单打开时保持激活状态
+          isSelected && !isEditing && "bg-gray-100 dark:bg-[#27272A]", // 非编辑时才应用选中样式
+          isMenuOpen && !isEditing && "bg-gray-100 dark:bg-[#27272A]"
         )}
-        onClick={() => setSelectedConversationId(conversation._id)}
+        onClick={() => {
+          if (!isEditing) {
+            setSelectedConversationId(conversation._id)
+          }
+        }}
       >
-        <span className="text-xs font-medium flex-1 truncate">
-          {conversation.title || "无标题对话"}
-        </span>
-        
-        {/* 操作下拉菜单 */}
-        <DropdownMenu onOpenChange={(open) => {
-          setOpenMenuConversationId(open ? conversation._id : null);
-        }}>
-          <DropdownMenuTrigger asChild>
-            <div
-              className={cn(
-                "ml-auto p-[7px] rounded-md transition-all opacity-0 group-hover:opacity-100",
-                "hover:bg-gray-200 dark:hover:bg-gray-700",
-                isMenuOpen && "opacity-100 bg-gray-200 dark:bg-gray-700" // 菜单打开时保持激活状态
-              )}
-              onClick={(e) => {
-                e.stopPropagation(); // 防止触发外层div的onClick
-              }}
-            >
-              <MoreVertical className="w-3 h-3 text-gray-400" />
-            </div>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="center" className="w-36 py-2">
-            <DropdownMenuItem onClick={() => handleEditTitle(conversation._id)} className="cursor-pointer">
-              <Edit className="w-4 h-4 mr-2" />
-              编辑对话标题
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => handleToggleFavorite(conversation._id, isFavorited)} 
-              className="cursor-pointer"
-            >
-              {isFavorited ? (
-                <>
-                  <StarOff className="w-4 h-4 mr-2" />
-                  取消收藏
-                </>
-              ) : (
-                <>
-                  <Star className="w-4 h-4 mr-2" />
-                  添加到收藏
-                </>
-              )}
-            </DropdownMenuItem>
-            <DropdownMenuItem 
-              onClick={() => handleDeleteConversation(conversation._id)}
-              className="text-red-600 focus:text-red-600 cursor-pointer"
-            >
-              <Trash2 className="w-4 h-4 mr-2" />
-              删除对话
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {isEditing ? (
+          <div className="flex items-center w-full gap-1">
+            <Input
+              ref={inputRef}
+              value={editingTitle}
+              onChange={(e) => setEditingTitle(e.target.value)}
+              onBlur={handleTitleSubmit}
+              onKeyDown={handleKeyDown}
+              className="h-7 text-xs flex-1"
+              onClick={(e) => e.stopPropagation()} // 防止事件冒泡
+            />
+            {/* AI 功能占位符 */}
+            <Wand2 className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer" onClick={() => console.log("AI 建议标题功能占位")} />
+          </div>
+        ) : (
+          <>
+            <span className="text-xs font-medium flex-1 truncate">
+              {conversation.title || "无标题对话"}
+            </span>
+            
+            {/* 操作下拉菜单 */}
+            <DropdownMenu onOpenChange={(open) => {
+              if (!open && isMenuOpen) { // 仅在菜单关闭时更新状态
+                  setOpenMenuConversationId(null);
+              } else if (open) {
+                  setOpenMenuConversationId(conversation._id);
+              }
+            }}>
+              <DropdownMenuTrigger asChild>
+                <div
+                  className={cn(
+                    "ml-auto p-[7px] rounded-md transition-all opacity-0 group-hover:opacity-100",
+                    "hover:bg-gray-200 dark:hover:bg-gray-700",
+                    isMenuOpen && "opacity-100 bg-gray-200 dark:bg-gray-700" // 菜单打开时保持激活状态
+                  )}
+                  onClick={(e) => {
+                    e.stopPropagation(); // 防止触发外层div的onClick
+                  }}
+                >
+                  <MoreVertical className="w-3 h-3 text-gray-400" />
+                </div>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="center" className="w-36 py-2">
+                <DropdownMenuItem onClick={() => handleEditTitle(conversation)} className="cursor-pointer">
+                  <Edit className="w-4 h-4 mr-2" />
+                  编辑对话标题
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => handleToggleFavorite(conversation._id, isFavorited)} 
+                  className="cursor-pointer"
+                >
+                  {isFavorited ? (
+                    <>
+                      <StarOff className="w-4 h-4 mr-2" />
+                      取消收藏
+                    </>
+                  ) : (
+                    <>
+                      <Star className="w-4 h-4 mr-2" />
+                      添加到收藏
+                    </>
+                  )}
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={() => handleDeleteConversation(conversation._id)}
+                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                >
+                  <Trash2 className="w-4 h-4 mr-2" />
+                  删除对话
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </>
+        )}
       </div>
     );
   };
