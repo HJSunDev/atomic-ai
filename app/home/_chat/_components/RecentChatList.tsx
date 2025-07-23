@@ -24,21 +24,20 @@ export function RecentChatList() {
   // 3. 维护当前打开下拉菜单的会话ID
   const [openMenuConversationId, setOpenMenuConversationId] = useState<Id<"conversations"> | null>(null);
   
-  // 维护正在编辑的会话ID
+  // 4. 维护正在编辑的会话ID
   const [editingConversationId, setEditingConversationId] = useState<Id<"conversations"> | null>(null);
-  // 维护正在编辑的标题内容
+  // 5. 维护正在编辑的标题内容
   const [editingTitle, setEditingTitle] = useState("");
   
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // 4. 控制收藏区域的展开/收起状态
+  // 6. 控制收藏区域的展开/收起状态
   const [showAllFavorites, setShowAllFavorites] = useState(false);
 
-  // 5. 切换收藏状态功能的 mutation、删除对话功能的 mutation
+  // 7. mutation：切换收藏状态、删除对话、更新标题
   const toggleFavorite = useMutation(api.chat.mutations.toggleConversationFavorite);
   const deleteConversation = useMutation(api.chat.mutations.deleteConversation);
   const updateTitle = useMutation(api.chat.mutations.updateConversationTitle);
-
 
   // 监听 editingConversationId 变化，自动聚焦
   useEffect(() => {
@@ -48,13 +47,12 @@ export function RecentChatList() {
     }
   }, [editingConversationId]);
 
-
   // 处理编辑对话标题
   const handleEditTitle = (conversation: Doc<"conversations">) => {
     setEditingConversationId(conversation._id);
     setEditingTitle(conversation.title || "");
   };
-  
+
   // 提交标题修改
   const handleTitleSubmit = async () => {
     if (!editingConversationId || !editingTitle.trim()) {
@@ -128,19 +126,26 @@ export function RecentChatList() {
         }}
       >
         {isEditing ? (
-          <div className="flex items-center w-full gap-1">
+          <>
             <Input
               ref={inputRef}
               value={editingTitle}
               onChange={(e) => setEditingTitle(e.target.value)}
               onBlur={handleTitleSubmit}
               onKeyDown={handleKeyDown}
-              className="h-7 text-xs flex-1"
+              className="text-xs font-medium flex-1 truncate border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 h-[1.125rem] leading-[1.125rem] selection:bg-gray-200 dark:selection:bg-gray-600 selection:text-inherit rounded-none"
               onClick={(e) => e.stopPropagation()} // 防止事件冒泡
             />
-            {/* AI 功能占位符 */}
-            <Wand2 className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer" onClick={() => console.log("AI 建议标题功能占位")} />
-          </div>
+            
+            {/* AI 功能占位符 - 放在原操作按钮位置 */}
+            <div className="ml-auto p-[7px] rounded-md hover:bg-gray-200 dark:hover:bg-gray-700 transition-all">
+              <Wand2 className="w-3 h-3 text-[#947CF1] cursor-pointer" 
+                     onClick={(e) => {
+                       e.stopPropagation();
+                       console.log("AI 建议标题功能占位");
+                     }} />
+            </div>
+          </>
         ) : (
           <>
             <span className="text-xs font-medium flex-1 truncate">
