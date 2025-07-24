@@ -49,6 +49,7 @@ export function RecentChatList() {
 
   // 处理编辑对话标题
   const handleEditTitle = (conversation: Doc<"conversations">) => {
+    setOpenMenuConversationId(null); // 在进入编辑模式前，手动关闭菜单状态，清除因为菜单打开状态显示的背景色
     setEditingConversationId(conversation._id);
     setEditingTitle(conversation.title || "");
   };
@@ -104,11 +105,16 @@ export function RecentChatList() {
     }
   };
   
-  // 渲染单个会话项的函数, 样式参考 AiModelList
+  // 渲染单个会话项的函数
   const renderConversationItem = (conversation: Doc<"conversations">) => {
+    
+    // 判断当前会话项是否被选中（用于高亮显示）
     const isSelected = selectedConversationId === conversation._id;
+    // 判断当前会话项的操作菜单是否处于打开状态
     const isMenuOpen = openMenuConversationId === conversation._id;
+    // 判断当前会话项是否被收藏，未设置时默认为 false
     const isFavorited = conversation.isFavorited || false;
+    // 判断当前会话项是否处于编辑标题模式
     const isEditing = editingConversationId === conversation._id;
 
     return (
@@ -175,12 +181,18 @@ export function RecentChatList() {
                 </div>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="w-36 py-2">
-                <DropdownMenuItem onClick={() => handleEditTitle(conversation)} className="cursor-pointer">
+                <DropdownMenuItem onClick={(e) => {
+                  e.stopPropagation();
+                  handleEditTitle(conversation);
+                }} className="cursor-pointer">
                   <Edit className="w-4 h-4 mr-2" />
                   编辑对话标题
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => handleToggleFavorite(conversation._id, isFavorited)} 
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleToggleFavorite(conversation._id, isFavorited);
+                  }}
                   className="cursor-pointer"
                 >
                   {isFavorited ? (
@@ -195,8 +207,11 @@ export function RecentChatList() {
                     </>
                   )}
                 </DropdownMenuItem>
-                <DropdownMenuItem 
-                  onClick={() => handleDeleteConversation(conversation._id)}
+                <DropdownMenuItem
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteConversation(conversation._id);
+                  }}
                   className="text-red-600 focus:text-red-600 cursor-pointer"
                 >
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -214,8 +229,11 @@ export function RecentChatList() {
   const renderFavoritesSection = () => {
     if (!conversationData?.favorited) return null;
 
+    // 获取所有被收藏的会话
     const favoritedConversations = conversationData.favorited;
+    // 根据 showAllFavorites 状态决定展示全部还是前3个收藏会话
     const displayedFavorites = showAllFavorites ? favoritedConversations : favoritedConversations.slice(0, 3);
+    // 判断收藏会话数量是否超过3个，用于显示“更多/收起”按钮
     const hasMoreFavorites = favoritedConversations.length > 3;
 
     return (
@@ -254,8 +272,10 @@ export function RecentChatList() {
   
   // 渲染最近聊天区域
   const renderRecentChatsSection = () => {
+    // 如果没有分组的会话数据，则不渲染最近聊天区域
     if (!conversationData?.grouped) return null;
 
+    // 获取分组后的会话数据
     const groupedConversations = conversationData.grouped;
 
     if (groupedConversations.length === 0) {
