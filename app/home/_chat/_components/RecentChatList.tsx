@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { Id, Doc } from "@/convex/_generated/dataModel";
+import { useChatStore } from "@/store/home/useChatStore";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -18,8 +19,8 @@ export function RecentChatList() {
   // 1. 使用query获取分组数据（包含 favorited 和 grouped）
   const conversationData = useQuery(api.chat.queries.listGroupedByTime);
   
-  // 2. 维护当前选中的会话ID (后续可接入全局状态管理)
-  const [selectedConversationId, setSelectedConversationId] = useState<Id<"conversations"> | null>(null);
+  // 2. 使用全局状态管理替代本地状态
+  const { currentConversationId, selectConversation, startNewConversation } = useChatStore();
   
   // 3. 维护当前打开下拉菜单的会话ID
   const [openMenuConversationId, setOpenMenuConversationId] = useState<Id<"conversations"> | null>(null);
@@ -99,17 +100,26 @@ export function RecentChatList() {
   // 处理删除对话
   const handleDeleteConversation = async (conversationId: Id<"conversations">) => {
     try {
+      // 如果删除的是当前选中的会话，清空选择状态
+      if (currentConversationId === conversationId) {
+        startNewConversation();
+      }
       await deleteConversation({ conversationId });
     } catch (error) {
       console.error("删除对话失败:", error);
     }
   };
   
+  // 处理会话选择
+  const handleSelectConversation = (conversationId: Id<"conversations">) => {
+    selectConversation(conversationId);
+  };
+  
   // 渲染单个会话项的函数
   const renderConversationItem = (conversation: Doc<"conversations">) => {
     
-    // 判断当前会话项是否被选中（用于高亮显示）
-    const isSelected = selectedConversationId === conversation._id;
+    // 判断当前会话项是否被选中（使用全局状态）
+    const isSelected = currentConversationId === conversation._id;
     // 判断当前会话项的操作菜单是否处于打开状态
     const isMenuOpen = openMenuConversationId === conversation._id;
     // 判断当前会话项是否被收藏，未设置时默认为 false
@@ -127,7 +137,7 @@ export function RecentChatList() {
         )}
         onClick={() => {
           if (!isEditing) {
-            setSelectedConversationId(conversation._id)
+            handleSelectConversation(conversation._id)
           }
         }}
       >
@@ -233,7 +243,7 @@ export function RecentChatList() {
     const favoritedConversations = conversationData.favorited;
     // 根据 showAllFavorites 状态决定展示全部还是前3个收藏会话
     const displayedFavorites = showAllFavorites ? favoritedConversations : favoritedConversations.slice(0, 3);
-    // 判断收藏会话数量是否超过3个，用于显示“更多/收起”按钮
+    // 判断收藏会话数量是否超过3个，用于显示"更多/收起"按钮
     const hasMoreFavorites = favoritedConversations.length > 3;
 
     return (
