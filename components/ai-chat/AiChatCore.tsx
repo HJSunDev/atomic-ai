@@ -1,109 +1,134 @@
 import React, { useState, useRef, useEffect } from "react";
-import { useAction } from "convex/react";
+import { useAction, useQuery, useMutation } from "convex/react";
+import { useUser } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
+import { useChatStore } from "@/store/home/useChatStore";
+import { ThinkingCursor, TypingCursor } from "@/components/custom";
 
-// 定义消息类型
-export type MessageRole = "user" | "assistant" | "system";
-
-// 定义消息数据结构
+// 消息类型定义 - 基于数据库schema
 export interface Message {
-  id: string;
-  role: MessageRole;
+  _id: Id<"messages">;
+  conversationId: Id<"conversations">;
+  parentMessageId?: Id<"messages">;
+  role: "user" | "assistant" | "system";
   content: string;
-  timestamp: Date;
-  model?: string; // 可选，用于AI消息展示模型信息
+  isChosenReply?: boolean; // 可选字段
+  metadata?: {
+    aiModel?: string;
+    tokensUsed?: number;
+    durationMs?: number;
+  };
+  _creationTime: number;
 }
 
-// AiChatCore接收的属性，支持自定义服务调用
+// AiChatCore 组件属性
 export interface AiChatCoreProps {
   children: (props: AiChatRenderProps) => React.ReactNode;
-  // 自定义初始消息，可选
-  initialMessages?: Message[];
-  // 自定义系统提示，可选
+  // 可选的系统提示
   systemPrompt?: string;
-  // 自定义模型ID，可选
-  modelId?: string;
-  // 传入的API密钥，可选，如果不提供则使用环境变量中的API密钥
+  // 可选的API密钥
   apiKey?: string;
 }
 
-// 定义传递给子组件的props类型
+// 传递给子组件的渲染属性
 export interface AiChatRenderProps {
   messages: Message[];
   inputValue: string;
-  isLoading: boolean; // 添加加载状态
-  // 我们使用React.RefObject，这是React内置类型
-  textareaRef: React.RefObject<HTMLTextAreaElement>;
-  messagesEndRef: React.RefObject<HTMLDivElement>;
+  isLoading: boolean;
+  isStreaming: boolean; // 新增：是否正在流式传输
+  streamingMessageId: Id<"messages"> | null; // 新增：正在流式传输的消息ID
+  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handlePromptClick: (promptText: string) => void;
   handleSendMessage: () => void;
+  // 会话管理功能
+  handleNewConversation: () => void;
+  handleSelectConversation: (conversationId: Id<"conversations">) => void;
+  currentConversationId: Id<"conversations"> | null;
+  conversations: any[] | undefined;
 }
 
 export function AiChatCore({ 
   children, 
-  initialMessages,
   systemPrompt,
-  modelId,
   apiKey
 }: AiChatCoreProps) {
-  // 添加状态来跟踪输入内容
-  const [inputValue, setInputValue] = useState("");
-  // 添加加载状态
-  const [isLoading, setIsLoading] = useState(false);
+  // 认证状态
+  const { isSignedIn } = useUser();
   
-  // 创建DOM元素引用的ref用于消息列表底部的元素
+  // 全局聊天状态管理
+  const { 
+    currentConversationId, 
+    selectedModel,
+    selectConversation,
+    startNewConversation,
+    setSelectedModel
+  } = useChatStore();
+  
+  // 本地UI状态
+  const [inputValue, setInputValue] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [streamingMessageId, setStreamingMessageId] = useState<Id<"messages"> | null>(null);
+  
+  // DOM引用
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  // 创建DOM元素引用的ref用于textarea元素
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   
-  // 使用 Convex 的 chatCompletion action
-  const callChatAI = useAction(api.ai.chat.actions.chatCompletion);
+  // Convex hooks
+  const startNewChatRound = useMutation(api.chat.mutations.startNewChatRound);
+  const streamAssistantResponse = useAction(api.chat.action.streamAssistantResponse);
+  
+  // 获取会话列表
+  const conversations = useQuery(
+    api.chat.queries.getUserConversations,
+    isSignedIn ? {} : "skip"
+  );
 
-  // 初始默认消息
-  const defaultMessages: Message[] = [
-    {
-      id: "1",
-      role: "assistant",
-      content: "您好！我是OmniAid智能助手，很高兴为您提供帮助。您可以向我咨询任何问题，我会尽力为您解答。",
-      timestamp: new Date(),
-      model: modelId ? undefined : "deepseek-v3"
+  // 获取当前会话的消息
+  const messages = useQuery(
+    api.chat.queries.getConversationMessages,
+    currentConversationId ? { conversationId: currentConversationId } : "skip"
+  );
+
+  // 监听流式传输状态 - 当消息元数据更新完成时清除流式状态
+  useEffect(() => {
+    if (!streamingMessageId || !messages) return;
+
+    const streamingMessage = messages.find((m) => m._id === streamingMessageId);
+    
+    // 如果找到消息且已有完整元数据，说明流式传输完成
+    if (streamingMessage && streamingMessage.metadata?.durationMs) {
+      setStreamingMessageId(null);
     }
-  ];
-  
-  // 使用传入的初始消息或默认消息
-  const [messages, setMessages] = useState<Message[]>(initialMessages || defaultMessages);
-  
+  }, [messages, streamingMessageId]);
+
+  // 自动滚动到底部
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages]);
+
   // 处理输入变化
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
   };
-  
-  // 滚动到底部的函数 - 内部使用，不需要暴露给子组件，使用auto实现即时滚动
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "auto" });
-  };
-  
-  // 组件挂载和消息更新时滚动到底部
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-  
-  // 处理提示卡片点击
+
+  // 处理提示点击
   const handlePromptClick = (promptText: string) => {
-    // 查找占位符位置（使用&&&作为光标定位点）
     const placeholderText = "&&&";
     const placeholderIndex = promptText.indexOf(placeholderText);
     
     if (placeholderIndex !== -1) {
-      // 如果存在占位符，则替换占位符为空，并记录光标位置
       const newText = promptText.replace(placeholderText, "");
       setInputValue(newText);
       
-      // 聚焦到输入框并设置光标位置
       if (textareaRef.current) {
         textareaRef.current.focus();
-        // 设置光标位置到占位符的位置
         setTimeout(() => {
           if (textareaRef.current) {
             textareaRef.current.setSelectionRange(placeholderIndex, placeholderIndex);
@@ -111,118 +136,109 @@ export function AiChatCore({
         }, 0);
       }
     } else {
-      // 如果没有占位符，则直接设置文本并聚焦
       setInputValue(promptText);
       if (textareaRef.current) {
         textareaRef.current.focus();
       }
     }
   };
-  
-  // 将消息历史格式化为AI服务所需的格式
-  const formatMessagesForAI = (messages: Message[]) => {
-    return messages.map(msg => ({
-      role: msg.role,
-      content: msg.content,
-      timestamp: msg.timestamp.toISOString()
-    }));
-  };
-  
-  // 发送消息
+
+  // 发送消息 - 使用新的流式传输服务
   const handleSendMessage = async () => {
-    if (!inputValue.trim() || isLoading) return;
-    
-    // 创建新的用户消息
-    const newUserMessage: Message = {
-      id: Date.now().toString(),
-      role: "user",
-      content: inputValue,
-      timestamp: new Date()
-    };
-    
-    // 添加消息到列表
-    setMessages(prev => [...prev, newUserMessage]);
-    
-    // 清空输入框
+    // 验证条件：输入不为空、未登录、不在加载中、不在流式传输中
+    if (!inputValue.trim() || isLoading || !isSignedIn || streamingMessageId) return;
+
+    const userMessage = inputValue;
     setInputValue("");
-    
-    // 设置加载状态
     setIsLoading(true);
-    
+
     try {
-      // 准备聊天历史
-      const chatHistory = formatMessagesForAI(messages);
-      
-      // 调用AI服务
-      const response = await callChatAI({
-        userMessage: newUserMessage.content,
-        chatHistory,
-        modelId,
-        apiKey,
-        systemPrompt
+      // 步骤1: 快速创建消息占位符
+      const result = await startNewChatRound({
+        userMessage,
+        conversationId: currentConversationId || undefined,
       });
-      
-      // 创建AI回复消息
-      if (response.status === "success") {
-        const aiResponse: Message = {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: response.content as string,
-          timestamp: new Date(),
-          model: response.modelUsed?.name
-        };
+
+      if (result) {
+        const { conversationId, assistantMessageId } = result;
         
-        // 添加AI回复到消息列表
-        setMessages(prev => [...prev, aiResponse]);
-      } else {
-        // 错误处理 - 使用安全的类型转换
-        const errorContent = typeof response.error === 'string' 
-          ? response.error 
-          : "未知错误";
+        // 如果是新会话，更新全局状态
+        if (!currentConversationId) {
+          selectConversation(conversationId);
+        }
         
-        const errorMessage: Message = {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: `抱歉，我遇到了一些问题：${errorContent}`,
-          timestamp: new Date(),
-          model: response.modelUsed?.name
-        };
-        
-        // 添加错误消息到列表
-        setMessages(prev => [...prev, errorMessage]);
+        // 设置流式传输状态
+        setStreamingMessageId(assistantMessageId);
+
+        // 步骤2: 异步开始流式传输（不使用await，让它在后台运行）
+        streamAssistantResponse({
+          conversationId,
+          assistantMessageId,
+          modelId: selectedModel,
+          userApiKey: apiKey || undefined,
+          systemPrompt: systemPrompt || undefined,
+        }).catch((error) => {
+          console.error("流式传输失败:", error);
+          // 清除流式状态，允许用户重试
+          setStreamingMessageId(null);
+        });
       }
     } catch (error) {
-      // 处理异常
-      console.error("AI服务调用失败:", error);
-      
-      // 添加错误消息到列表
-      const errorMessage: Message = {
-        id: Date.now().toString(),
-        role: "assistant",
-        content: `抱歉，我遇到了一些技术问题，请稍后再试。`,
-        timestamp: new Date()
-      };
-      
-      setMessages(prev => [...prev, errorMessage]);
+      console.error("创建聊天回合失败:", error);
+      // 在实际应用中可以显示Toast通知
     } finally {
-      // 重置加载状态
+      // 立即解除加载状态，允许用户继续输入
       setIsLoading(false);
     }
   };
-  
-  // 构建传递给子组件的属性
-  // 使用类型断言（as）解决类型兼容性问题
-  // 这是安全的，因为React的ref对象在运行时行为一致
+
+  // 会话管理功能
+  const handleNewConversation = () => {
+    startNewConversation();
+  };
+
+  const handleSelectConversation = (conversationId: Id<"conversations">) => {
+    selectConversation(conversationId);
+  };
+
+  // 构建渲染属性
   const renderProps: AiChatRenderProps = {
-    messages,
+    messages: messages || [],
     inputValue,
     isLoading,
-    textareaRef: textareaRef as React.RefObject<HTMLTextAreaElement>, 
-    messagesEndRef: messagesEndRef as React.RefObject<HTMLDivElement>,
+    isStreaming: !!streamingMessageId,
+    streamingMessageId,
+    textareaRef,
+    messagesEndRef,
     handleInputChange,
     handlePromptClick,
-    handleSendMessage
+    handleSendMessage,
+    handleNewConversation,
+    handleSelectConversation,
+    currentConversationId,
+    conversations,
   };
-  
+
   return children(renderProps);
+}
+
+// 导出用于在Message组件中渲染流式效果的辅助组件
+export function MessageStreamingEffects({ 
+  message, 
+  streamingMessageId 
+}: { 
+  message: Message; 
+  streamingMessageId: Id<"messages"> | null;
+}) {
+  const isCurrentlyStreaming = streamingMessageId === message._id;
+  
+  if (!isCurrentlyStreaming) return null;
+  
+  // 如果消息内容为空，显示思考光标
+  if (!message.content) {
+    return <ThinkingCursor color="#947DF2" />;
+  }
+  
+  // 如果有内容，显示打字光标
+  return <TypingCursor />;
 } 

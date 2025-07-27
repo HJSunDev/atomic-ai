@@ -1,23 +1,38 @@
 import React from "react";
-import { Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Bot } from "lucide-react";
-import { Message } from "./AiChatCore";
+import { Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Bot, Clock } from "lucide-react";
+import { Message, MessageStreamingEffects } from "./AiChatCore";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface MessageListProps {
   messages: Message[];
-  messagesEndRef: any; // 使用any类型避免类型问题
+  messagesEndRef: React.RefObject<HTMLDivElement | null>;
   emptyState?: React.ReactNode;
+  streamingMessageId?: Id<"messages"> | null; // 新增：流式传输消息ID
 }
 
-export function MessageList({ messages, messagesEndRef, emptyState }: MessageListProps) {
-  if ( messages.length === 0 && emptyState) {
+export function MessageList({ 
+  messages, 
+  messagesEndRef, 
+  emptyState, 
+  streamingMessageId 
+}: MessageListProps) {
+  if (messages.length === 0 && emptyState) {
     return <>{emptyState}</>;
   }
+
+  // 格式化时间戳为可读格式
+  const formatTimestamp = (timestamp: number) => {
+    return new Date(timestamp).toLocaleTimeString('zh-CN', { 
+      hour: '2-digit', 
+      minute: '2-digit' 
+    });
+  };
 
   return (
     <div className="p-4">
       {messages.map((message, index) => (
         <div 
-          key={message.id}
+          key={message._id}
           className="group mb-6 last:mb-2"
         >
           {message.role === "user" ? (
@@ -26,6 +41,11 @@ export function MessageList({ messages, messagesEndRef, emptyState }: MessageLis
               {/* 用户消息内容 */}
               <div className="w-3/4 bg-[#F1F2F3] dark:bg-[#2B2B2D] rounded-tl-lg rounded-tr-lg rounded-bl-lg p-4 ml-auto">
                 <div className="text-sm whitespace-pre-line">{message.content}</div>
+              </div>
+              
+              {/* 用户消息时间戳 */}
+              <div className="text-xs text-gray-500 dark:text-gray-400 mt-1 mr-2">
+                {formatTimestamp(message._creationTime)}
               </div>
               
               {/* 用户消息功能区 - 根据是否为最后一条消息决定是否默认显示 */}
@@ -49,13 +69,38 @@ export function MessageList({ messages, messagesEndRef, emptyState }: MessageLis
                     <Bot className="w-4 h-4 text-white" />
                   </div>
                   <span className="text-sm font-medium">OmniAid</span>
-                  <span className="text-xs text-gray-500">
-                    {message.model}
-                  </span>
+                  {message.metadata?.aiModel && (
+                    <span className="text-xs bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-blue-800 dark:text-blue-200">
+                      {message.metadata.aiModel}
+                    </span>
+                  )}
                 </div>
                 
                 {/* AI消息内容 */}
-                <div className="text-sm whitespace-pre-line">{message.content}</div>
+                <div className="text-sm whitespace-pre-line">
+                  {message.content}
+                  {/* 流式传输效果 */}
+                  <MessageStreamingEffects 
+                    message={message} 
+                    streamingMessageId={streamingMessageId || null} 
+                  />
+                </div>
+                
+                {/* 消息元数据信息 - 只在流式传输完成后显示 */}
+                {message.metadata && !streamingMessageId && message.metadata.durationMs && (
+                  <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                    {message.metadata.tokensUsed && (
+                      <span>Tokens: {message.metadata.tokensUsed}</span>
+                    )}
+                    {message.metadata.durationMs && (
+                      <span className="flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {(message.metadata.durationMs / 1000).toFixed(1)}s
+                      </span>
+                    )}
+                    <span>{formatTimestamp(message._creationTime)}</span>
+                  </div>
+                )}
               </div>
               
               {/* AI消息功能区 - 根据是否为最后一条消息决定是否默认显示 */}

@@ -42,7 +42,9 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
           handleInputChange, 
           handlePromptClick, 
           handleSendMessage,
-          isLoading
+          isLoading,
+          isStreaming,
+          streamingMessageId
         }) => (
           <>
             {/* 内容区域 - 让内容区域占满宽度并允许滚动 */}
@@ -52,6 +54,7 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
                 <MessageList 
                   messages={messages} 
                   messagesEndRef={messagesEndRef}
+                  streamingMessageId={streamingMessageId}
                   emptyState={
                     <EmptyState
                       promptCards={promptCards.map(card => ({
@@ -71,7 +74,7 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
                 textareaRef={textareaRef}
                 handleInputChange={handleInputChange}
                 handleSendMessage={handleSendMessage}
-                isLoading={isLoading}
+                isLoading={isLoading || isStreaming}
               />
             </div>
           </>
