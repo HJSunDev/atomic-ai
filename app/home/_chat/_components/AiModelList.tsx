@@ -4,6 +4,8 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useChatStore } from "@/store/home/useChatStore";
+import { DEFAULT_MODEL_ID } from "@/convex/_lib/models";
 
 // AI模型列表组件
 export function AiModelList() {
@@ -16,19 +18,22 @@ export function AiModelList() {
 
   // 控制"更多"列表的显示状态
   const [isMoreVisible, setIsMoreVisible] = useState(false);
-  // 当前选中的模型 (这里暂时用一个假数据，后续可以接入全局状态)
-  const [selectedModelId, setSelectedModelId] = useState("claude-3.5-sonnet");
+  
+  // 从全局聊天状态管理中解构出当前选中模型、设置选中模型的方法，以及新建会话的方法
+  const { selectedModel, setSelectedModel, startNewConversation, currentConversationId } = useChatStore();
 
-  // 新建聊天点击事件处理
+  // 新建聊天点击事件处理 - 使用默认模型开启新会话
   const handleNewChat = () => {
-    console.log("创建新的聊天");
-    // TODO: 实现创建新聊天的逻辑
-    // 1. 可能需要调用一个mutation来创建新的会话
-    // 2. 清空当前聊天界面的状态
-    // 3. 将selectedConversationId设置为新创建的会话ID
-    setSelectedModelId(""); // 示例：取消模型选择
+    // 调用全局状态管理创建新会话
+    startNewConversation();
+    setSelectedModel(DEFAULT_MODEL_ID);
   };
 
+  // 处理模型选择 - 使用指定模型开启新会话
+  const handleSelectModel = (modelId: string) => {
+    startNewConversation(); // 先开启新会话
+    setSelectedModel(modelId); // 再设置模型
+  };
 
   // 在前端对模型列表进行排序：置顶的在前，未置顶的在后
   const sortedModels = useMemo(() => {
@@ -100,7 +105,9 @@ export function AiModelList() {
     modelId: string,
     isPinned: boolean
   }) => {
-    const isSelected = model.modelId === selectedModelId;
+    // 只有在新会话状态（currentConversationId为null）且选中该模型时才显示选中状态
+    const isSelected = !currentConversationId && model.modelId === selectedModel;
+    
     return (
       <div
         key={model.modelId}
@@ -108,7 +115,7 @@ export function AiModelList() {
           "group flex items-center p-[7px] mx-2 my-0.5 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-[#27272A]",
           isSelected && "bg-gray-100 dark:bg-[#27272A]"
         )}
-        onClick={() => setSelectedModelId(model.modelId)}
+        onClick={() => handleSelectModel(model.modelId)}
       >
         <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0 mr-2"></div>
         <span className="text-xs font-medium flex-1 truncate">
