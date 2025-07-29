@@ -42,7 +42,8 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
           handleInputChange, 
           handlePromptClick, 
           handleSendMessage,
-          isLoading,
+          isSendingMessage,
+          isMessagesLoading,
           isStreaming,
           streamingMessageId
         }) => (
@@ -55,6 +56,7 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
                   messages={messages} 
                   messagesEndRef={messagesEndRef}
                   streamingMessageId={streamingMessageId}
+                  isMessagesLoading={isMessagesLoading}
                   emptyState={
                     <EmptyState
                       promptCards={promptCards.map(card => ({
@@ -74,7 +76,7 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
                 textareaRef={textareaRef}
                 handleInputChange={handleInputChange}
                 handleSendMessage={handleSendMessage}
-                isLoading={isLoading || isStreaming}
+                isLoading={isSendingMessage || isStreaming || isMessagesLoading}
               />
             </div>
           </>

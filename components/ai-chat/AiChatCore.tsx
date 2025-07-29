@@ -35,7 +35,8 @@ export interface AiChatCoreProps {
 export interface AiChatRenderProps {
   messages: Message[];
   inputValue: string;
-  isLoading: boolean;
+  isSendingMessage: boolean;
+  isMessagesLoading: boolean;
   isStreaming: boolean; // 新增：是否正在流式传输
   streamingMessageId: Id<"messages"> | null; // 新增：正在流式传输的消息ID
   textareaRef: React.RefObject<HTMLTextAreaElement | null>;
@@ -67,9 +68,11 @@ export function AiChatCore({
     setSelectedModel
   } = useChatStore();
   
-  // 本地UI状态
+  // 聊天输入框的内容状态
   const [inputValue, setInputValue] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  // 是否正在发送消息的状态
+  const [isSendingMessage, setIsSendingMessage] = useState(false);
+  // 当前正在流式传输的消息ID（如无则为null）
   const [streamingMessageId, setStreamingMessageId] = useState<Id<"messages"> | null>(null);
   
   // DOM引用
@@ -91,6 +94,9 @@ export function AiChatCore({
     api.chat.queries.getConversationMessages,
     currentConversationId ? { conversationId: currentConversationId } : "skip"
   );
+
+  // 消息加载中状态：有选中的会话但消息数据尚未获取时为true
+  const isMessagesLoading = currentConversationId !== null && messages === undefined;
 
   // 监听流式传输状态 - 当消息元数据更新完成时清除流式状态
   useEffect(() => {
@@ -146,11 +152,11 @@ export function AiChatCore({
   // 发送消息 - 使用新的流式传输服务
   const handleSendMessage = async () => {
     // 验证条件：输入不为空、未登录、不在加载中、不在流式传输中
-    if (!inputValue.trim() || isLoading || !isSignedIn || streamingMessageId) return;
+    if (!inputValue.trim() || isSendingMessage || !isSignedIn || streamingMessageId) return;
 
     const userMessage = inputValue;
     setInputValue("");
-    setIsLoading(true);
+    setIsSendingMessage(true);
 
     try {
       // 步骤1: 快速创建消息占位符
@@ -188,7 +194,7 @@ export function AiChatCore({
       // 在实际应用中可以显示Toast通知
     } finally {
       // 立即解除加载状态，允许用户继续输入
-      setIsLoading(false);
+      setIsSendingMessage(false);
     }
   };
 
@@ -205,7 +211,8 @@ export function AiChatCore({
   const renderProps: AiChatRenderProps = {
     messages: messages || [],
     inputValue,
-    isLoading,
+    isSendingMessage,
+    isMessagesLoading,
     isStreaming: !!streamingMessageId,
     streamingMessageId,
     textareaRef,

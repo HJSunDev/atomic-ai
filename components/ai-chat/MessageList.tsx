@@ -2,20 +2,115 @@ import React from "react";
 import { Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Bot, Clock } from "lucide-react";
 import { Message, MessageStreamingEffects } from "./AiChatCore";
 import { Id } from "@/convex/_generated/dataModel";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface MessageListProps {
   messages: Message[];
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   emptyState?: React.ReactNode;
-  streamingMessageId?: Id<"messages"> | null; // 新增：流式传输消息ID
+  streamingMessageId?: Id<"messages"> | null; // 流式传输消息ID
+  isMessagesLoading?: boolean; // 消息加载状态
 }
+
+// 骨架屏组件 - 模拟真实的消息对话结构
+const MessagesSkeleton = () => (
+  <div className="p-4">
+    {/* 模拟用户消息 */}
+    <div className="group mb-6">
+      <div className="flex flex-col items-end">
+        {/* 用户消息气泡骨架 */}
+        <div className="w-3/4 bg-gray-100 dark:bg-gray-800 rounded-tl-lg rounded-tr-lg rounded-bl-lg p-4 ml-auto">
+          <div className="space-y-2 animate-pulse">
+            <Skeleton className="h-4 w-full bg-gray-200 dark:bg-gray-700" />
+            <Skeleton className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700" />
+          </div>
+        </div>
+        
+        {/* 用户消息时间戳骨架 */}
+        <div className="mt-1 mr-2">
+          <Skeleton className="h-3 w-12 bg-gray-200 dark:bg-gray-700" />
+        </div>
+      </div>
+    </div>
+
+    {/* 模拟AI消息 */}
+    <div className="group mb-6">
+      <div className="flex flex-col">
+        <div className="w-full">
+          {/* AI信息栏骨架 */}
+          <div className="flex items-center gap-2 mb-1.5">
+            {/* AI头像骨架 - 降低透明度，使用更柔和的颜色 */}
+            <div className="w-7 h-7 rounded-full bg-gray-300 dark:bg-gray-600 flex-shrink-0 animate-pulse"></div>
+            {/* AI名称骨架 */}
+            <Skeleton className="h-4 w-16 bg-gray-200 dark:bg-gray-700" />
+            {/* 模型标签骨架 */}
+            <Skeleton className="h-5 w-20 rounded bg-gray-200 dark:bg-gray-700" />
+          </div>
+          
+          {/* AI消息内容骨架 - 模拟多行段落 */}
+          <div className="space-y-2">
+            <div className="animate-pulse space-y-2">
+              <Skeleton className="h-4 w-full bg-gray-200 dark:bg-gray-700" />
+              <Skeleton className="h-4 w-11/12 bg-gray-200 dark:bg-gray-700" />
+              <Skeleton className="h-4 w-4/5 bg-gray-200 dark:bg-gray-700" />
+              <Skeleton className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {/* 模拟第二轮对话 - 用户消息 */}
+    <div className="group mb-6">
+      <div className="flex flex-col items-end">
+        <div className="w-2/3 bg-gray-100 dark:bg-gray-800 rounded-tl-lg rounded-tr-lg rounded-bl-lg p-4 ml-auto">
+          <div className="animate-pulse">
+            <Skeleton className="h-4 w-full bg-gray-200 dark:bg-gray-700" />
+          </div>
+        </div>
+        <div className="mt-1 mr-2">
+          <Skeleton className="h-3 w-12 bg-gray-200 dark:bg-gray-700" />
+        </div>
+      </div>
+    </div>
+
+    {/* 模拟第二轮对话 - AI消息（正在输入状态） */}
+    <div className="group mb-2">
+      <div className="flex flex-col">
+        <div className="w-full">
+          {/* AI信息栏骨架 */}
+          <div className="flex items-center gap-2 mb-1.5">
+            <div className="w-7 h-7 rounded-full bg-gray-300 dark:bg-gray-600 flex-shrink-0 animate-pulse"></div>
+            <Skeleton className="h-4 w-16 bg-gray-200 dark:bg-gray-700" />
+            <Skeleton className="h-5 w-20 rounded bg-gray-200 dark:bg-gray-700" />
+          </div>
+          
+          {/* 正在输入的内容骨架 - 更短，模拟正在生成 */}
+          <div className="space-y-2">
+            <div className="animate-pulse space-y-2">
+              <Skeleton className="h-4 w-3/4 bg-gray-200 dark:bg-gray-700" />
+              <Skeleton className="h-4 w-1/2 bg-gray-200 dark:bg-gray-700" />
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+);
+
 
 export function MessageList({ 
   messages, 
   messagesEndRef, 
   emptyState, 
-  streamingMessageId 
+  streamingMessageId,
+  isMessagesLoading,
 }: MessageListProps) {
+
+  if (isMessagesLoading) {
+    return <MessagesSkeleton />;
+  }
+  
   if (messages.length === 0 && emptyState) {
     return <>{emptyState}</>;
   }
