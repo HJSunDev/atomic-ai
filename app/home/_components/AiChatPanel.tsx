@@ -31,7 +31,10 @@ export function AiChatPanel() {
           handleInputChange, 
           handlePromptClick, 
           handleSendMessage,
-          isLoading
+          isSendingMessage,
+          isMessagesLoading,
+          isStreaming,
+          streamingMessageId
         }) => (
           <>
             {/* 内容区域 */}
@@ -39,12 +42,15 @@ export function AiChatPanel() {
               <MessageList 
                 messages={messages} 
                 messagesEndRef={messagesEndRef}
+                streamingMessageId={streamingMessageId}
+                isMessagesLoading={isMessagesLoading}
                 emptyState={
                   <EmptyState
                     promptCards={promptCards.map(card => ({
                       ...card,
                       onClick: handlePromptClick
                     }))}
+                    className="h-full py-8 px-4"
                   />
                 }
               />
@@ -56,7 +62,7 @@ export function AiChatPanel() {
               textareaRef={textareaRef}
               handleInputChange={handleInputChange}
               handleSendMessage={handleSendMessage}
-              isLoading={isLoading}
+              isLoading={isSendingMessage || isStreaming || isMessagesLoading}
             />
           </>
         )}
