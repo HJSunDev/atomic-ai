@@ -42,6 +42,7 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
           handleInputChange, 
           handlePromptClick, 
           handleSendMessage,
+          handleNewConversation,
           isSendingMessage,
           isMessagesLoading,
           isStreaming,
@@ -77,6 +78,7 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
                 textareaRef={textareaRef}
                 handleInputChange={handleInputChange}
                 handleSendMessage={handleSendMessage}
+                onNewConversation={handleNewConversation}
                 isLoading={isSendingMessage || isStreaming || isMessagesLoading}
               />
             </div>

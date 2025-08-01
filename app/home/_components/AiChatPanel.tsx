@@ -31,6 +31,7 @@ export function AiChatPanel() {
           handleInputChange, 
           handlePromptClick, 
           handleSendMessage,
+          handleNewConversation,
           isSendingMessage,
           isMessagesLoading,
           isStreaming,
@@ -62,6 +63,7 @@ export function AiChatPanel() {
               textareaRef={textareaRef}
               handleInputChange={handleInputChange}
               handleSendMessage={handleSendMessage}
+              onNewConversation={handleNewConversation}
               isLoading={isSendingMessage || isStreaming || isMessagesLoading}
             />
           </>

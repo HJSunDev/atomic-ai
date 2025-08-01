@@ -1,12 +1,14 @@
 import React, { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Sparkles, Maximize2, Brain, Clock, Loader2 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { Send, Sparkles, Maximize2, Brain, Clock, Loader2, MessageSquarePlus } from "lucide-react";
 
 interface ChatInputProps {
   inputValue: string;
   textareaRef: any; // 使用any类型避免类型问题
   handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
   handleSendMessage: () => void;
+  onNewConversation?: () => void; // 新建对话回调
   isLoading?: boolean; // 添加加载状态属性
   promptOptions?: Array<{
     type: string;
@@ -19,6 +21,7 @@ export function ChatInput({
   textareaRef, 
   handleInputChange, 
   handleSendMessage,
+  onNewConversation,
   isLoading = false, // 默认为false
   promptOptions = [] 
 }: ChatInputProps) {
@@ -62,7 +65,7 @@ export function ChatInput({
         >
           <Brain className="w-4 h-4 text-[#212125] dark:text-gray-300" />
         </button>
-        <div className="flex items-center justify-center ml-auto">
+        <div className="flex items-center justify-center ml-auto gap-1">
           {/* 历史消息图标 */}
           <button 
             className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
@@ -70,6 +73,21 @@ export function ChatInput({
           >
             <Clock className="h-4 w-4 text-[#212125] dark:text-gray-300" />
           </button>
+          {/* 新建对话图标 */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button 
+                className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center cursor-pointer"
+                disabled={isLoading} // 加载时禁用按钮
+                onClick={() => onNewConversation?.()} // 调用新建对话回调
+              >
+                <MessageSquarePlus className="h-4 w-4 text-[#212125] dark:text-gray-300" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>开启新对话</p>
+            </TooltipContent>
+          </Tooltip>
         </div>
       </div>
       
