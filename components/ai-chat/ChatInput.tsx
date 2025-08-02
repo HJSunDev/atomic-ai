@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Send, Sparkles, Maximize2, Brain, Clock, Loader2, MessageSquarePlus } from "lucide-react";
+import { ChatHistory } from "./ChatHistory";
 
 interface ChatInputProps {
   inputValue: string;
@@ -27,6 +28,8 @@ export function ChatInput({
 }: ChatInputProps) {
   // 添加聚焦状态管理
   const [isFocused, setIsFocused] = useState(false);
+  // 控制tooltip显示状态，用于解决抽屉关闭后tooltip意外显示的问题
+  const [isTooltipDisabled, setIsTooltipDisabled] = useState(false);
   
   return (
     <div className="bg-white dark:bg-[#202020]">
@@ -67,12 +70,33 @@ export function ChatInput({
         </button>
         <div className="flex items-center justify-center ml-auto gap-1">
           {/* 历史消息图标 */}
-          <button 
-            className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
-            disabled={isLoading} // 加载时禁用按钮
-          >
-            <Clock className="h-4 w-4 text-[#212125] dark:text-gray-300" />
-          </button>
+          <Tooltip open={isTooltipDisabled ? false : undefined}>
+            <TooltipTrigger asChild>
+              <ChatHistory
+                onSheetToggle={(open) => {
+                  if (open) {
+                    // 抽屉打开时立即禁用tooltip
+                    setIsTooltipDisabled(true);
+                  } else {
+                    // 抽屉关闭时，延迟500ms后重新启用tooltip
+                    setTimeout(() => {
+                      setIsTooltipDisabled(false);
+                    }, 500);
+                  }
+                }}
+              >
+                <button 
+                  className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center cursor-pointer"
+                  disabled={isLoading} // 加载时禁用按钮
+                >
+                  <Clock className="h-4 w-4 text-[#212125] dark:text-gray-300" />
+                </button>
+              </ChatHistory>
+            </TooltipTrigger>
+            <TooltipContent>
+              <p>聊天历史</p>
+            </TooltipContent>
+          </Tooltip>
           {/* 新建对话图标 */}
           <Tooltip>
             <TooltipTrigger asChild>
