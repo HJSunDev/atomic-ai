@@ -24,6 +24,43 @@ export const getUserConversations = query({
 });
 
 /**
+ * 搜索用户的对话列表
+ * 支持按会话标题进行实时搜索，如果搜索词为空则返回最新的会话列表
+ */
+export const searchUserConversations = query({
+  args: {
+    search: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    // 从认证上下文获取用户ID
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    // 如果搜索词为空或只包含空白字符，返回最新的会话列表
+    const searchTerm = args.search?.trim();
+    if (!searchTerm) {
+      const conversations = await ctx.db
+        .query("conversations")
+        .withIndex("by_userId", (q) => q.eq("userId", userId))
+        .order("desc")
+        .collect();
+      
+      return conversations;
+    }
+
+    // 使用搜索索引进行全文搜索
+    const searchResults = await ctx.db
+      .query("conversations")
+      .withSearchIndex("search_conversations_by_title", (q) =>
+        q.search("title", searchTerm).eq("userId", userId)
+      )
+      .collect();
+
+    return searchResults;
+  },
+});
+
+/**
  * 获取对话中的消息记录
  * 用于聊天界面显示完整的对话历史
  */

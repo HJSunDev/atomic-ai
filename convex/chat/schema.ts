@@ -19,7 +19,12 @@ export const chatSchema = {
     // 按用户ID和提示词模块ID索引，方便查询用户从特定模块发起的会话
     .index("by_userId_promptModuleId", ["userId", "promptModuleId"])
     // 用于高效查询用户的收藏会话
-    .index("by_userId_isFavorited", ["userId", "isFavorited"]),
+    .index("by_userId_isFavorited", ["userId", "isFavorited"])
+    // 会话标题搜索索引，支持按用户ID过滤的全文搜索
+    .searchIndex("search_conversations_by_title", {
+      searchField: "title",
+      filterFields: ["userId"], // 确保用户只能搜索自己的会话
+    }),
 
   /**
    * 消息表 (messages)
@@ -127,6 +132,15 @@ export const chatSchema = {
      * 按父消息ID索引。
      * 用于高效地查询某条用户消息下的所有AI回复，是实现"对比多个回复"功能的核心性能保障。
      */
-    .index("by_parentMessageId", ["parentMessageId"]),
+    .index("by_parentMessageId", ["parentMessageId"])
+  
+    /**
+     * 消息内容搜索索引。
+     * 支持在消息内容中进行全文搜索，可以按会话ID过滤，确保搜索范围的准确性。
+     */
+    .searchIndex("search_messages_by_content", {
+      searchField: "content",
+      filterFields: ["conversationId"], // 可以按特定会话进行搜索
+    }),
 
 }; 

@@ -12,12 +12,23 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Input } from "@/components/ui/input"; 
+import { Input } from "@/components/ui/input";
+import { useDebouncedValue } from "@/hooks/use-debounced-value"; 
 
 // 最近聊天记录列表组件
-export function RecentChatList() {
-  // 1. 使用query获取分组数据（包含 favorited 和 grouped）
-  const conversationData = useQuery(api.chat.queries.listGroupedByTime);
+export function RecentChatList({ searchQuery }: { searchQuery: string }) {
+  // 对搜索词进行防抖处理
+  const debouncedSearch = useDebouncedValue(searchQuery, 500);
+  
+  // 1. 根据是否有搜索词决定使用哪个查询
+  const isSearching = debouncedSearch.trim().length > 0;
+  // 使用query获取完整的分组数据（包含 favorited 和 grouped）
+  const conversationData = useQuery(api.chat.queries.listGroupedByTime, isSearching ? "skip" : {});
+  // 使用query获取搜索结果
+  const searchResults = useQuery(
+    api.chat.queries.searchUserConversations, 
+    isSearching ? { search: debouncedSearch } : "skip"
+  );
   
   // 2. 使用全局状态管理替代本地状态
   const { currentConversationId, selectConversation, startNewConversation } = useChatStore();
@@ -235,6 +246,29 @@ export function RecentChatList() {
     );
   };
 
+  // 渲染搜索结果
+  const renderSearchResults = () => {
+    if (!searchResults) return null;
+
+    return (
+      <section className="mt-5">
+        <div className="px-3 py-2 text-sm font-medium">
+          搜索结果 {searchResults.length > 0 && `(${searchResults.length})`}
+        </div>
+        
+        {searchResults.length === 0 ? (
+          <div className="p-3 text-center text-xs text-gray-500">
+            没有找到匹配的聊天记录
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {searchResults.map(renderConversationItem)}
+          </div>
+        )}
+      </section>
+    );
+  };
+
   // 渲染收藏区域
   const renderFavoritesSection = () => {
     if (!conversationData?.favorited) return null;
@@ -386,10 +420,20 @@ export function RecentChatList() {
   );
 
   // 主渲染逻辑
-  if (conversationData === undefined) {
+
+  // 1. 统一处理加载状态，这是最优先的判断
+  const isLoading = (isSearching && searchResults === undefined) || (!isSearching && conversationData === undefined);
+  if (isLoading) {
     return renderLoadingSkeleton();
   }
 
+  // 2. 处理搜索模式下的成功渲染
+  if (isSearching) {
+    return renderSearchResults();
+  }
+
+  // 3. 最后处理正常模式下的成功渲染（作为默认情况）
+  // (经过了前面的判断，代码执行到这里时，conversationData 肯定已经加载好了)
   return (
     <>
       {/* 收藏区域 */}

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { Search, MoreVertical } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { ScrollView } from "@/components/custom";
@@ -7,6 +7,9 @@ import { RecentChatList } from "./RecentChatList";
 
 // 聊天侧边栏组件
 export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
+  // 搜索状态管理
+  const [searchQuery, setSearchQuery] = useState("");
+  
   return (
     <ScrollView
       as="main"
@@ -25,6 +28,8 @@ export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
           <Input 
             type="text" 
             placeholder="搜索聊天记录" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
             className="h-[2rem] pl-9 pr-3 py-1.5 bg-gray-100 dark:bg-[#27272A] text-sm placeholder:text-xs border-0 focus-visible:ring-1 focus-visible:ring-[#947CF1] focus-visible:border-[#947CF1]"
           />
         </div>
@@ -50,7 +55,7 @@ export const ChatSidebar = ({ onToggle }: { onToggle: () => void }) => {
       <AiModelList />
       
       {/* 聊天记录列表 */}
-      <RecentChatList />
+      <RecentChatList searchQuery={searchQuery} />
 
     </ScrollView>
   );
