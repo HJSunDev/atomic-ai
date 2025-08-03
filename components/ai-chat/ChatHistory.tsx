@@ -20,6 +20,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 interface ChatHistoryProps {
   children: React.ReactNode;
@@ -39,9 +40,17 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
   
   // 搜索相关状态
   const [searchValue, setSearchValue] = useState("");
+  const debouncedSearch = useDebouncedValue(searchValue, 500);
+  const isSearching = debouncedSearch.trim().length > 0;
   
-  // 获取分组会话数据
-  const conversationData = useQuery(api.chat.queries.listGroupedByTime);
+  // 获取分组会话数据（仅在非搜索模式下）
+  const conversationData = useQuery(api.chat.queries.listGroupedByTime, isSearching ? "skip" : {});
+  
+  // 获取搜索结果（仅在搜索模式下）
+  const searchResults = useQuery(
+    api.chat.queries.searchUserConversations,
+    isSearching ? { search: debouncedSearch } : "skip"
+  );
   
   // 全局聊天状态管理
   const { currentConversationId, selectConversation } = useChatStore();
@@ -251,6 +260,31 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
     );
   };
   
+  // 渲染搜索结果
+  const renderSearchResults = () => {
+    if (!searchResults) return null;
+
+    return (
+      <div className="mb-6">
+        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 px-3 mb-3">
+          搜索结果 ({searchResults.length})
+        </h3>
+        
+        {searchResults.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="text-gray-500 dark:text-gray-400 text-sm">
+              没有找到匹配的对话
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-1">
+            {searchResults.map(renderConversationItem)}
+          </div>
+        )}
+      </div>
+    );
+  };
+  
   // 渲染收藏区域
   const renderFavoritesSection = () => {
     if (!conversationData?.favorited || conversationData.favorited.length === 0) {
@@ -390,14 +424,23 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
         
         {/* 聊天列表 */}
         <div className="flex-1 overflow-y-auto py-4">
-          {conversationData === undefined ? (
-            renderLoadingSkeleton()
-          ) : (
-            <div>
-              {renderFavoritesSection()}
-              {renderRecentChatsSection()}
-            </div>
-          )}
+          {(() => {
+            const isLoading = (isSearching && searchResults === undefined) || (!isSearching && conversationData === undefined);
+            if (isLoading) {
+              return renderLoadingSkeleton();
+            }
+
+            if (isSearching) {
+              return renderSearchResults();
+            }
+
+            return (
+              <>
+                {renderFavoritesSection()}
+                {renderRecentChatsSection()}
+              </>
+            );
+          })()}
         </div>
       </SheetContent>
     </Sheet>
