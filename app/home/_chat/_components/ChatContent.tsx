@@ -17,7 +17,7 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
   ];
   
   return (
-    <div className="flex-1 h-full flex flex-col bg-white dark:bg-[#202020]">
+    <div className="relative flex-1 h-full flex flex-col dark:bg-[#202020]">
       {/* 当侧边栏收起时，显示展开按钮 */}
       {!showSidebar && (
         <section className="absolute top-4 left-4 z-10">
