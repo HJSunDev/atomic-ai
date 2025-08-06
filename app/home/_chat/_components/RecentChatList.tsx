@@ -201,7 +201,7 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
                   <MoreVertical className="w-3 h-3 text-gray-400" />
                 </div>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="center" className="w-36 py-2">
+              <DropdownMenuContent align="center" className="w-36 py-2 dark:bg-[#202020] dark:border-gray-700">
                 <DropdownMenuItem onClick={(e) => {
                   e.stopPropagation();
                   handleEditTitle(conversation);

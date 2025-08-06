@@ -443,7 +443,7 @@ export const ScrollView = forwardRef<HTMLElement, ScrollViewProps>(
             backgroundColor: config.trackColor,
             opacity: showScrollbar ? 1 : 0,  // 根据状态控制显隐
             pointerEvents: showScrollbar ? 'auto' : 'none',  // 隐藏时禁用鼠标事件
-            zIndex: 1000,  // 确保滚动条在最上层
+            zIndex: 30,  // 确保滚动条在内容之上，但不遮挡弹出层
           }}
         >
           {/* 滚动条滑块 */}
