@@ -1,9 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState } from "react";
 import { Search, MoreVertical, Edit, Star, StarOff, Trash2, ChevronDown } from "lucide-react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
-import { Id, Doc } from "@/convex/_generated/dataModel";
+import { Doc } from "@/convex/_generated/dataModel";
 import { useChatStore } from "@/store/home/useChatStore";
 import {
   Sheet,
@@ -20,7 +18,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useChatHistory } from "@/hooks/useChatHistory";
 
 interface ChatHistoryProps {
   children: React.ReactNode;
@@ -38,107 +36,35 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
     onSheetToggle?.(open); // 通知父组件状态变化
   };
   
-  // 搜索相关状态
-  const [searchValue, setSearchValue] = useState("");
-  const debouncedSearch = useDebouncedValue(searchValue, 500);
-  const isSearching = debouncedSearch.trim().length > 0;
-  
-  // 获取分组会话数据（仅在非搜索模式下）
-  const conversationData = useQuery(api.chat.queries.listGroupedByTime, isSearching ? "skip" : {});
-  
-  // 获取搜索结果（仅在搜索模式下）
-  const searchResults = useQuery(
-    api.chat.queries.searchUserConversations,
-    isSearching ? { search: debouncedSearch } : "skip"
-  );
-  
-  // 全局聊天状态管理
-  const { currentConversationId, selectConversation } = useChatStore();
-  
-  // 会话操作相关状态
-  const [openMenuConversationId, setOpenMenuConversationId] = useState<Id<"conversations"> | null>(null);
-  const [editingConversationId, setEditingConversationId] = useState<Id<"conversations"> | null>(null);
-  const [editingTitle, setEditingTitle] = useState("");
-  
-  const inputRef = useRef<HTMLInputElement>(null);
-  
-  // 控制收藏区域的展开/收起状态
-  const [showAllFavorites, setShowAllFavorites] = useState(false);
-  
-  // Convex mutations
-  const toggleFavorite = useMutation(api.chat.mutations.toggleConversationFavorite);
-  const deleteConversation = useMutation(api.chat.mutations.deleteConversation);
-  const updateTitle = useMutation(api.chat.mutations.updateConversationTitle);
-  
-  // 监听编辑状态变化，自动聚焦输入框
-  useEffect(() => {
-    if (editingConversationId && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select();
-    }
-  }, [editingConversationId]);
-  
-  // 处理编辑对话标题
-  const handleEditTitle = (conversation: Doc<"conversations">) => {
-    setOpenMenuConversationId(null);
-    setEditingConversationId(conversation._id);
-    setEditingTitle(conversation.title || "");
-  };
-  
-  // 提交标题修改
-  const handleTitleSubmit = async () => {
-    if (!editingConversationId || !editingTitle.trim()) {
-      setEditingConversationId(null);
-      return;
-    }
-    
-    try {
-      await updateTitle({
-        conversationId: editingConversationId,
-        newTitle: editingTitle,
-      });
-    } catch (error) {
-      console.error("更新标题失败:", error);
-    } finally {
-      setEditingConversationId(null);
-    }
-  };
-  
-  // 处理键盘事件
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      handleTitleSubmit();
-    } else if (event.key === "Escape") {
-      setEditingConversationId(null);
-    }
-  };
-  
-  // 处理收藏/取消收藏
-  const handleToggleFavorite = async (conversationId: Id<"conversations">, currentFavoriteStatus: boolean) => {
-    try {
-      await toggleFavorite({
-        conversationId,
-        isFavorited: !currentFavoriteStatus,
-      });
-    } catch (error) {
-      console.error("切换收藏状态失败:", error);
-    }
-  };
-  
-  // 处理删除对话
-  const handleDeleteConversation = async (conversationId: Id<"conversations">) => {
-    try {
-      await deleteConversation({ conversationId });
-    } catch (error) {
-      console.error("删除对话失败:", error);
-    }
-  };
-  
-  // 处理会话选择
-  const handleSelectConversation = (conversationId: Id<"conversations">) => {
-    selectConversation(conversationId);
-    handleSheetOpenChange(false); // 选择后关闭抽屉
-  };
+  // 全局：用于高亮当前会话与删除当前会话时回退
+  const { currentConversationId, startNewConversation } = useChatStore();
+
+  // 统一业务逻辑：复用 useChatHistory
+  const {
+    conversationData,
+    searchResults,
+    isLoading,
+    isSearching,
+    searchValue,
+    setSearchValue,
+    openMenuConversationId,
+    setOpenMenuConversationId,
+    editingConversationId,
+    editingTitle,
+    setEditingTitle,
+    showAllFavorites,
+    setShowAllFavorites,
+    inputRef,
+    handleEditTitle,
+    handleTitleSubmit,
+    handleKeyDown,
+    handleToggleFavorite,
+    handleDeleteConversation,
+    handleSelectConversation,
+  } = useChatHistory({
+    onConversationSelect: () => handleSheetOpenChange(false),
+    onBeforeDeleteCurrent: () => startNewConversation(),
+  });
   
   // 渲染单个会话项
   const renderConversationItem = (conversation: Doc<"conversations">) => {
@@ -339,7 +265,7 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
       <div>
         <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 px-3 mb-3">最近</h3>
         
-        {groupedConversations.map((group) => (
+        {groupedConversations.map((group: { groupName: string; conversations: Doc<"conversations">[] }) => (
           <div key={group.groupName} className="mb-4">
             <div className="px-3 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium">
               {group.groupName}
@@ -424,23 +350,16 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
         
         {/* 聊天列表 */}
         <div className="flex-1 overflow-y-auto py-4">
-          {(() => {
-            const isLoading = (isSearching && searchResults === undefined) || (!isSearching && conversationData === undefined);
-            if (isLoading) {
-              return renderLoadingSkeleton();
-            }
-
-            if (isSearching) {
-              return renderSearchResults();
-            }
-
-            return (
-              <>
-                {renderFavoritesSection()}
-                {renderRecentChatsSection()}
-              </>
-            );
-          })()}
+          {isLoading ? (
+            renderLoadingSkeleton()
+          ) : isSearching ? (
+            renderSearchResults()
+          ) : (
+            <>
+              {renderFavoritesSection()}
+              {renderRecentChatsSection()}
+            </>
+          )}
         </div>
       </SheetContent>
     </Sheet>

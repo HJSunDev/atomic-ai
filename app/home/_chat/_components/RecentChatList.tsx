@@ -1,9 +1,7 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useEffect } from "react";
 import { MoreVertical, ChevronDown, Edit, Star, StarOff, Trash2, Wand2 } from "lucide-react";
-import { useQuery, useMutation } from "convex/react";
-import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
-import { Id, Doc } from "@/convex/_generated/dataModel";
+import { Doc } from "@/convex/_generated/dataModel";
 import { useChatStore } from "@/store/home/useChatStore";
 import {
   DropdownMenu,
@@ -13,118 +11,43 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
-import { useDebouncedValue } from "@/hooks/use-debounced-value"; 
+import { useChatHistory } from "@/hooks/useChatHistory";
 
 // 最近聊天记录列表组件
 export function RecentChatList({ searchQuery }: { searchQuery: string }) {
-  // 对搜索词进行防抖处理
-  const debouncedSearch = useDebouncedValue(searchQuery, 500);
-  
-  // 1. 根据是否有搜索词决定使用哪个查询
-  const isSearching = debouncedSearch.trim().length > 0;
-  // 使用query获取完整的分组数据（包含 favorited 和 grouped）
-  const conversationData = useQuery(api.chat.queries.listGroupedByTime, isSearching ? "skip" : {});
-  // 使用query获取搜索结果
-  const searchResults = useQuery(
-    api.chat.queries.searchUserConversations, 
-    isSearching ? { search: debouncedSearch } : "skip"
-  );
-  
-  // 2. 使用全局状态管理替代本地状态
-  const { currentConversationId, selectConversation, startNewConversation } = useChatStore();
-  
-  // 3. 维护当前打开下拉菜单的会话ID
-  const [openMenuConversationId, setOpenMenuConversationId] = useState<Id<"conversations"> | null>(null);
-  
-  // 4. 维护正在编辑的会话ID
-  const [editingConversationId, setEditingConversationId] = useState<Id<"conversations"> | null>(null);
-  // 5. 维护正在编辑的标题内容
-  const [editingTitle, setEditingTitle] = useState("");
-  
-  const inputRef = useRef<HTMLInputElement>(null);
+  const { currentConversationId, startNewConversation } = useChatStore();
 
-  // 6. 控制收藏区域的展开/收起状态
-  const [showAllFavorites, setShowAllFavorites] = useState(false);
+  const {
+    conversationData,
+    searchResults,
+    isLoading,
+    isSearching,
+    searchValue,
+    setSearchValue,
+    openMenuConversationId,
+    setOpenMenuConversationId,
+    editingConversationId,
+    editingTitle,
+    setEditingTitle,
+    showAllFavorites,
+    setShowAllFavorites,
+    inputRef,
+    handleEditTitle,
+    handleTitleSubmit,
+    handleKeyDown,
+    handleToggleFavorite,
+    handleDeleteConversation,
+    handleSelectConversation,
+  } = useChatHistory({
+    onBeforeDeleteCurrent: () => {
+      startNewConversation();
+    },
+  });
 
-  // 7. mutation：切换收藏状态、删除对话、更新标题
-  const toggleFavorite = useMutation(api.chat.mutations.toggleConversationFavorite);
-  const deleteConversation = useMutation(api.chat.mutations.deleteConversation);
-  const updateTitle = useMutation(api.chat.mutations.updateConversationTitle);
-
-  // 监听 editingConversationId 变化，自动聚焦
+  // 将外部传入的搜索词同步到 Hook 内部的搜索状态
   useEffect(() => {
-    if (editingConversationId && inputRef.current) {
-      inputRef.current.focus();
-      inputRef.current.select(); // 全选内容方便修改
-    }
-  }, [editingConversationId]);
-
-  // 处理编辑对话标题
-  const handleEditTitle = (conversation: Doc<"conversations">) => {
-    setOpenMenuConversationId(null); // 在进入编辑模式前，手动关闭菜单状态，清除因为菜单打开状态显示的背景色
-    setEditingConversationId(conversation._id);
-    setEditingTitle(conversation.title || "");
-  };
-
-  // 提交标题修改
-  const handleTitleSubmit = async () => {
-    if (!editingConversationId || !editingTitle.trim()) {
-      // 如果标题为空，则恢复原状或不修改
-      setEditingConversationId(null);
-      return;
-    }
-
-    try {
-      await updateTitle({
-        conversationId: editingConversationId,
-        newTitle: editingTitle,
-      });
-    } catch (error) {
-      console.error("更新标题失败:", error);
-      // TODO: 这里可以添加用户提示，例如 toast
-    } finally {
-      setEditingConversationId(null); // 退出编辑模式
-    }
-  };
-
-  // 处理键盘事件
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
-    if (event.key === "Enter") {
-      handleTitleSubmit();
-    } else if (event.key === "Escape") {
-      setEditingConversationId(null); // 取消编辑
-    }
-  };
-
-  // 处理收藏/取消收藏
-  const handleToggleFavorite = async (conversationId: Id<"conversations">, currentFavoriteStatus: boolean) => {
-    try {
-      await toggleFavorite({
-        conversationId,
-        isFavorited: !currentFavoriteStatus,
-      });
-    } catch (error) {
-      console.error("切换收藏状态失败:", error);
-    }
-  };
-
-  // 处理删除对话
-  const handleDeleteConversation = async (conversationId: Id<"conversations">) => {
-    try {
-      // 如果删除的是当前选中的会话，清空选择状态
-      if (currentConversationId === conversationId) {
-        startNewConversation();
-      }
-      await deleteConversation({ conversationId });
-    } catch (error) {
-      console.error("删除对话失败:", error);
-    }
-  };
-  
-  // 处理会话选择
-  const handleSelectConversation = (conversationId: Id<"conversations">) => {
-    selectConversation(conversationId);
-  };
+    setSearchValue(searchQuery);
+  }, [searchQuery, setSearchValue]);
   
   // 渲染单个会话项的函数
   const renderConversationItem = (conversation: Doc<"conversations">) => {
@@ -340,7 +263,7 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
           <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
         </div>
         
-        {groupedConversations.map((group) => (
+        {groupedConversations.map((group: { groupName: string; conversations: Doc<"conversations">[] }) => (
           <div key={group.groupName}>
             {/* 渲染分组标题, e.g., '今天', '7天内' */}
             <div className="px-3 py-1 text-xs text-gray-500">{group.groupName}</div>
@@ -422,7 +345,6 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
   // 主渲染逻辑
 
   // 1. 统一处理加载状态，这是最优先的判断
-  const isLoading = (isSearching && searchResults === undefined) || (!isSearching && conversationData === undefined);
   if (isLoading) {
     return renderLoadingSkeleton();
   }
