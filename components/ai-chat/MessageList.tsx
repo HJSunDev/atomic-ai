@@ -3,6 +3,7 @@ import { Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Bot, Clock } from "lucide-r
 import { Message, MessageStreamingEffects } from "./AiChatCore";
 import { Id } from "@/convex/_generated/dataModel";
 import { Skeleton } from "@/components/ui/skeleton";
+import { MessageRenderer, type MessagePart } from "./MessageRenderer";
 
 interface MessageListProps {
   messages: Message[];
@@ -135,7 +136,10 @@ export function MessageList({
             <div className="flex flex-col items-end">
               {/* 用户消息内容 */}
               <div className="w-3/4 bg-[#F1F2F3] dark:bg-[#2B2B2D] rounded-tl-lg rounded-tr-lg rounded-bl-lg p-4 ml-auto">
-                <div className="text-sm whitespace-pre-line">{message.content}</div>
+                <MessageRenderer
+                  className="prose prose-sm dark:prose-invert max-w-none text-sm"
+                  parts={[{ type: "md", content: message.content } satisfies MessagePart]}
+                />
               </div>
               
               {/* 用户消息时间戳 */}
@@ -173,7 +177,10 @@ export function MessageList({
                 
                 {/* AI消息内容 */}
                 <div className="text-sm whitespace-pre-line">
-                  {message.content}
+                  <MessageRenderer
+                    className="prose prose-sm dark:prose-invert max-w-none text-sm"
+                    parts={[{ type: "md", content: message.content } satisfies MessagePart]}
+                  />
                   {/* 流式传输效果 */}
                   <MessageStreamingEffects 
                     message={message} 
