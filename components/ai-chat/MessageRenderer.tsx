@@ -31,6 +31,8 @@ function MarkdownRenderer({ content }: { content: string }) {
       remarkPlugins={[remarkGfm]}
       // 安全性：默认不启用原始 HTML（不使用 rehypeRaw）
       components={{
+        // 临时容错：将段落从 <p> 改为 <div>，避免在段落内渲染块级 <div>（由高亮器生成）导致的嵌套错误
+        p: ({ children }) => <div className="mb-4 last:mb-0">{children}</div>,
         // TypeScript 说明：react-markdown 传入了自定义 inline 属性，
         // DOM 属性类型中未显式声明，这里使用 any 处理。
         code({ inline, className, children, ...props }: any) {
