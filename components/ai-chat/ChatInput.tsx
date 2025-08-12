@@ -25,7 +25,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Check, ChevronDown } from "lucide-react";
+import { Check, ChevronDown, Globe } from "lucide-react";
 
 interface ChatInputProps {
   inputValue: string;
@@ -326,15 +326,11 @@ export function ChatInput({
           </div>
 
           {/* 选择区 */}
-          <div className="px-3 py-2.5 bg-[#f9fafb] dark:bg-[#1b1b1d] border-t border-gray-100 dark:border-gray-800 rounded-b-md flex items-center gap-4">
+          <div className="px-3 py-2.5 bg-[#f9fafb] dark:bg-[#1b1b1d] border-t border-gray-100 dark:border-gray-800 rounded-b-md flex items-center gap-1">
             {/* 模型选择器 */}
             <ModelSelector />
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 bg-gray-300 dark:bg-gray-600 rounded-full"></div>
-              <span className="text-xs text-gray-500 dark:text-gray-400">
-                选项2
-              </span>
-            </div>
+            {/* 网络查询入口 */}
+            <NetworkSearchEntry />
           </div>
         </div>
       </div>
@@ -346,6 +342,8 @@ export function ChatInput({
 function ModelSelector() {
   // 读取与更新全局选择的模型ID
   const { selectedModel, setSelectedModel } = useChatStore();
+  // 控制下拉菜单打开状态，用于切换触发器图标方向
+  const [open, setOpen] = useState(false);
 
   // 当前模型配置
   const current = AVAILABLE_MODELS[selectedModel];
@@ -359,17 +357,17 @@ function ModelSelector() {
   });
 
   return (
-    <DropdownMenu>
+    <DropdownMenu open={open} onOpenChange={setOpen}>
       <DropdownMenuTrigger asChild>
         <button
-          className="h-7 px-2 rounded-full flex items-center justify-center gap-1.5 cursor-pointer transition-colors hover:bg-gray-100 dark:hover:bg-gray-800 border-0 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none"
+          className="h-7 rounded-full flex items-center justify-center gap-1.5 cursor-pointer transition-colors  border-0 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none"
           title="选择模型"
         >
           <div className="w-3.5 h-3.5 bg-gray-400 dark:bg-gray-600 rounded-full"></div>
           <span className="text-[12px] text-gray-700 dark:text-gray-300">
             {current?.shortName ?? current?.modelName ?? "选择模型"}
           </span>
-          <ChevronDown className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+          <ChevronDown className={cn("w-3.5 h-3.5 text-gray-500 dark:text-gray-400 transition-transform", open && "rotate-180")} />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48 max-h-80 overflow-y-auto p-1 bg-white dark:bg-[#202020] border border-gray-200 dark:border-gray-700 shadow-lg">
@@ -409,5 +407,47 @@ function ModelSelector() {
         ))}
       </DropdownMenuContent>
     </DropdownMenu>
+  );
+}
+
+// 网络查询入口组件：提供全网开关（仅前端状态）
+function NetworkSearchEntry() {
+  // 控制是否开启全网搜索，仅前端本地状态
+  const [enabled, setEnabled] = useState(false);
+
+  return (
+    <button
+      className={cn(
+        "h-7 rounded-full flex items-center gap-1 cursor-pointer",
+        "px-2 transition-colors border-0 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none",
+        enabled
+          ? "bg-[#F1EDFF] text-[#5A43D8] dark:bg-[#2A2540] dark:text-[#C6BBFF]"
+          : "bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+      )}
+      title="网络查询"
+      onClick={() => setEnabled((v) => !v)}
+      aria-pressed={enabled}
+    >
+      {/* 左侧图标 */}
+      <Globe className={cn("w-3.5 h-3.5", enabled ? "text-[#7C6AF2]" : "text-gray-500 dark:text-gray-400")} />
+      {/* 文案 */}
+      <span className="text-[12px]">全网</span>
+      {/* 右侧小开关（视觉样式，不含表单语义） */}
+      <span
+        className={cn(
+          "ml-1 inline-flex items-center w-8 h-4 rounded-full transition-colors",
+          enabled ? "bg-[#7C6AF2]" : "bg-gray-300 dark:bg-gray-600"
+        )}
+        role="switch"
+        aria-checked={enabled}
+      >
+        <span
+          className={cn(
+            "inline-block w-3 h-3 bg-white rounded-full shadow transform transition-transform",
+            enabled ? "translate-x-4" : "translate-x-1"
+          )}
+        />
+      </span>
+    </button>
   );
 }

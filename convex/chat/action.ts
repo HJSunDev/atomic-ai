@@ -27,6 +27,13 @@ export const streamAssistantResponse = action({
     modelId: v.optional(v.string()),
     userApiKey: v.optional(v.string()),
     systemPrompt: v.optional(v.string()),
+    // 可选的 Agent 开关（v1 仅支持 webSearch，占位用于后续扩展）
+    agentFlags: v.optional(
+      v.object({
+        // 是否允许本轮启用联网搜索
+        webSearch: v.optional(v.boolean()),
+      })
+    ),
   },
   handler: async (ctx, args) => {
 
