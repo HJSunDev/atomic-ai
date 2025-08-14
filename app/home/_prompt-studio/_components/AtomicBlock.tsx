@@ -32,8 +32,6 @@ import {
 import { v4 as uuidv4 } from 'uuid';
 // 导入PromptDetailPanel组件
 import { PromptDetailPanel } from './PromptDetailPanel';
-// 导入promptStore
-import { usePromptStore, PromptModule } from '@/store/home/promptStore';
 // 导入预览面板组件
 import { PromptPreviewPanel } from './PromptPreviewPanel';
 // 导入 toast 提示
@@ -147,9 +145,7 @@ export function AtomicBlock() {
   // 当前预览的模块
   const [previewItem, setPreviewItem] = useState<GridItem | null>(null);
 
-  // 获取当前选择的提示词模块
-  const selectedPrompt = usePromptStore(state => state.selectedPrompt);
-  const clearSelectedPrompt = usePromptStore(state => state.clearSelectedPrompt);
+
 
   // 在客户端加载后再渲染组件
   useEffect(() => {
@@ -421,29 +417,7 @@ export function AtomicBlock() {
       onDragOver={handleDragOver}
     >
       <main className={`h-auto bg-gray-100 p-6 rounded-lg`}>
-        <h2 className="text-2xl font-bold mb-8">功能卡片</h2>
-        <p className="mb-6 text-gray-600">将下方卡片拖动到上方操作区</p>
         
-        {/* 当前选择的提示词模块指示器 */}
-        {selectedPrompt && (
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6 flex items-center justify-between">
-            <div>
-              <span className="text-sm text-blue-600 font-medium">当前选择的提示词模块：</span>
-              <span className="ml-2 font-bold">{selectedPrompt.title}</span>
-            </div>
-            <button
-              className="text-blue-500 hover:text-blue-700 text-sm flex items-center"
-              onClick={clearSelectedPrompt}
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                <circle cx="12" cy="12" r="10"></circle>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
-              </svg>
-              清除选择
-            </button>
-          </div>
-        )}
         
         {/* 操作区显示控制 */}
         {showOperationArea && (
