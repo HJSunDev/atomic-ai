@@ -2,7 +2,7 @@
 
 import { useDroppable } from '@dnd-kit/core';
 import type { GridItem } from './types';
-import { DraggableGridItem } from './DraggableGridItem';
+import { ModuleCard } from './ModuleCard';
 
 // 创建操作区组件，可以作为放置目标
 export function OperationArea({ items, onClear, onDelete, onSave }: { items: GridItem[], onClear: () => void, onDelete: (id: string) => void, onSave: (item: GridItem) => void }) {
@@ -30,7 +30,7 @@ export function OperationArea({ items, onClear, onDelete, onSave }: { items: Gri
       {items.length > 0 ? (
         <div className="flex flex-wrap gap-4">
           {items.map(item => (
-            <DraggableGridItem key={item.id} item={item} isOperationAreaItem={true} onDelete={onDelete} onSave={onSave} />
+            <ModuleCard key={item.id} item={item} isOperationAreaItem={true} onDelete={onDelete} onSave={onSave} />
           ))}
         </div>
       ) : (

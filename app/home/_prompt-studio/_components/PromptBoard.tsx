@@ -43,12 +43,12 @@ import { toast } from 'sonner';
 import type { GridItem } from './types';
 import { insertChildModule, reorderChildModules } from './helpers';
 // 拆分后的子组件
-import { DraggableGridItem } from './DraggableGridItem';
+import { ModuleCard } from './ModuleCard';
 import { OperationArea } from './OperationArea';
 import { DragOverlayItem } from './DragOverlayItem';
 
 
-export function AtomicBlock() {
+export function PromptBoard() {
   // 添加客户端渲染状态
   const [isMounted, setIsMounted] = useState(false);
   
@@ -442,7 +442,7 @@ export function AtomicBlock() {
                 {/* 占位卡片内容，可为空或加提示 */}
               </div>
             ) : (
-              <DraggableGridItem 
+              <ModuleCard 
                 key={item.id} 
                 item={item} 
                 onDelete={handleDeleteGridItem}

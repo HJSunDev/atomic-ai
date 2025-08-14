@@ -1,7 +1,7 @@
 "use client";
 
 import { TestBlock } from "./_components/TestBlock";
-import { AtomicBlock } from "./_components/AtomicBlock";
+import { PromptBoard } from "./_components/PromptBoard";
 import { usePromptStore } from "@/store/home/promptStore";
 
 export const PromptStudioModule = () => {
@@ -55,7 +55,7 @@ export const PromptStudioModule = () => {
         </div>
 
         {/* 提示词管理区 */}
-        <AtomicBlock />
+        <PromptBoard />
 
         {/*  */}
 

@@ -15,7 +15,7 @@ import { usePromptStore, PromptModule } from '@/store/home/promptStore';
  * @param item - 当前渲染的网格项数据
  * @param isOperationAreaItem - 是否为操作区的卡片，决定是否可作为放置目标
  */
-export function DraggableGridItem({ 
+export function ModuleCard({ 
   item, 
   isOperationAreaItem = false, 
   onDelete, 
