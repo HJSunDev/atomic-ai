@@ -173,7 +173,7 @@ export function ModuleCard({
       style={style}
       {...listeners}
       {...attributes}
-      className={`${item.color} p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative group ${isOver && !isDragging && !isDraggingOwnChild ? 'ring-2 ring-blue-400' : ''}`}
+      className={`bg-white p-4 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative group ${isOver && !isDragging && !isDraggingOwnChild ? 'ring-2 ring-blue-400' : ''}`}
       onClick={(e) => {
         // 如果点击的是按钮，不触发卡片点击事件
         if ((e.target as HTMLElement).closest('button')) {

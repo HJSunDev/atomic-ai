@@ -9,7 +9,7 @@ export function DragOverlayItem({ item }: { item: GridItem | null }) {
   if (!item) return null;
   return (
     <div
-      className={`${item.color} rounded-lg shadow-xl border-2 border-blue-500 cursor-grabbing flex flex-col items-start justify-center px-5 py-3 select-none`}
+      className={`bg-white rounded-lg shadow-xl border-2 border-blue-500 cursor-grabbing flex flex-col items-start justify-center px-5 py-3 select-none`}
       style={{ minHeight: '72px', maxHeight: '96px', opacity: 0.97 }}
     >
       {/* 只显示标题和内容，内容超出省略 */}

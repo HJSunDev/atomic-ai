@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from 'react';
-
-interface GridItem {
-  id: string;
-  title: string;
-  content: string;
-  color: string;
-  children: GridItem[];
-}
+import type { GridItem } from './types';
 
 interface PromptDetailPanelProps {
   item: GridItem;

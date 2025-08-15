@@ -58,20 +58,17 @@ export function PromptBoard() {
       id: '1',
       title: '文本生成',
       content: '生成各种类型的创意文本',
-      color: 'bg-blue-100',
       children: [
         {
           id: '1-1',
           title: '短文本生成',
           content: '快速生成短句',
-          color: 'bg-blue-50',
           children: [], 
         },
         {
           id: '1-2',
           title: '长文本生成',
           content: '生成长篇文章',
-          color: 'bg-blue-50',
           children: [],
         },
       ],
@@ -80,35 +77,30 @@ export function PromptBoard() {
       id: '2',
       title: '图像描述',
       content: '从图像中提取文本描述',
-      color: 'bg-green-100',
       children: [],
     },
     {
       id: '3',
       title: '代码助手',
       content: '帮助编写和调试代码',
-      color: 'bg-yellow-100',
       children: [], 
     },
     {
       id: '4',
       title: '翻译工具',
       content: '在不同语言之间进行翻译',
-      color: 'bg-purple-100',
       children: [],
     },
     {
       id: '5',
       title: '摘要生成',
       content: '从长文本中提取关键信息',
-      color: 'bg-pink-100',
       children: [],
     },
     {
       id: '6',
       title: '问答系统',
       content: '回答用户提出的各种问题',
-      color: 'bg-orange-100',
       children: [],
     },
   ]);
@@ -430,7 +422,7 @@ export function PromptBoard() {
         )}
         
         {/* 使用网格布局显示卡片列表 */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map(item => (
             // 拖拽时在原位置渲染半透明占位卡片
             activeId === item.id ? (
@@ -451,7 +443,7 @@ export function PromptBoard() {
               />
             )
           ))}
-        </div>
+        </main>
 
         {/* 使用PromptDetailPanel组件 */}
         {showDetailPanel && selectedItem && (
