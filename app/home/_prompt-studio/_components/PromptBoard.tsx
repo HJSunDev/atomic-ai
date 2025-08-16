@@ -45,7 +45,7 @@ import { insertChildModule, reorderChildModules } from './helpers';
 // 拆分后的子组件
 import { ModuleCard } from './ModuleCard';
 import { OperationArea } from './OperationArea';
-import { DragOverlayItem } from './DragOverlayItem';
+import { ModuleDragPreview } from './ModuleDragPreview';
 
 
 export function PromptBoard() {
@@ -108,13 +108,13 @@ export function PromptBoard() {
   // 存储操作区中的项目
   const [operationItems, setOperationItems] = useState<GridItem[]>([]);
 
-  // 当前被拖拽的项目状态
-  const [activeId, setActiveId] = useState<string | null>(null);
+  // 当前正在拖拽的模块 ID
+  const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
   
-  // 获取当前被拖拽的项目数据
+  // 获取当前正在拖拽的模块数据
   // 由于操作区和网格区 id 可能不同，需分别查找
-  const activeItem = activeId
-    ? items.find(item => item.id === activeId) || operationItems.find(item => item.id === activeId) || null
+  const draggingItem = draggingItemId
+    ? items.find(item => item.id === draggingItemId) || operationItems.find(item => item.id === draggingItemId) || null
     : null;
   
   // 跟踪鼠标是否真正进入了操作区
@@ -235,7 +235,7 @@ export function PromptBoard() {
   // 处理拖拽开始事件
   const handleDragStart = (event: DragStartEvent) => {
     // 设置当前被拖拽项的ID
-    setActiveId(event.active.id as string);
+    setDraggingItemId(event.active.id as string);
     // 重置操作区进入状态
     setEnteredOperationArea(false);
 
@@ -309,7 +309,7 @@ export function PromptBoard() {
       }
     }
     // 清除当前被拖拽项
-    setActiveId(null);
+    setDraggingItemId(null);
     resetGridDragging();
   };
 
@@ -425,7 +425,7 @@ export function PromptBoard() {
         <main className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {items.map(item => (
             // 拖拽时在原位置渲染半透明占位卡片
-            activeId === item.id ? (
+            draggingItemId === item.id ? (
               <div
                 key={item.id}
                 className="p-4 rounded-lg border-2 border-dashed border-gray-300 bg-gray-200 opacity-40 flex flex-col justify-center items-center min-h-[120px] transition-all"
@@ -465,7 +465,7 @@ export function PromptBoard() {
 
       {/* 拖拽时显示的覆盖层元素 */}
       <DragOverlay>
-        {activeItem ? <DragOverlayItem item={activeItem} /> : null}
+        {draggingItem ? <ModuleDragPreview item={draggingItem} /> : null}
       </DragOverlay>
     </DndContext>
   );

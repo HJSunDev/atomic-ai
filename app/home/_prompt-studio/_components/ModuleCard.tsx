@@ -3,7 +3,7 @@
 import { CSS } from '@dnd-kit/utilities';
 import { useDroppable, useDraggable } from '@dnd-kit/core';
 import type { GridItem } from './types';
-import { GridItemContent } from './GridItemContent';
+import { ModuleCardContent } from './ModuleCardContent';
 import { usePromptStore, PromptModule } from '@/store/home/promptStore';
 
 /**
@@ -186,7 +186,7 @@ export function ModuleCard({
       {isOperationAreaItem ? renderOperationAreaButtons() : renderGridAreaButtons()}
       
       {/* 渲染卡片内容，传递 isOperationAreaItem */}
-      <GridItemContent item={item} isOperationAreaItem={isOperationAreaItem} />
+      <ModuleCardContent item={item} isOperationAreaItem={isOperationAreaItem} />
       
       {/* 拖拽经过时的提示遮罩，仅在悬停时显示，且排除正在拖动的项目本身和自己的子模块 */}
       {isOver && !isDragging && !isDraggingOwnChild && (

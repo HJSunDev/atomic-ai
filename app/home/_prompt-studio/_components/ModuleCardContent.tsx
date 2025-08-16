@@ -2,10 +2,10 @@
 
 import { useDroppable } from '@dnd-kit/core';
 import type { GridItem } from './types';
-import { DraggableChildItem } from './DraggableChildItem';
+import { SortableChildItem } from './SortableChildItem';
 
 
-export function GridItemContent({ item, isOperationAreaItem = false }: { item: GridItem, isOperationAreaItem?: boolean }) {
+export function ModuleCardContent({ item, isOperationAreaItem = false }: { item: GridItem, isOperationAreaItem?: boolean }) {
   // 创建子模块区域的 droppable 区域
   // 仅在操作区的模块中启用子模块排序功能
   let setChildAreaRef: ((node: HTMLElement | null) => void) | undefined = undefined;
@@ -37,7 +37,7 @@ export function GridItemContent({ item, isOperationAreaItem = false }: { item: G
           <div className="flex flex-col gap-2">
             {item.children.map((child, index) => (
               isOperationAreaItem
-                ? <DraggableChildItem key={child.id} child={child} parentId={item.id} index={index} />
+                ? <SortableChildItem key={child.id} child={child} parentId={item.id} index={index} />
                 : (
                   <div
                     key={child.id}

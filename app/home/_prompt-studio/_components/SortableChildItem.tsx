@@ -5,7 +5,7 @@ import { useDraggable, useDroppable } from '@dnd-kit/core';
 import type { GridItem } from './types';
 
 // 可拖拽的子模块组件（仅用于操作区）
-export function DraggableChildItem({ child, parentId, index }: { child: GridItem, parentId: string, index: number }) {
+export function SortableChildItem({ child, parentId, index }: { child: GridItem, parentId: string, index: number }) {
   // 生成唯一id，格式为 child-父id-子id
   const dragId = `child-${parentId}-${child.id}`;
   // 使子模块可拖拽
