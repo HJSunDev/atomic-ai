@@ -23,6 +23,7 @@ import type * as persistent_stream_demo_http from "../persistent_stream_demo/htt
 import type * as persistent_stream_demo_httpActions from "../persistent_stream_demo/httpActions.js";
 import type * as persistent_stream_demo_mutations from "../persistent_stream_demo/mutations.js";
 import type * as persistent_stream_demo_queries from "../persistent_stream_demo/queries.js";
+import type * as prompt_queries from "../prompt/queries.js";
 import type * as userModelPreferences_mutations from "../userModelPreferences/mutations.js";
 import type * as userModelPreferences_queries from "../userModelPreferences/queries.js";
 
@@ -56,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   "persistent_stream_demo/httpActions": typeof persistent_stream_demo_httpActions;
   "persistent_stream_demo/mutations": typeof persistent_stream_demo_mutations;
   "persistent_stream_demo/queries": typeof persistent_stream_demo_queries;
+  "prompt/queries": typeof prompt_queries;
   "userModelPreferences/mutations": typeof userModelPreferences_mutations;
   "userModelPreferences/queries": typeof userModelPreferences_queries;
 }>;
