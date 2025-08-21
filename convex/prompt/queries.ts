@@ -90,4 +90,43 @@ export const listPromptModulesWithChildren = query({
   },
 });
 
+/**
+ * 查询当前用户未作为其他模块子模块的提示词模块列表（排除已归档）。
+ * - 使用关系表索引 `by_childId` 判断模块是否被引用为子模块；
+ * - 仅返回当前用户的未归档模块；
+ * - 不关心父模块的归档状态或归属用户，只要存在引用即视为“已作为子模块”。
+ */
+export const listPromptModulesNotUsedAsChild = query({
+  args: {},
+  handler: async (ctx) => {
+    // 权限校验：获取当前用户ID
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    // 查询当前用户的未归档提示词模块
+    const modules = (await ctx.db
+      .query("promptModules")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect())
+      .filter((m) => m.isArchived !== true);
+
+    if (modules.length === 0) return [];
+
+    // 过滤掉“已作为子模块”的模块
+    const topLevelCandidates = await Promise.all(
+      modules.map(async (mod) => {
+        // 通过 childId 索引快速判断是否存在引用
+        const usedAsChild = await ctx.db
+          .query("promptModuleRelationships")
+          .withIndex("by_childId", (q) => q.eq("childId", mod._id))
+          .first();
+        return usedAsChild ? null : mod;
+      })
+    );
+
+    // 过滤掉空值
+    return topLevelCandidates.filter((m) => m !== null);
+  },
+});
+
 
