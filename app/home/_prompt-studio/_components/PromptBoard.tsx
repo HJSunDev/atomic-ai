@@ -380,7 +380,7 @@ export function PromptBoard() {
   // 服务端渲染时返回一个占位符
   if (!isMounted) {
     return (
-      <div className="h-[1500px] mb-[20px] bg-gray-100 p-6 rounded-lg overflow-hidden relative">
+      <div className="h-[1500px] mb-[20px] bg-gray-100 p-6 rounded-lg overflow-hidden relative max-w-[70rem] w-full mx-auto">
         <h2 className="text-xl font-bold mb-6">功能卡片加载中...</h2>
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
@@ -408,7 +408,7 @@ export function PromptBoard() {
       // 监听拖拽经过事件
       onDragOver={handleDragOver}
     >
-      <main className={`h-auto bg-gray-100 p-6 rounded-lg`}>
+      <main className={`h-auto bg-gray-100 p-6 rounded-lg max-w-[70rem] w-full mx-auto`}>
         
         
         {/* 操作区显示控制 */}
