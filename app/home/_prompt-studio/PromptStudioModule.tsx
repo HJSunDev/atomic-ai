@@ -3,6 +3,7 @@
 import { TestBlock } from "./_components/TestBlock";
 import { PromptBoard } from "./_components/PromptBoard";
 import { WelcomePanel } from "./_components/WelcomePanel";
+import { EditorPanel } from "./_components/EditorPanel";
 import { usePromptStore } from "@/store/home/promptStore";
 
 export const PromptStudioModule = () => {
@@ -26,6 +27,8 @@ export const PromptStudioModule = () => {
 
   return (
     <main className="w-full h-full bg-muted/20 overflow-y-auto">
+      {/* 全局挂载：通用编辑面板（Notion 风格） */}
+      <EditorPanel />
       {/* 欢迎面板 */}
       <WelcomePanel />
 
