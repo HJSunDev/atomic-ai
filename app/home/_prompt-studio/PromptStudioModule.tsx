@@ -26,7 +26,7 @@ export const PromptStudioModule = () => {
   );
 
   return (
-    <main className="w-full h-full bg-muted/20 overflow-y-auto">
+    <main className="relative w-full h-full bg-muted/20 overflow-y-auto">
       {/* 全局挂载：通用编辑面板（Notion 风格） */}
       <EditorPanel />
       {/* 欢迎面板 */}
