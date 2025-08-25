@@ -1,12 +1,16 @@
 "use client";
 
-import { usePanelStore } from "@/store/ui/panelStore";
+import { useDocumentStore } from "@/store/home/documentStore";
 
 // 欢迎面板：顶部欢迎与功能概览占位模块
 export const WelcomePanel = () => {
-  // 点击“新建模块”时打开通用面板（创建模式）
+  // 点击"新建模块"时打开文档查看器（创建模式）
   const openCreateModule = () => {
-    usePanelStore.getState().open({ type: "module", mode: "create" });
+    useDocumentStore.getState().open({ 
+      type: "module", 
+      mode: "create",
+      displayMode: "drawer"
+    });
   };
 
   return (
