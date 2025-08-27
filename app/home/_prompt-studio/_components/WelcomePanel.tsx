@@ -1,12 +1,18 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useDocumentStore } from "@/store/home/documentStore";
 
 // 欢迎面板：顶部欢迎与功能概览占位模块
 export const WelcomePanel = () => {
+  const router = useRouter();
+  
   // 点击"新建模块"时打开文档查看器（创建模式）
   const openCreateModule = () => {
-    useDocumentStore.getState().open();
+    // 使用统一的文档打开方法，通过依赖注入方式处理路由跳转
+    useDocumentStore.getState().openDocument({
+      onNavigateToFullscreen: () => router.push('/home/prompt-document')
+    });
   };
 
   return (

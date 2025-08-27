@@ -3,8 +3,13 @@
 import { useDocumentStore } from "@/store/home/documentStore";
 import type React from "react";
 
+// 文档表单属性：支持外部关闭回调
+interface DocumentFormProps {
+  onRequestClose?: () => void;
+}
+
 // 文档表单：默认可编辑，像 Notion 一样可视即编辑；不包含保存逻辑
-export const DocumentForm = () => {
+export const DocumentForm = ({ onRequestClose }: DocumentFormProps) => {
   const { draft, setDraft, close } = useDocumentStore();
 
   // 标题变更
@@ -34,9 +39,10 @@ export const DocumentForm = () => {
           <span className="text-sm text-gray-500">文档</span>
         </div>
         <div className="flex items-center gap-2">
+          {/* 关闭按钮：全屏页通过 onRequestClose 控制关闭与返回 */}
           <button
             className="px-3 py-1.5 text-sm rounded border hover:bg-gray-50"
-            onClick={close}
+            onClick={onRequestClose ? onRequestClose : close}
           >
             关闭
           </button>

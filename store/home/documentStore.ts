@@ -29,6 +29,17 @@ interface DocumentState {
   setDisplayMode: (mode: DocumentDisplayMode) => void;
   toggleDisplayMode: () => void;
   setDraft: (patch: Partial<PromptDocumentDraft>) => void;
+  
+  // 统一的文档打开方法，处理不同显示模式下的打开逻辑
+  openDocument: (config?: DocumentOpenConfig & { 
+    onNavigateToFullscreen?: () => void;
+  }) => void;
+  
+  // 统一的模式切换方法，处理不同模式之间的切换逻辑
+  switchDisplayMode: (targetMode: DocumentDisplayMode, callbacks?: {
+    onNavigateToHome?: () => void;
+    onNavigateToFullscreen?: () => void;
+  }) => void;
 }
 
 // 默认草稿
@@ -98,5 +109,53 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     const { draft } = get();
     const newDraft = { ...draft, ...patch };
     set({ draft: newDraft });
+  },
+
+  // 统一的文档打开方法，根据当前显示模式智能选择打开方式
+  openDocument: (config) => {
+    const { displayMode, open } = get();
+    const { onNavigateToFullscreen, ...openConfig } = config || {};
+    
+    if (displayMode === 'fullscreen') {
+      // 全屏模式：通过回调进行路由跳转
+      if (onNavigateToFullscreen) {
+        onNavigateToFullscreen();
+      }
+    } else {
+      // 抽屉/模态模式：直接打开
+      open(openConfig);
+    }
+  },
+
+  // 统一的模式切换方法，处理不同模式之间的切换逻辑
+  switchDisplayMode: (targetMode: DocumentDisplayMode, callbacks?: {
+    onNavigateToHome?: () => void;
+    onNavigateToFullscreen?: () => void;
+  }) => {
+    const { displayMode, setDisplayMode, open } = get();
+    const { onNavigateToHome, onNavigateToFullscreen } = callbacks || {};
+
+    if (targetMode === displayMode) {
+      // 已经是目标模式，无需切换
+      return;
+    }
+
+    if (targetMode === 'fullscreen') {
+      // 切换到全屏模式
+      if (onNavigateToFullscreen) {
+        onNavigateToFullscreen();
+      }
+    } else if (displayMode === 'fullscreen') {
+      // 从全屏模式切换到其他模式
+      setDisplayMode(targetMode);
+      if (onNavigateToHome) {
+        onNavigateToHome();
+        // 延迟打开以确保页面已加载
+        setTimeout(() => open(), 100);
+      }
+    } else {
+      // 在抽屉和模态之间切换
+      setDisplayMode(targetMode);
+    }
   },
 }));

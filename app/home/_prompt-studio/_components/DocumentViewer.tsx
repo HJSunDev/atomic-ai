@@ -34,13 +34,13 @@ export const DocumentViewer = () => {
 
   // 处理显示模式切换
   const handleDisplayModeChange = (mode: 'drawer' | 'modal' | 'fullscreen') => {
-    if (mode === 'fullscreen') {
-      // 全屏模式跳转到路由页面
-      router.push('/home/prompt-document');
-      close(); // 关闭当前浮层
-    } else {
-      setDisplayMode(mode);
-    }
+    // 使用统一的模式切换方法
+    useDocumentStore.getState().switchDisplayMode(mode, {
+      onNavigateToFullscreen: () => {
+        router.push('/home/prompt-document');
+        close(); // 关闭当前浮层
+      }
+    });
     setModeMenuOpen(false);
   };
 
