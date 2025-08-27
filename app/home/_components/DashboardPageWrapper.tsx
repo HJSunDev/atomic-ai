@@ -59,6 +59,7 @@ export function DashboardPageWrapper({ children }: DashboardPageWrapperProps) {
 
       {/* 使用ClientOnly组件确保内容仅在客户端渲染 */}
       <ClientOnly>
+        {/* 如果当前菜单支持AI面板，则显示AI面板 */}
         {shouldShowAiPanel && (
           <>
             {/* AI面板控制按钮 */}

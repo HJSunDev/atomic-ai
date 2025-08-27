@@ -1,59 +1,34 @@
 import { create } from 'zustand';
 
-// 提示词文档草稿类型
+// 文档内容草稿类型
 export interface PromptDocumentDraft {
   title: string;
   description: string;
   content: string;
 }
 
-// 文档支持的实体类型
-export type DocumentEntityType = 'module' | 'artifact' | null;
-
-// 文档模式：新建/编辑/预览
-export type DocumentMode = 'create' | 'edit' | 'preview' | null;
-
 // 显示模式：右侧抽屉 / 居中模态 / 全屏
 export type DocumentDisplayMode = 'drawer' | 'modal' | 'fullscreen';
 
-// 文档开启配置
+// 打开配置
 export interface DocumentOpenConfig {
-  type: DocumentEntityType;
-  mode: DocumentMode;
   initialData?: Partial<PromptDocumentDraft>;
-  onSave?: (data: PromptDocumentDraft) => void;
-  onCancel?: () => void;
-  displayMode?: DocumentDisplayMode;
 }
 
 interface DocumentState {
   // UI 状态
   isOpen: boolean;
-  type: DocumentEntityType;
-  mode: DocumentMode;
   displayMode: DocumentDisplayMode;
-  
-  // 草稿数据
+
+  // 文档数据（仅用于显示，不提供内容操作方法）
   draft: PromptDocumentDraft;
-  initialDraft: PromptDocumentDraft;
-  dirty: boolean;
-  
-  // 回调函数
-  onSave?: (data: PromptDocumentDraft) => void;
-  onCancel?: () => void;
-  
-  // 计算属性
-  isReadonly: boolean;
-  
-  // 操作方法
-  open: (config: DocumentOpenConfig) => void;
+
+  // 操作方法（仅与显示相关）
+  open: (config?: DocumentOpenConfig) => void;
   close: () => void;
   setDisplayMode: (mode: DocumentDisplayMode) => void;
   toggleDisplayMode: () => void;
   setDraft: (patch: Partial<PromptDocumentDraft>) => void;
-  resetDraft: (initial?: Partial<PromptDocumentDraft>) => void;
-  handleSave: () => void;
-  handleCancel: () => void;
 }
 
 // 默认草稿
@@ -63,61 +38,49 @@ const defaultDraft: PromptDocumentDraft = {
   content: '',
 };
 
+// 读取初始显示模式：从 localStorage 恢复，否则使用默认 drawer
+const getInitialDisplayMode = (): DocumentDisplayMode => {
+  if (typeof window === 'undefined') return 'drawer';
+  const saved = window.localStorage.getItem('documentDisplayMode');
+  if (saved === 'drawer' || saved === 'modal' || saved === 'fullscreen') {
+    return saved;
+  }
+  return 'drawer';
+};
+
 export const useDocumentStore = create<DocumentState>((set, get) => ({
   // 初始状态
   isOpen: false,
-  type: null,
-  mode: null,
-  displayMode: 'drawer',
+  displayMode: getInitialDisplayMode(),
   draft: { ...defaultDraft },
-  initialDraft: { ...defaultDraft },
-  dirty: false,
-  onSave: undefined,
-  onCancel: undefined,
-  
-  // 计算属性
-  get isReadonly() {
-    return get().mode === 'preview';
-  },
-  
-  // 打开编辑器
+
+  // 打开查看器（仅设置显示模式与初始数据）
   open: (config) => {
-    const initialData = config.initialData || {};
+    const initialData = config?.initialData || {};
     const newDraft = { ...defaultDraft, ...initialData };
-    
+
     set({
       isOpen: true,
-      type: config.type,
-      mode: config.mode,
-      displayMode: config.displayMode || 'drawer',
       draft: newDraft,
-      initialDraft: { ...newDraft },
-      dirty: false,
-      onSave: config.onSave,
-      onCancel: config.onCancel,
     });
   },
-  
-  // 关闭编辑器
+
+  // 关闭查看器
   close: () => {
     set({
       isOpen: false,
-      type: null,
-      mode: null,
-      displayMode: 'drawer',
       draft: { ...defaultDraft },
-      initialDraft: { ...defaultDraft },
-      dirty: false,
-      onSave: undefined,
-      onCancel: undefined,
     });
   },
-  
+
   // 设置显示模式
   setDisplayMode: (mode) => {
     set({ displayMode: mode });
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('documentDisplayMode', mode);
+    }
   },
-  
+
   // 切换显示模式
   toggleDisplayMode: () => {
     const { displayMode } = get();
@@ -125,52 +88,15 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     const idx = order.indexOf(displayMode);
     const next = order[(idx + 1) % order.length];
     set({ displayMode: next });
-  },
-  
-  // 更新草稿
-  setDraft: (patch) => {
-    const { draft, initialDraft } = get();
-    const newDraft = { ...draft, ...patch };
-    
-    // 计算是否有变更
-    const isDirty = JSON.stringify(newDraft) !== JSON.stringify(initialDraft);
-    
-    set({
-      draft: newDraft,
-      dirty: isDirty,
-    });
-  },
-  
-  // 重置草稿
-  resetDraft: (initial) => {
-    const newDraft = { ...defaultDraft, ...initial };
-    set({
-      draft: newDraft,
-      initialDraft: { ...newDraft },
-      dirty: false,
-    });
-  },
-  
-  // 处理保存
-  handleSave: () => {
-    const { draft, onSave, isReadonly } = get();
-    if (isReadonly || !onSave) return;
-    
-    onSave(draft);
-    get().close();
-  },
-  
-  // 处理取消
-  handleCancel: () => {
-    const { onCancel, dirty } = get();
-    
-    // 如果有未保存的更改，可以在这里添加确认逻辑
-    if (dirty) {
-      const shouldDiscard = window.confirm('有未保存的更改，确定要关闭吗？');
-      if (!shouldDiscard) return;
+    if (typeof window !== 'undefined') {
+      window.localStorage.setItem('documentDisplayMode', next);
     }
-    
-    if (onCancel) onCancel();
-    get().close();
+  },
+
+  // 更新本地草稿，仅用于本地编辑，不涉及保存
+  setDraft: (patch) => {
+    const { draft } = get();
+    const newDraft = { ...draft, ...patch };
+    set({ draft: newDraft });
   },
 }));

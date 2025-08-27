@@ -11,16 +11,11 @@ export default function DocumentPage() {
   const { isOpen, open, setDisplayMode } = useDocumentStore();
 
   useEffect(() => {
-    // 如果文档查看器未打开，则以全屏模式打开一个默认的创建模式
+    // 全屏页强制设置为 fullscreen 显示
+    setDisplayMode("fullscreen");
+    // 若未打开，则打开（使用全局默认展示草稿）
     if (!isOpen) {
-      open({
-        type: "module",
-        mode: "create",
-        displayMode: "fullscreen",
-      });
-    } else {
-      // 如果已经打开，则切换到全屏模式
-      setDisplayMode("fullscreen");
+      open();
     }
   }, [isOpen, open, setDisplayMode]);
 

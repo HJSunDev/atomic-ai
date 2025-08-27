@@ -43,8 +43,11 @@ export default function DashboardPage() {
   const currentContent = menuContentMap[activeMenuId] || menuContentMap["prompt-studio"];
 
   return (
-    <DashboardPageWrapper>
-      {currentContent}
-    </DashboardPageWrapper>
+    <>
+      {/* 页面主内容与AI聊天侧栏的自适应布局容器；随菜单切换重置AI面板，并按需调整主区宽度 */}
+      <DashboardPageWrapper>
+        {currentContent}
+      </DashboardPageWrapper>
+    </>
   );
 } 

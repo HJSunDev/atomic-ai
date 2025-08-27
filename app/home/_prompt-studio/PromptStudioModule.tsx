@@ -27,8 +27,10 @@ export const PromptStudioModule = () => {
 
   return (
     <main className="relative w-full h-full bg-muted/20 overflow-y-auto">
-      {/* 全局挂载：文档查看器（Notion 风格） */}
-      <DocumentViewer />
+
+
+      {/* 页面内容区 */}
+
       {/* 欢迎面板 */}
       <WelcomePanel />
 
@@ -86,6 +88,15 @@ export const PromptStudioModule = () => {
         <h2 className="text-2xl font-bold mb-8">artifact广场</h2>
         <PlaceholderCardStrip />
       </section>
+
+
+
+      {/* 全局挂载区 */}
+      
+      {/* 文档查看器 */}
+      <DocumentViewer />
+
+
     </main>
   );
 };

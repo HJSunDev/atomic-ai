@@ -6,11 +6,7 @@ import { useDocumentStore } from "@/store/home/documentStore";
 export const WelcomePanel = () => {
   // 点击"新建模块"时打开文档查看器（创建模式）
   const openCreateModule = () => {
-    useDocumentStore.getState().open({ 
-      type: "module", 
-      mode: "create",
-      displayMode: "drawer"
-    });
+    useDocumentStore.getState().open();
   };
 
   return (
@@ -34,7 +30,7 @@ export const WelcomePanel = () => {
               新建模块
             </button>
             <div className="h-16 rounded-lg border bg-gray-50 flex items-center justify-center text-xs text-gray-400">
-              新建artifact
+              占位
             </div>
             <div className="h-16 rounded-lg border bg-gray-50 flex items-center justify-center text-xs text-gray-400">
               ···
