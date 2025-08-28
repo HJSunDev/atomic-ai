@@ -32,7 +32,7 @@ export const WelcomePanel = () => {
           </div>
           {/* 功能按钮占位 */}
           <div className="grid grid-cols-3 gap-3">
-            <button onClick={openCreateModule} className="h-16 rounded-lg border bg-gray-50 flex items-center justify-center text-xs text-gray-400">
+            <button onMouseEnter={() => router.prefetch('/home/prompt-document')} onClick={openCreateModule} className="h-16 rounded-lg border bg-gray-50 flex items-center justify-center text-xs text-gray-400">
               新建模块
             </button>
             <div className="h-16 rounded-lg border bg-gray-50 flex items-center justify-center text-xs text-gray-400">
