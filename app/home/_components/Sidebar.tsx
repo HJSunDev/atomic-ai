@@ -21,6 +21,8 @@ import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { CustomUserAvatar } from "@/components/ui/CustomUserAvatar";
 import { createPortal } from "react-dom";
 import { useSidebarMenuStore } from "@/store/home";
+import { useAppNavigation } from "@/hooks/useAppNavigation";
+import type { MenuItemId } from "@/store/home/use-sidebar-menu-store";
 
 // 自定义AI机器人图标
 const AIRobotIcon = ({ className }: { className?: string }) => {
@@ -63,6 +65,14 @@ export function Sidebar() {
   
   // 获取当前菜单状态
   const { activeMenuId, setActiveMenu, collapsed, toggleCollapsed } = useSidebarMenuStore();
+  
+  // 统一导航服务：集中处理菜单选择与必要的路由跳转
+  const { navigateToMenu } = useAppNavigation();
+  
+  // 封装统一点击处理，替代直接 setActiveMenu
+  const handleMenuClick = (menuId: MenuItemId) => {
+    navigateToMenu(menuId);
+  };
   
   // 引用
   const moreButtonRef = useRef<HTMLDivElement>(null);
@@ -186,7 +196,7 @@ export function Sidebar() {
                 "flex flex-col items-center py-2 group cursor-pointer",
                 activeMenuId === "prompt-studio" && "rounded-lg"
               )}
-              onClick={() => setActiveMenu("prompt-studio")}
+              onClick={() => handleMenuClick("prompt-studio")}
             >
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
@@ -214,7 +224,7 @@ export function Sidebar() {
                   ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
                   : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
               )}
-              onClick={() => setActiveMenu("prompt-studio")}
+              onClick={() => handleMenuClick("prompt-studio")}
             >
               <AIRobotIcon className={cn(
                 "h-4 w-4 mr-3",
@@ -233,7 +243,7 @@ export function Sidebar() {
                 "flex flex-col items-center py-2 group cursor-pointer",
                 activeMenuId === "chat" && "rounded-lg"
               )}
-              onClick={() => setActiveMenu("chat")}
+              onClick={() => handleMenuClick("chat")}
             >
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
@@ -261,7 +271,7 @@ export function Sidebar() {
                   ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
                   : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
               )}
-              onClick={() => setActiveMenu("chat")}
+              onClick={() => handleMenuClick("chat")}
             >
               <MessageSquare className={cn(
                 "h-4 w-4 mr-3",
@@ -280,7 +290,7 @@ export function Sidebar() {
                 "flex flex-col items-center py-2 group cursor-pointer",
                 activeMenuId === "discovery" && "rounded-lg"
               )}
-              onClick={() => setActiveMenu("discovery")}
+              onClick={() => handleMenuClick("discovery")}
             >
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
@@ -308,7 +318,7 @@ export function Sidebar() {
                   ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
                   : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
               )}
-              onClick={() => setActiveMenu("discovery")}
+              onClick={() => handleMenuClick("discovery")}
             >
               <Compass className={cn(
                 "h-4 w-4 mr-3",
@@ -400,7 +410,7 @@ export function Sidebar() {
             <div className="py-3 px-2 bg-white rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-60 dark:bg-[#202020]">
               {/* 以下为菜单项 */}
               
-              <div className="block" onClick={() => setActiveMenu("documents")}>
+              <div className="block" onClick={() => handleMenuClick("documents") }>
                 <div className={cn(
                   "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
                   activeMenuId === "documents"
@@ -420,7 +430,7 @@ export function Sidebar() {
                 </div>
               </div>
               
-              <div className="block" onClick={() => setActiveMenu("knowledge-base")}>
+              <div className="block" onClick={() => handleMenuClick("knowledge-base") }>
                 <div className={cn(
                   "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
                   activeMenuId === "knowledge-base"
@@ -443,7 +453,7 @@ export function Sidebar() {
               <div className="my-2 border-t border-gray-100 dark:border-gray-700"></div>
               
               
-              <div className="block" onClick={() => setActiveMenu("feedback")}>
+              <div className="block" onClick={() => handleMenuClick("feedback") }>
                 <div className={cn(
                   "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
                   activeMenuId === "feedback"
