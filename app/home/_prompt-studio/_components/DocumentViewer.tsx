@@ -13,7 +13,6 @@ export const DocumentViewer = () => {
   const {
     isOpen,
     displayMode,
-    setDisplayMode,
     close,
   } = useDocumentStore();
 
