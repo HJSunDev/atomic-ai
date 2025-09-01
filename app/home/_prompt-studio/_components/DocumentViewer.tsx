@@ -37,7 +37,6 @@ export const DocumentViewer = () => {
     useDocumentStore.getState().switchDisplayMode(mode, {
       onNavigateToFullscreen: () => {
         router.push('/home/prompt-document');
-        close(); // 关闭当前浮层
       }
     });
     setModeMenuOpen(false);

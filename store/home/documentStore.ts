@@ -105,15 +105,15 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
   openDocument: (config) => {
     const { displayMode, _open } = get();
     const { onNavigateToFullscreen, ...openConfig } = config || {};
-    
+
+    // 先设置打开状态与草稿，确保全屏页面也能读取到状态与初始数据
+    _open(openConfig);
+
     if (displayMode === 'fullscreen') {
       // 全屏模式：通过回调进行路由跳转
       if (onNavigateToFullscreen) {
         onNavigateToFullscreen();
       }
-    } else {
-      // 抽屉/模态模式：直接打开
-      _open(openConfig);
     }
   },
 
@@ -122,7 +122,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     onNavigateToHome?: () => void;
     onNavigateToFullscreen?: () => void;
   }) => {
-    const { displayMode, _setDisplayMode, _open } = get();
+    const { displayMode, _setDisplayMode, _open, isOpen } = get();
     const { onNavigateToHome, onNavigateToFullscreen } = callbacks || {};
 
     if (targetMode === displayMode) {
@@ -131,7 +131,11 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     }
 
     if (targetMode === 'fullscreen') {
-      // 切换到全屏模式：通过回调进行路由跳转
+      // 切换到全屏模式：先持久化模式并确保已打开，再进行路由跳转
+      _setDisplayMode('fullscreen');
+      if (!isOpen) {
+        _open();
+      }
       if (onNavigateToFullscreen) {
         onNavigateToFullscreen();
       }
