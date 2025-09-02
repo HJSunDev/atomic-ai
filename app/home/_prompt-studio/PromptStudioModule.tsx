@@ -7,11 +7,10 @@ import { DocumentViewer } from "./_components/DocumentViewer";
 import { usePromptStore } from "@/store/home/promptStore";
 
 export const PromptStudioModule = () => {
-  // 获取当前选择的提示词模块
+  // 当前选中的提示词文档
   const selectedPrompt = usePromptStore((state) => state.selectedPrompt);
-  const clearSelectedPrompt = usePromptStore(
-    (state) => state.clearSelectedPrompt
-  );
+  // 清除当前选中提示词文档状态的函数
+  const clearSelectedPrompt = usePromptStore((state) => state.clearSelectedPrompt);
 
   // 一行横向滚动的卡片占位条
   const PlaceholderCardStrip = () => (
@@ -93,7 +92,7 @@ export const PromptStudioModule = () => {
 
       {/* 全局挂载区 */}
       
-      {/* 文档查看器 */}
+      {/* 文档视图容器 */}
       <DocumentViewer />
 
 

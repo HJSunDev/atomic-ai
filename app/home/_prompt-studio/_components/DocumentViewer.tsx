@@ -1,94 +1,92 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useDocumentStore } from "@/store/home/documentStore";
 import { DocumentForm } from "./DocumentForm";
+import { PanelLeft, Square, Maximize, Check } from "lucide-react";
 
 // 文档查看器：根据显示模式选择合适的容器（Sheet/Dialog/路由）
 export const DocumentViewer = () => {
+  
   const router = useRouter();
-  const {
-    isOpen,
-    displayMode,
-    close,
-  } = useDocumentStore();
 
-  const [modeMenuOpen, setModeMenuOpen] = useState(false);
-  const modeMenuRef = useRef<HTMLDivElement | null>(null);
+  const isOpen = useDocumentStore((state) => state.isOpen);
+  const displayMode = useDocumentStore((state) => state.displayMode);
+  const close = useDocumentStore((state) => state.close);
+  const switchDisplayMode = useDocumentStore((state) => state.switchDisplayMode);
 
-  // 点击外部关闭模式菜单
-  useEffect(() => {
-    if (!modeMenuOpen) return;
-    const handleDocClick = (e: MouseEvent) => {
-      if (modeMenuRef.current && !modeMenuRef.current.contains(e.target as Node)) {
-        setModeMenuOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', handleDocClick);
-    return () => document.removeEventListener('mousedown', handleDocClick);
-  }, [modeMenuOpen]);
 
   // 处理显示模式切换
   const handleDisplayModeChange = (mode: 'drawer' | 'modal' | 'fullscreen') => {
-    // 使用统一的模式切换方法
-    useDocumentStore.getState().switchDisplayMode(mode, {
+    // 使用通过hook获取的switchDisplayMode方法
+    switchDisplayMode(mode, {
       onNavigateToFullscreen: () => {
         router.push('/home/prompt-document');
       }
     });
-    setModeMenuOpen(false);
   };
 
-  // 模式选择器组件
+  // 模式选择器组件：使用DropdownMenu提供更好的用户体验
   const DisplayModeSelector = () => (
-    <div className="relative" ref={modeMenuRef}>
-      <button
-        aria-label="选择显示模式"
-        title="选择显示模式"
-        onClick={() => setModeMenuOpen((v) => !v)}
-        className="h-8 w-8 rounded border flex items-center justify-center text-xs text-gray-500 bg-white hover:bg-gray-50"
-      >
-        {displayMode === 'drawer' && '⇤'}
-        {displayMode === 'modal' && '▭'}
-        {displayMode === 'fullscreen' && '⛶'}
-      </button>
-      {modeMenuOpen && (
-        <div className="absolute left-0 top-10 w-40 bg-white border rounded-xl shadow-xl p-1 z-50">
-          <button
-            className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded hover:bg-gray-50 ${displayMode === 'drawer' ? 'ring-1 ring-gray-200' : ''}`}
-            onClick={() => handleDisplayModeChange('drawer')}
-          >
-            <span className="flex items-center gap-2">
-              <span className="inline-block h-3 w-3 border rounded-sm" />
-              侧边预览
-            </span>
-            {displayMode === 'drawer' ? '✓' : ''}
-          </button>
-          <button
-            className={`w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded hover:bg-gray-50 ${displayMode === 'modal' ? 'ring-1 ring-gray-200' : ''}`}
-            onClick={() => handleDisplayModeChange('modal')}
-          >
-            <span className="flex items-center gap-2">
-              <span className="inline-block h-3 w-3 border rounded-sm" />
-              居中预览
-            </span>
-            {displayMode === 'modal' ? '✓' : ''}
-          </button>
-          <button
-            className="w-full flex items-center justify-between gap-2 px-3 py-2 text-sm rounded hover:bg-gray-50"
-            onClick={() => handleDisplayModeChange('fullscreen')}
-          >
-            <span className="flex items-center gap-2">
-              <span className="inline-block h-3 w-3 border rounded-sm" />
-              内容区全屏
-            </span>
-          </button>
-        </div>
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          aria-label="选择显示模式"
+          title="选择显示模式"
+          className="h-8 w-8 rounded-md border border-gray-200 flex items-center justify-center text-gray-600 bg-white hover:bg-gray-50 hover:border-gray-300 transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-opacity-50"
+        >
+          {displayMode === 'drawer' && <PanelLeft className="h-4 w-4" />}
+          {displayMode === 'modal' && <Square className="h-4 w-4" />}
+          {displayMode === 'fullscreen' && <Maximize className="h-4 w-4" />}
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start" className="w-48 p-1" sideOffset={8}>
+        <DropdownMenuItem
+          onClick={() => handleDisplayModeChange('drawer')}
+          className="flex items-center gap-3 px-3 py-2.5 text-sm cursor-pointer rounded-sm hover:bg-gray-50 focus:bg-gray-50"
+        >
+          <div className="flex items-center justify-center w-5 h-5">
+            <PanelLeft className="h-4 w-4 text-gray-500" />
+          </div>
+          <span className="flex-1">侧边预览</span>
+          {displayMode === 'drawer' && (
+            <Check className="h-4 w-4 text-blue-600" />
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleDisplayModeChange('modal')}
+          className="flex items-center gap-3 px-3 py-2.5 text-sm cursor-pointer rounded-sm hover:bg-gray-50 focus:bg-gray-50"
+        >
+          <div className="flex items-center justify-center w-5 h-5">
+            <Square className="h-4 w-4 text-gray-500" />
+          </div>
+          <span className="flex-1">居中预览</span>
+          {displayMode === 'modal' && (
+            <Check className="h-4 w-4 text-blue-600" />
+          )}
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleDisplayModeChange('fullscreen')}
+          className="flex items-center gap-3 px-3 py-2.5 text-sm cursor-pointer rounded-sm hover:bg-gray-50 focus:bg-gray-50"
+        >
+          <div className="flex items-center justify-center w-5 h-5">
+            <Maximize className="h-4 w-4 text-gray-500" />
+          </div>
+          <span className="flex-1">内容区全屏</span>
+          {displayMode === 'fullscreen' && (
+            <Check className="h-4 w-4 text-blue-600" />
+          )}
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 
   // 带模式选择器的表单
@@ -97,9 +95,7 @@ export const DocumentViewer = () => {
       {/* 模式选择器头部 */}
       <div className="flex items-center justify-between px-4 py-3 border-b bg-gray-50">
         <DisplayModeSelector />
-        <div className="text-xs text-gray-500">文档查看器</div>
       </div>
-      
       {/* 表单内容 */}
       <div className="flex-1 overflow-hidden">
         <DocumentForm />
@@ -113,7 +109,7 @@ export const DocumentViewer = () => {
   if (displayMode === 'drawer') {
     return (
       <Sheet open onOpenChange={(open) => !open && close()}>
-        <SheetContent side="right" className="sm:max-w-[720px] w-full p-0">
+        <SheetContent side="right" className="sm:max-w-[720px] w-full p-0" showCloseButton={false}>
           <SheetTitle className="sr-only">文档查看器</SheetTitle>
           <FormWithModeSelector />
         </SheetContent>
@@ -125,7 +121,7 @@ export const DocumentViewer = () => {
   if (displayMode === 'modal') {
     return (
       <Dialog open onOpenChange={(open) => !open && close()}>
-        <DialogContent className="w-[min(90vw,800px)] max-h-[90vh] p-0">
+        <DialogContent className="w_[min(90vw,800px)] max-h-[90vh] p-0" showCloseButton={false}>
           <DialogTitle className="sr-only">文档查看器</DialogTitle>
           <FormWithModeSelector />
         </DialogContent>
