@@ -19,7 +19,7 @@ export const DocumentViewer = () => {
   if (displayMode === 'drawer') {
     return (
       <Sheet open onOpenChange={(open) => !open && close()}>
-        <SheetContent side="right" className="sm:max-w-[720px] w-full p-0" showCloseButton={false}>
+        <SheetContent side="right" className="sm:max-w-[37rem] w-full p-0" showCloseButton={false}>
           <SheetTitle className="sr-only">文档查看器</SheetTitle>
           <DocumentContent />
         </SheetContent>
@@ -31,7 +31,7 @@ export const DocumentViewer = () => {
   if (displayMode === 'modal') {
     return (
       <Dialog open onOpenChange={(open) => !open && close()}>
-        <DialogContent className="w_[min(90vw,800px)] max-h-[90vh] p-0" showCloseButton={false}>
+        <DialogContent className="max-w-none sm:max-w-none w-[54rem] h-[84vh] p-0 overflow-hidden" showCloseButton={false}>
           <DialogTitle className="sr-only">文档查看器</DialogTitle>
           <DocumentContent />
         </DialogContent>

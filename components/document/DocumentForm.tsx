@@ -31,12 +31,12 @@ export const DocumentForm = ({}: DocumentFormProps) => {
   };
 
   return (
-    <div className="h-full overflow-y-auto px-8 py-8">
-      <div className="max-w-[50rem] mx-auto">
-        {/* 标题输入：可直接编辑 */}
-        <div className="mb-6">
+    <div className="h-full overflow-y-auto px-6 py-6 bg-red-100">
+      <div className="max-w-[42rem] mx-auto bg-blue-100">
+        {/* 标题输入：Notion风格的大标题 */}
+        <div className="mb-8">
           <input
-            className="w-full text-3xl font-bold outline-none placeholder:text-gray-300"
+            className="w-full text-4xl font-bold outline-none placeholder:text-gray-300 leading-tight"
             placeholder="无标题"
             value={draft.title}
             onChange={handleTitleChange}
@@ -44,10 +44,10 @@ export const DocumentForm = ({}: DocumentFormProps) => {
           />
         </div>
 
-        {/* 描述输入：可直接编辑 */}
-        <div className="mb-6">
+        {/* 描述输入：更加简洁的描述区域 */}
+        <div className="mb-8">
           <textarea
-            className="w-full resize-none outline-none text-gray-600 placeholder:text-gray-300"
+            className="w-full resize-none outline-none text-gray-600 placeholder:text-gray-300 leading-relaxed"
             rows={2}
             placeholder="添加描述..."
             value={draft.description}
@@ -55,11 +55,11 @@ export const DocumentForm = ({}: DocumentFormProps) => {
           />
         </div>
 
-        {/* 内容输入：可直接编辑 */}
+        {/* 内容输入：更加现代的编辑区域 */}
         <div>
           <textarea
-            className="w-full min-h-[300px] outline-none placeholder:text-gray-300 font-mono text-sm"
-            placeholder="输入内容...（后续可替换为富文本/模块化编辑器）"
+            className="w-full min-h-[400px] outline-none placeholder:text-gray-300 text-gray-800 leading-relaxed resize-none"
+            placeholder="开始写作..."
             value={draft.content}
             onChange={handleContentChange}
           />

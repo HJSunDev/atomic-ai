@@ -22,7 +22,7 @@ export default function DocumentPage() {
   }, [isOpen, router]);
 
   return (
-    <div className="h-screen flex flex-col bg-white">
+    <div className="h-screen flex flex-col bg-green-100">
       <DocumentContent onRequestClose={() => {
         useDocumentStore.getState().close();
         router.push('/home');
