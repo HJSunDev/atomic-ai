@@ -2,7 +2,8 @@
 
 import { DashboardPageWrapper } from "./_components/DashboardPageWrapper";
 import { useSidebarMenuStore } from "@/store";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { ChatModule} from "./_chat/ChatModule";
 import { PromptStudioModule } from "./_prompt-studio/PromptStudioModule";
 
@@ -20,8 +21,14 @@ const MenuPlaceholder = ({ title, description }: PlaceholderProps) => (
 );
 
 export default function DashboardPage() {
+  const router = useRouter();
   // 获取当前活动的菜单ID
   const { activeMenuId } = useSidebarMenuStore();
+
+  // 预加载常用页面，提升整体用户体验
+  useEffect(() => {
+    router.prefetch('/home/prompt-document');
+  }, [router]);
 
   // 菜单内容映射表 - 将菜单ID映射到对应的内容组件
   const menuContentMap: Record<string, ReactNode> = {

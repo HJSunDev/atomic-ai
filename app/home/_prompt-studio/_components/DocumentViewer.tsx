@@ -31,7 +31,7 @@ export const DocumentViewer = () => {
   if (displayMode === 'modal') {
     return (
       <Dialog open onOpenChange={(open) => !open && close()}>
-        <DialogContent className="max-w-none sm:max-w-none w-[54rem] h-[84vh] p-0 overflow-hidden" showCloseButton={false}>
+        <DialogContent className="max-w-none sm:max-w-none w-[54rem] h-[84vh] p-0 overflow-hidden flex flex-col" showCloseButton={false}>
           <DialogTitle className="sr-only">文档查看器</DialogTitle>
           <DocumentContent />
         </DialogContent>

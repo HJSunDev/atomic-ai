@@ -146,10 +146,8 @@ export const DocumentContent = ({ onRequestClose }: DocumentContentProps) => {
         </div>
       </header>
       
-      <main className="flex-1 overflow-hidden bg-purple-100">
-        <div className={contentPaddingByMode[displayMode]}>
-          <DocumentForm />
-        </div>
+      <main className={`flex-1 overflow-auto ${contentPaddingByMode[displayMode]}`}>
+        <DocumentForm />
       </main>
     </section>
   );
