@@ -1,6 +1,7 @@
 "use client";
 
 import { useDocumentStore } from "@/store/home/documentStore";
+import { TiptapEditor } from "./TiptapEditor";
 import type React from "react";
 
 // 文档表单属性：目前无需外部关闭回调
@@ -23,17 +24,15 @@ export const DocumentForm = ({}: DocumentFormProps) => {
     setDraft({ description: e.target.value });
   };
 
-  // 内容变更
-  const handleContentChange = (
-    e: React.ChangeEvent<HTMLTextAreaElement>
-  ) => {
-    setDraft({ content: e.target.value });
+  // 富文本内容变更
+  const handleContentChange = (content: string) => {
+    setDraft({ content });
   };
 
   return (
-    <div className="max-w-[42rem] mx-auto pt-4 bg-blue-100">
+    <article className="max-w-[42rem] mx-auto pt-4 bg-blue-100">
       {/* 标题输入：Notion风格的大标题 */}
-      <div className="mb-8">
+      <section className="">
         <input
           className="w-full text-4xl font-bold outline-none placeholder:text-gray-300 leading-tight"
           placeholder="无标题"
@@ -41,10 +40,10 @@ export const DocumentForm = ({}: DocumentFormProps) => {
           onChange={handleTitleChange}
           autoFocus
         />
-      </div>
+      </section>
 
       {/* 描述输入：更加简洁的描述区域 */}
-      <div className="mb-8">
+      <section className="">
         <textarea
           className="w-full resize-none outline-none text-gray-600 placeholder:text-gray-300 leading-relaxed"
           rows={2}
@@ -52,19 +51,16 @@ export const DocumentForm = ({}: DocumentFormProps) => {
           value={draft.description}
           onChange={handleDescriptionChange}
         />
-      </div>
+      </section>
 
-      {/* 内容输入：更加现代的编辑区域 */}
-      <div>
-        <textarea
-          className="w-full min-h-[400px] outline-none placeholder:text-gray-300 text-gray-800 leading-relaxed resize-none"
+      {/* 富文本编辑器：Notion风格的富文本编辑 */}
+      <section>
+        <TiptapEditor
+          content={draft.content}
+          onContentChange={handleContentChange}
           placeholder="开始写作..."
-          value={draft.content}
-          onChange={handleContentChange}
         />
-      </div>
-
-
-    </div>
+      </section>
+    </article>
   );
 }
