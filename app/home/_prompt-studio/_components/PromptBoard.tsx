@@ -36,6 +36,8 @@ import { PromptDetailPanel } from './PromptDetailPanel';
 import { PromptPreviewPanel } from './PromptPreviewPanel';
 // 导入 toast 提示
 import { toast } from 'sonner';
+// 导入新手指引组件
+import { TutorialOverlay } from './TutorialOverlay';
 
 
 
@@ -136,6 +138,11 @@ export function PromptBoard() {
   const [showPreviewPanel, setShowPreviewPanel] = useState(false);
   // 当前预览的模块
   const [previewItem, setPreviewItem] = useState<GridItem | null>(null);
+  
+  // 新手指引相关状态
+  const [showTutorial, setShowTutorial] = useState(false);
+  // 教程动画时强制显示操作区
+  const [tutorialForceShowOperation, setTutorialForceShowOperation] = useState(false);
 
 
 
@@ -144,10 +151,24 @@ export function PromptBoard() {
     setIsMounted(true);
   }, []);
 
+  // 新手指引初始化逻辑
+  useEffect(() => {
+    if (!isMounted) return;
+    
+    // 检查用户是否已经看过新手指引
+    const hasSeenTutorial = localStorage.getItem('prompt-board-tutorial-seen');
+    if (!hasSeenTutorial) {
+      // 延迟1秒显示教程，让用户先看到界面
+      setTimeout(() => {
+        setShowTutorial(true);
+      }, 1000);
+    }
+  }, [isMounted]);
+
   // 监听 gridDraggingId 和 operationItems 控制操作区显示/隐藏
   useEffect(() => {
-    // 只要有拖拽或有内容就显示
-    if (gridDraggingId || operationItems.length > 0) {
+    // 只要有拖拽、有内容或教程强制显示就显示
+    if (gridDraggingId || operationItems.length > 0 || tutorialForceShowOperation) {
       setShowOperationArea(true);
       // 有内容或拖拽时清除隐藏定时器
       if (hideTimerRef.current) {
@@ -167,7 +188,7 @@ export function PromptBoard() {
         hideTimerRef.current = null;
       }
     };
-  }, [gridDraggingId, operationItems.length]);
+  }, [gridDraggingId, operationItems.length, tutorialForceShowOperation]);
 
   // 处理操作区模块-子模块提升到顶层
   const handlePromoteToTop = useCallback((event: Event) => {
@@ -377,6 +398,19 @@ export function PromptBoard() {
     setPreviewItem(null);
   }, []);
 
+  // 处理关闭新手指引
+  const handleCloseTutorial = useCallback(() => {
+    setShowTutorial(false);
+    setTutorialForceShowOperation(false);
+    // 记录用户已经看过教程
+    localStorage.setItem('prompt-board-tutorial-seen', 'true');
+  }, []);
+
+  // 处理教程中的操作区显示控制
+  const handleTutorialOperationArea = useCallback((show: boolean) => {
+    setTutorialForceShowOperation(show);
+  }, []);
+
   // 服务端渲染时返回一个占位符
   if (!isMounted) {
     return (
@@ -467,6 +501,13 @@ export function PromptBoard() {
       <DragOverlay>
         {draggingItem ? <ModuleDragPreview item={draggingItem} /> : null}
       </DragOverlay>
+      
+      {/* 新手指引覆盖层 */}
+      <TutorialOverlay
+        isVisible={showTutorial}
+        onClose={handleCloseTutorial}
+        onShowOperationArea={handleTutorialOperationArea}
+      />
     </DndContext>
   );
 }
