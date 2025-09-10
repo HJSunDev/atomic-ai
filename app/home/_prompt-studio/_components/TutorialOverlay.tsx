@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
+import { ThumbIcon } from '@/components/icons';
 
 interface TutorialOverlayProps {
   /** 是否显示新手指引 */
@@ -23,7 +24,6 @@ export function TutorialOverlay({
   onShowOperationArea 
 }: TutorialOverlayProps) {
   const [animationState, setAnimationState] = useState<'idle' | 'dragging' | 'dropping'>('idle');
-  const [currentCycle, setCurrentCycle] = useState(0);
 
   useEffect(() => {
     if (!isVisible) return;
@@ -47,7 +47,6 @@ export function TutorialOverlay({
       setTimeout(() => {
         setAnimationState('idle');
         onShowOperationArea?.(false);
-        setCurrentCycle(prev => prev + 1);
       }, 4000);
     };
 
@@ -111,68 +110,12 @@ export function TutorialOverlay({
             transition: 'all 1000ms cubic-bezier(0.4, 0.0, 0.2, 1)'
           }}
         >
-          {/* 手指图标 */}
-          <div className="relative">
-            {/* 手指SVG */}
-            <svg 
-              width="40" 
-              height="40" 
-              viewBox="0 0 100 100" 
-              className={`transform transition-transform duration-300 ${
-                animationState === 'dragging' ? 'rotate-12' : ''
-              }`}
-            >
-              {/* 手指主体 */}
-              <path
-                d="M45 20 Q50 15 55 20 L55 60 Q55 70 45 70 Q35 70 35 60 L35 20 Q35 15 40 15 Q45 15 45 20 Z"
-                fill="#FFB382"
-                stroke="#E69968"
-                strokeWidth="1"
-              />
-              {/* 指甲 */}
-              <ellipse
-                cx="50"
-                cy="22"
-                rx="5"
-                ry="3"
-                fill="#FFD4B3"
-                stroke="#E69968"
-                strokeWidth="0.5"
-              />
-              {/* 关节线 */}
-              <line
-                x1="38"
-                y1="35"
-                x2="52"
-                y2="35"
-                stroke="#E69968"
-                strokeWidth="1"
-                opacity="0.6"
-              />
-              <line
-                x1="38"
-                y1="50"
-                x2="52"
-                y2="50"
-                stroke="#E69968"
-                strokeWidth="1"
-                opacity="0.6"
-              />
-            </svg>
-            
-            {/* 拖动时的阴影效果 */}
-            {animationState !== 'idle' && (
-              <div className="absolute -top-2 -left-2 w-12 h-12 bg-blue-400/30 rounded-full animate-pulse" />
-            )}
-          </div>
-          
-          {/* 点击波纹效果 */}
-          {animationState === 'dropping' && (
-            <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2">
-              <div className="w-8 h-8 bg-green-400/50 rounded-full animate-ping" />
-              <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-4 h-4 bg-green-500 rounded-full" />
-            </div>
-          )}
+            {/* 拇指图标组件 */}
+            <ThumbIcon 
+              size={170}
+              variant="ghost"
+              animationState={animationState}
+            />
         </div>
 
         {/* 拖动路径虚线 */}
@@ -231,7 +174,10 @@ export function TutorialOverlay({
           <div className="flex items-center gap-3">
             <div className="flex-shrink-0">
               <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                <span className="text-blue-600 font-bold text-sm">{currentCycle + 1}</span>
+                {/* 根据动画状态显示对应的步骤数字 */}
+                <span className="text-blue-600 font-bold text-sm">
+                  {animationState === 'idle' ? '1' : animationState === 'dragging' ? '2' : '3'}
+                </span>
               </div>
             </div>
             <div className="text-sm text-gray-600">
