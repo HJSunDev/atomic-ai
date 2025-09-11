@@ -12,26 +12,8 @@ export const PromptStudioModule = () => {
   // 清除当前选中提示词文档状态的函数
   const clearSelectedPrompt = usePromptStore((state) => state.clearSelectedPrompt);
 
-  // 一行横向滚动的卡片占位条
-  const PlaceholderCardStrip = () => (
-    <div className="flex flex-nowrap gap-4 overflow-x-auto py-2 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
-      {Array.from({ length: 10 }).map((_, idx) => (
-        <div
-          key={idx}
-          className="shrink-0 w-56 h-32 rounded-xl border bg-white"
-        />
-      ))}
-    </div>
-  );
-
   return (
     <main className="relative w-full h-full bg-muted/20 overflow-y-auto">
-
-
-      {/* 页面内容区 */}
-
-      {/* 欢迎面板 */}
-      <WelcomePanel />
 
       {/* 页面标题与说明 */}
       <section className="px-6 pt-6 max-w-[70rem] w-full mx-auto">
@@ -72,26 +54,11 @@ export const PromptStudioModule = () => {
           </div>
         )}
       </section>
-
       {/* 提示词管理区 */}
       <PromptBoard />
 
-      {/* 模块广场  */}
-      <section className="px-6 pt-6 max-w-[70rem] w-full mx-auto">
-        <h2 className="text-2xl font-bold mb-8">模块广场</h2>
-        <PlaceholderCardStrip />
-      </section>
-
-      {/* artifact广场  */}
-      <section className="px-6 pt-6 max-w-[70rem] w-full mx-auto">
-        <h2 className="text-2xl font-bold mb-8">artifact广场</h2>
-        <PlaceholderCardStrip />
-      </section>
-
-
 
       {/* 全局挂载区 */}
-      
       {/* 文档视图容器 */}
       <DocumentViewer />
 

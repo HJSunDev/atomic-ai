@@ -23,6 +23,7 @@ import { createPortal } from "react-dom";
 import { useSidebarMenuStore } from "@/store/home";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import type { MenuItemId } from "@/store/home/use-sidebar-menu-store";
+import { HomeNavIcon } from "@/components/icons";
 
 // 自定义AI机器人图标
 const AIRobotIcon = ({ className }: { className?: string }) => {
@@ -189,6 +190,61 @@ export function Sidebar() {
       <div className={cn("flex-1")}>
         {/* 主功能导航项 */}
         <nav className="px-2 space-y-1">
+          {/* 主页 */}
+          {collapsed ? (
+            <div
+              className={cn(
+                "flex flex-col items-center py-2 group cursor-pointer",
+                activeMenuId === "home" && "rounded-lg"
+              )}
+              onClick={() => handleMenuClick("home")}
+            >
+              <div className={cn(
+                "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
+                activeMenuId === "home" 
+                  ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
+                  : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
+              )}>
+                <HomeNavIcon
+                  size={18}
+                  color="currentColor"
+                  className={cn(
+                    "h-[18px] w-[18px]",
+                    activeMenuId === "home"
+                      ? "text-primary dark:text-gray-200"
+                      : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
+                  )}
+                />
+              </div>
+              <span className={cn(
+                "text-[11px] mt-1",
+                activeMenuId === "home" && "text-primary dark:text-gray-200 font-medium"
+              )}>主页</span>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
+                activeMenuId === "home"
+                  ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
+                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
+              )}
+              onClick={() => handleMenuClick("home")}
+            >
+              <HomeNavIcon
+                size={16}
+                color="currentColor"
+                className={cn(
+                  "h-4 w-4 mr-3",
+                  activeMenuId === "home"
+                    ? "text-primary dark:text-gray-200"
+                    : "text-gray-600 dark:text-gray-400"
+                )}
+              />
+              <span>主页</span>
+            </div>
+          )}
+          
           {/* 智创 */}
           {collapsed ? (
             <div

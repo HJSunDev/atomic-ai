@@ -6,6 +6,7 @@ import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ChatModule} from "./_chat/ChatModule";
 import { PromptStudioModule } from "./_prompt-studio/PromptStudioModule";
+import { HomeModule } from "./_home/HomeModule";
 
 // 菜单占位内容组件
 interface PlaceholderProps {
@@ -32,6 +33,8 @@ export default function DashboardPage() {
 
   // 菜单内容映射表 - 将菜单ID映射到对应的内容组件
   const menuContentMap: Record<string, ReactNode> = {
+    // 主页模块
+    "home": <HomeModule />,
     // 智创模块使用独立组件
     "prompt-studio": <PromptStudioModule />,
     // 聊天模块使用独立组件
