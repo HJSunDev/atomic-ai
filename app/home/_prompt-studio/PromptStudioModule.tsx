@@ -2,7 +2,6 @@
 
 import { TestBlock } from "./_components/TestBlock";
 import { PromptBoard } from "./_components/PromptBoard";
-import { WelcomePanel } from "./_components/WelcomePanel";
 import { DocumentViewer } from "./_components/DocumentViewer";
 import { usePromptStore } from "@/store/home/promptStore";
 
