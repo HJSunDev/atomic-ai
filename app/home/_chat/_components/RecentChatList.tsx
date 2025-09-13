@@ -65,7 +65,7 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
       <div
         key={conversation._id}
         className={cn(
-          "group flex items-center p-[7px] mx-2 my-0.5 rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-[#27272A]",
+          "group flex items-center p-[7px] mx-[6px] rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-[#27272A]",
           isSelected && !isEditing && "bg-gray-100 dark:bg-[#27272A]", // 非编辑时才应用选中样式
           isMenuOpen && !isEditing && "bg-gray-100 dark:bg-[#27272A]"
         )}
@@ -83,7 +83,7 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
               onChange={(e) => setEditingTitle(e.target.value)}
               onBlur={handleTitleSubmit}
               onKeyDown={handleKeyDown}
-              className="text-xs font-medium flex-1 truncate border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 h-[1.125rem] leading-[1.125rem] selection:bg-gray-200 dark:selection:bg-gray-600 selection:text-inherit rounded-none"
+              className="text-[14px] font-normal flex-1 truncate border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 h-[1.125rem] leading-[1.125rem] selection:bg-gray-200 dark:selection:bg-gray-600 selection:text-inherit rounded-none text-[#262626]"
               onClick={(e) => e.stopPropagation()} // 防止事件冒泡
             />
             
@@ -98,7 +98,7 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
           </>
         ) : (
           <>
-            <span className="text-xs font-medium flex-1 truncate">
+            <span className="text-[14px] font-normal text-[#262626] flex-1 truncate">
               {conversation.title || "无标题对话"}
             </span>
             
@@ -175,7 +175,7 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
 
     return (
       <section className="mt-5">
-        <div className="px-3 py-2 text-sm font-medium">
+        <div className="px-3 py-2 text-[16px] font-semibold text-[#262626]">
           搜索结果 {searchResults.length > 0 && `(${searchResults.length})`}
         </div>
         
@@ -204,8 +204,8 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
     const hasMoreFavorites = favoritedConversations.length > 3;
 
     return (
-      <section className="mt-5">
-        <div className="px-3 py-2 text-sm font-medium">收藏</div>
+      <section className="mt-2">
+        <div className="px-3 py-2 text-[16px] font-semibold text-[#262626]">收藏</div>
         
         {favoritedConversations.length === 0 ? (
           <div className="p-3 text-center text-xs text-gray-500">
@@ -219,14 +219,14 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
             {/* 展开/收起更多收藏 */}
             {hasMoreFavorites && (
               <div 
-                className="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-[#2B2B2D] cursor-pointer"
+                className="flex items-center px-[7px] cursor-pointer"
                 onClick={() => setShowAllFavorites(!showAllFavorites)}
               >
-                <span className="text-sm text-gray-500 pl-1">
-                  {showAllFavorites ? "收起" : `更多 (${favoritedConversations.length - 3})`}
+                <span className="text-[14px] font-normal text-[#8c8c8c] pl-1">
+                  {showAllFavorites ? "收起" : `更多(${favoritedConversations.length - 3})`}
                 </span>
                 <ChevronDown className={cn(
-                  "w-4 h-4 ml-1 text-gray-500 transition-transform",
+                  "w-4 h-4 ml-1 text-[#8c8c8c] transition-transform",
                   showAllFavorites && "rotate-180"
                 )} />
               </div>
@@ -248,7 +248,7 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
     if (groupedConversations.length === 0) {
       return (
         <section className="mt-5 mb-3">
-          <div className="px-3 py-2 text-sm font-medium">最近</div>
+          <div className="px-3 py-2 text-[16px] font-semibold text-[#262626]">最近</div>
           <div className="p-3 text-center text-xs text-gray-500">
             暂无聊天记录
           </div>
@@ -257,8 +257,8 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
     }
 
     return (
-      <section className="mt-5 mb-3">
-        <div className="px-3 py-2 text-sm font-medium flex items-center justify-between">
+      <section className="mt-2">
+        <div className="px-3 py-2 text-[16px] font-semibold text-[#262626] flex items-center justify-between">
           <span>最近</span>
           <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" />
         </div>
@@ -266,7 +266,7 @@ export function RecentChatList({ searchQuery }: { searchQuery: string }) {
         {groupedConversations.map((group: { groupName: string; conversations: Doc<"conversations">[] }) => (
           <div key={group.groupName}>
             {/* 渲染分组标题, e.g., '今天', '7天内' */}
-            <div className="px-3 py-1 text-xs text-gray-500">{group.groupName}</div>
+            <div className="px-3 text-[12px] font-normal text-[#8c8c8c]">{group.groupName}</div>
             
             {/* 渲染该分组下的所有会话 */}
             {group.conversations.map(renderConversationItem)}

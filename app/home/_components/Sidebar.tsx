@@ -134,7 +134,7 @@ export function Sidebar() {
   return (
     <aside 
       className={cn(
-        "flex flex-col h-full bg-[#FAFAFA] dark:bg-[#1B1B1D] overflow-hidden dark:border-gray-800 shrink-0 relative z-10",
+        "flex flex-col h-full bg-[#F9F8F7] text-[rgb(95,94,91)] dark:text-gray-300 dark:bg-[#1B1B1D] overflow-hidden dark:border-gray-800 shrink-0 relative z-10",
         collapsed ? "w-[4rem]" : "w-[10.5rem]"
       )}
     >
@@ -144,7 +144,7 @@ export function Sidebar() {
       )}>
         {/* 应用名 */}
         {!collapsed && (
-          <div className="font-semibold text-xl text-primary dark:text-white flex items-center">
+          <div className="font-semibold text-xl text-[rgb(95,94,91)] dark:text-white flex items-center">
             Atomic
           </div>
         )}
@@ -162,7 +162,7 @@ export function Sidebar() {
               onClick={toggleCollapsed}
               className="flex items-center justify-center ml-1 w-5 h-5 cursor-pointer rounded-full bg-[#E6E6E8] dark:bg-[#2C2C2E]"
             >
-              <ArrowLeftToLine className="h-3 w-3 text-gray-600 dark:text-gray-400" />
+              <ArrowLeftToLine className="h-3 w-3 text-[rgb(95,94,91)] dark:text-gray-400" />
             </button>
           </>
         )}
@@ -175,7 +175,7 @@ export function Sidebar() {
               onClick={toggleCollapsed}
               className="flex items-center justify-center w-6 h-6 mb-3 cursor-pointer rounded-full bg-[#E6E6E8] dark:bg-[#2C2C2E]"
             >
-              <ArrowRightFromLine className="h-3 w-3 text-gray-600 dark:text-gray-400 translate-x-0.5" />
+              <ArrowRightFromLine className="h-3 w-3 text-[rgb(95,94,91)] dark:text-gray-400 translate-x-0.5" />
             </button>
 
             {/* 用户头像 */}
@@ -202,7 +202,7 @@ export function Sidebar() {
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
                 activeMenuId === "home" 
-                  ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
+                  ? "bg-[#F1F0EF] dark:bg-[#27272A]" 
                   : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <HomeNavIcon
@@ -211,14 +211,14 @@ export function Sidebar() {
                   className={cn(
                     "h-[18px] w-[18px]",
                     activeMenuId === "home"
-                      ? "text-primary dark:text-gray-200"
+                      ? "text-[rgb(95,94,91)] dark:text-gray-200"
                       : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                   )}
                 />
               </div>
               <span className={cn(
                 "text-[11px] mt-1",
-                activeMenuId === "home" && "text-primary dark:text-gray-200 font-medium"
+                activeMenuId === "home" && "text-[rgb(95,94,91)] dark:text-gray-200 font-medium"
               )}>主页</span>
             </div>
           ) : (
@@ -226,8 +226,8 @@ export function Sidebar() {
               className={cn(
                 "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
                 activeMenuId === "home"
-                  ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
-                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
+                  ? "bg-[#F1F0EF] text-[rgb(95,94,91)] dark:bg-[#27272A] dark:text-gray-200"
+                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-[rgb(95,94,91)] dark:text-gray-300"
               )}
               onClick={() => handleMenuClick("home")}
             >
@@ -237,7 +237,7 @@ export function Sidebar() {
                 className={cn(
                   "h-4 w-4 mr-3",
                   activeMenuId === "home"
-                    ? "text-primary dark:text-gray-200"
+                    ? "text-[rgb(95,94,91)] dark:text-gray-200"
                     : "text-gray-600 dark:text-gray-400"
                 )}
               />
@@ -257,19 +257,19 @@ export function Sidebar() {
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
                 activeMenuId === "prompt-studio" 
-                  ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
+                  ? "bg-[#F1F0EF] dark:bg-[#27272A]" 
                   : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <AIRobotIcon className={cn(
                   "h-[18px] w-[18px]",
                   activeMenuId === "prompt-studio"
-                    ? "text-primary dark:text-gray-200"
+                    ? "text-[rgb(95,94,91)] dark:text-gray-200"
                     : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
                 "text-[11px] mt-1",
-                activeMenuId === "prompt-studio" && "text-primary dark:text-gray-200 font-medium"
+                activeMenuId === "prompt-studio" && "text-[rgb(95,94,91)] dark:text-gray-200 font-medium"
               )}>智创</span>
             </div>
           ) : (
@@ -277,15 +277,15 @@ export function Sidebar() {
               className={cn(
                 "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
                 activeMenuId === "prompt-studio"
-                  ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
-                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
+                  ? "bg-[#F1F0EF] text-[rgb(95,94,91)] dark:bg-[#27272A] dark:text-gray-200"
+                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-[rgb(95,94,91)] dark:text-gray-300"
               )}
               onClick={() => handleMenuClick("prompt-studio")}
             >
               <AIRobotIcon className={cn(
                 "h-4 w-4 mr-3",
                 activeMenuId === "prompt-studio"
-                  ? "text-primary dark:text-gray-200"
+                  ? "text-[rgb(95,94,91)] dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
               )} />
               <span>智创</span>
@@ -304,19 +304,19 @@ export function Sidebar() {
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
                 activeMenuId === "chat" 
-                  ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
+                  ? "bg-[#F1F0EF] dark:bg-[#27272A]" 
                   : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <MessageSquare className={cn(
                   "h-[18px] w-[18px]",
                   activeMenuId === "chat"
-                    ? "text-primary dark:text-gray-200"
+                    ? "text-[rgb(95,94,91)] dark:text-gray-200"
                     : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
                 "text-[11px] mt-1",
-                activeMenuId === "chat" && "text-primary dark:text-gray-200 font-medium"
+                activeMenuId === "chat" && "text-[rgb(95,94,91)] dark:text-gray-200 font-medium"
               )}>聊天</span>
             </div>
           ) : (
@@ -324,15 +324,15 @@ export function Sidebar() {
               className={cn(
                 "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
                 activeMenuId === "chat"
-                  ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
-                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
+                  ? "bg-[#F1F0EF] text-[rgb(95,94,91)] dark:bg-[#27272A] dark:text-gray-200"
+                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-[rgb(95,94,91)] dark:text-gray-300"
               )}
               onClick={() => handleMenuClick("chat")}
             >
               <MessageSquare className={cn(
                 "h-4 w-4 mr-3",
                 activeMenuId === "chat"
-                  ? "text-primary dark:text-gray-200"
+                  ? "text-[rgb(95,94,91)] dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
               )} />
               <span>聊天</span>
@@ -351,19 +351,19 @@ export function Sidebar() {
               <div className={cn(
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
                 activeMenuId === "discovery" 
-                  ? "bg-[#ECEDEE] dark:bg-[#27272A]" 
+                  ? "bg-[#F1F0EF] dark:bg-[#27272A]" 
                   : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <Compass className={cn(
                   "h-[18px] w-[18px]",
                   activeMenuId === "discovery"
-                    ? "text-primary dark:text-gray-200"
+                    ? "text-[rgb(95,94,91)] dark:text-gray-200"
                     : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
                 "text-[11px] mt-1",
-                activeMenuId === "discovery" && "text-primary dark:text-gray-200 font-medium"
+                activeMenuId === "discovery" && "text-[rgb(95,94,91)] dark:text-gray-200 font-medium"
               )}>发现</span>
             </div>
           ) : (
@@ -371,15 +371,15 @@ export function Sidebar() {
               className={cn(
                 "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
                 activeMenuId === "discovery"
-                  ? "bg-[#ECEDEE] text-primary dark:bg-[#27272A] dark:text-gray-200"
-                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-gray-700 dark:text-gray-300"
+                  ? "bg-[#F1F0EF] text-[rgb(95,94,91)] dark:bg-[#27272A] dark:text-gray-200"
+                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-[rgb(95,94,91)] dark:text-gray-300"
               )}
               onClick={() => handleMenuClick("discovery")}
             >
               <Compass className={cn(
                 "h-4 w-4 mr-3",
                 activeMenuId === "discovery"
-                  ? "text-primary dark:text-gray-200"
+                  ? "text-[rgb(95,94,91)] dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
               )} />
               <span>发现</span>
