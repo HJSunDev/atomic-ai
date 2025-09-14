@@ -102,7 +102,49 @@ export function PromptBoard() {
     {
       id: '6',
       title: '问答系统',
-      content: '回答用户提出的各种问题',
+      content: '基于知识库回答用户问题',
+      children: [],
+    },
+    {
+      id: '7',
+      title: '情感分析',
+      content: '分析文本中的情感倾向',
+      children: [],
+    },
+    {
+      id: '8',
+      title: '关键词提取',
+      content: '从文本中提取重要关键词',
+      children: [],
+    },
+    {
+      id: '9',
+      title: '文本分类',
+      content: '将文本自动分类到预定义类别',
+      children: [],
+    },
+    {
+      id: '10',
+      title: '拼写检查',
+      content: '检测并纠正文本中的拼写错误',
+      children: [],
+    },
+    {
+      id: '11',
+      title: '语法检查',
+      content: '分析文本的语法正确性',
+      children: [],
+    },
+    {
+      id: '12',
+      title: '内容推荐',
+      content: '根据用户偏好推荐相关内容',
+      children: [],
+    },
+    {
+      id: '13',
+      title: '语音转文字',
+      content: '将语音内容转换为文本格式',
       children: [],
     },
   ]);
@@ -415,7 +457,7 @@ export function PromptBoard() {
   if (!isMounted) {
     return (
       <div className="h-[1500px] mb-[20px] bg-gray-100 p-6 rounded-lg overflow-hidden relative max-w-[70rem] w-full mx-auto">
-        <h2 className="text-xl font-bold mb-6">功能卡片加载中...</h2>
+        <h2 className="text-xl font-bold mb-6">模块加载中...</h2>
         <div className="animate-pulse">
           <div className="h-8 bg-gray-200 rounded w-3/4 mb-4"></div>
           <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
@@ -442,7 +484,7 @@ export function PromptBoard() {
       // 监听拖拽经过事件
       onDragOver={handleDragOver}
     >
-      <main className={`h-auto bg-gray-100 p-6 rounded-lg max-w-[70rem] w-full mx-auto`}>
+      <main className={`h-auto p-6 rounded-lg max-w-[70rem] w-full mx-auto bg-blue-100`}>
         
         
         {/* 操作区显示控制 */}

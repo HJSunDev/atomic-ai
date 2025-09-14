@@ -26,6 +26,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Check, ChevronDown, Globe } from "lucide-react";
+import { getModelIcon } from "@/lib/model-icon-utils";
+import Image from "next/image";
 
 interface ChatInputProps {
   inputValue: string;
@@ -363,7 +365,22 @@ function ModelSelector() {
           className="h-7 rounded-full flex items-center justify-center gap-1.5 cursor-pointer transition-colors  border-0 outline-none focus:outline-none focus-visible:outline-none ring-0 focus:ring-0 focus-visible:ring-0 shadow-none"
           title="选择模型"
         >
-          <div className="w-3.5 h-3.5 bg-gray-400 dark:bg-gray-600 rounded-full"></div>
+          {/* 当前选中模型的图标 */}
+          <div className="w-3.5 h-3.5 rounded-full overflow-hidden">
+            <Image
+              src={getModelIcon(current?.modelSeries || '')}
+              alt={`${current?.shortName || current?.modelName || 'model'} icon`}
+              width={14}
+              height={14}
+              className="w-full h-full object-cover"
+              onError={(e) => {
+                // 图标加载失败时显示默认背景
+                e.currentTarget.style.display = 'none';
+                (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'block';
+              }}
+            />
+            <div className="w-3.5 h-3.5 bg-gray-400 dark:bg-gray-600 rounded-full" style={{ display: 'none' }}></div>
+          </div>
           <span className="text-[12px] text-gray-700 dark:text-gray-300">
             {current?.shortName ?? current?.modelName ?? "选择模型"}
           </span>
@@ -382,8 +399,22 @@ function ModelSelector() {
             className="relative flex items-center mt-2 gap-2 py-2 pl-8 pr-6 text-[12px] cursor-pointer rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 data-[highlighted]:bg-gray-100 dark:data-[highlighted]:bg-gray-800"
             onClick={() => setSelectedModel(id)}
           >
-            {/* 左侧模型图标占位 */}
-            <div className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded bg-gray-200 dark:bg-gray-700" />
+            {/* 左侧模型图标 */}
+            <div className="absolute left-2 top-1/2 -translate-y-1/2 w-4 h-4 rounded overflow-hidden">
+              <Image
+                src={getModelIcon(model.modelSeries)}
+                alt={`${model.shortName || model.modelName} icon`}
+                width={16}
+                height={16}
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  // 图标加载失败时显示默认背景
+                  e.currentTarget.style.display = 'none';
+                  (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'block';
+                }}
+              />
+              <div className="w-4 h-4 rounded bg-gray-200 dark:bg-gray-700" style={{ display: 'none' }}></div>
+            </div>
             <div className="flex-1 min-w-0">
               <span className="truncate block">{model.shortName || model.modelName}</span>
             </div>

@@ -5,7 +5,9 @@ import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useChatStore } from "@/store/home/useChatStore";
-import { DEFAULT_MODEL_ID } from "@/convex/_lib/models";
+import { DEFAULT_MODEL_ID, AVAILABLE_MODELS } from "@/convex/_lib/models";
+import { getModelIcon } from "@/lib/model-icon-utils";
+import Image from "next/image";
 
 // AI模型列表组件
 export function AiModelList() {
@@ -117,7 +119,22 @@ export function AiModelList() {
         )}
         onClick={() => handleSelectModel(model.modelId)}
       >
-        <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700 flex-shrink-0 mr-2"></div>
+        {/* 使用真实的模型图标 */}
+        <div className="w-5 h-5 rounded-full flex-shrink-0 mr-2 overflow-hidden">
+          <Image
+            src={getModelIcon(AVAILABLE_MODELS[model.modelId]?.modelSeries || '')}
+            alt={`${model.modelId} icon`}
+            width={20}
+            height={20}
+            className="w-full h-full object-cover"
+            onError={(e) => {
+              // 图标加载失败时显示默认背景
+              e.currentTarget.style.display = 'none';
+              (e.currentTarget.nextElementSibling as HTMLElement)!.style.display = 'block';
+            }}
+          />
+          <div className="w-5 h-5 rounded-full bg-gray-200 dark:bg-gray-700" style={{ display: 'none' }}></div>
+        </div>
         <span className="text-xs font-medium flex-1 truncate">
           {model.modelId}
         </span>

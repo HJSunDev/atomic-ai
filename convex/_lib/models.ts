@@ -10,6 +10,8 @@ interface ModelConfig {
   isFree: boolean;         // 是否免费
   // 模型简称（用于有限空间展示，例如模型切换器）
   shortName: string;
+  // 模型系列标识（如 "gpt", "claude", "deepseek" 等，用于分组和图标显示）
+  modelSeries: string;
 }
 
 // 定义服务商类型
@@ -43,7 +45,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "OpenAI的快速响应模型，平衡效率与性能，适合日常对话和一般分析任务",
         isRecommended: false,
         isFree: false,
-        shortName: "GPT-3.5"
+        shortName: "GPT-3.5",
+        modelSeries: "gpt"
       },
       "gpt-4o": {
         modelName: "gpt-4o",
@@ -54,7 +57,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "OpenAI的多模态旗舰模型，具备强大的推理能力和知识广度，适合复杂分析和创意任务",
         isRecommended: false,
         isFree: false,
-        shortName: "GPT-4o"
+        shortName: "GPT-4o",
+        modelSeries: "gpt"
       },
       "gpt-5-chat": {
         modelName: "openai/gpt-5-chat",
@@ -65,7 +69,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "OpenAI新一代对话模型，面向企业级应用，具备更强的多模态、长上下文与稳健推理能力",
         isRecommended: true,
         isFree: false,
-        shortName: "GPT-5"
+        shortName: "GPT-5",
+        modelSeries: "gpt"
       },
       "claude-3-7-sonnet": {
         modelName: "anthropic/claude-3-7-sonnet",
@@ -76,7 +81,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "Anthropic最新的中型模型，提供卓越的推理和理解能力，擅长精确、有条理的回应",
         isRecommended: false,
         isFree: false,
-        shortName: "Claude 3.7"
+        shortName: "Claude 3.7",
+        modelSeries: "claude"
       },
       "claude-3.5-sonnet": {
         modelName: "anthropic/claude-3.5-sonnet",
@@ -87,7 +93,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "Anthropic的平衡型模型，擅长深度分析和情感理解，在准确性和创造性之间取得良好平衡",
         isRecommended: false,
         isFree: false,
-        shortName: "Claude 3.5"
+        shortName: "Claude 3.5",
+        modelSeries: "claude"
       },
       "deepseek-r1": {
         modelName: "deepseek/deepseek-r1",
@@ -98,7 +105,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "基于强化学习优化的推理模型，擅长逻辑分析和复杂推理，在数学和编程领域表现出色",
         isRecommended: false,
         isFree: false,
-        shortName: "DeepSeek R1"
+        shortName: "DeepSeek R1",
+        modelSeries: "deepseek"
       },
       "deepseek-v3": {
         modelName: "deepseek/deepseek-chat",
@@ -109,7 +117,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "DeepSeek最新的通用对话模型，提供强大的语言理解和推理能力，适合多样化的复杂场景",
         isRecommended: false,
         isFree: false,
-        shortName: "DeepSeek V3"
+        shortName: "DeepSeek V3",
+        modelSeries: "deepseek"
       },
       "claude-sonnet-4": {
         modelName: "anthropic/claude-sonnet-4",
@@ -120,7 +129,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "Claude Sonnet 4：在编码与推理任务上较3.7代有明显提升，适合日常生产级使用，平衡性能与成本",
         isRecommended: true,
         isFree: false,
-        shortName: "Claude Sonnet 4"
+        shortName: "Claude Sonnet 4",
+        modelSeries: "claude"
       },
       "claude-opus-4.1": {
         modelName: "anthropic/claude-opus-4.1",
@@ -131,7 +141,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "Claude Opus 4.1：旗舰级推理与研究分析能力，适合复杂代码重构、数据分析与工具协同任务",
         isRecommended: true,
         isFree: false,
-        shortName: "Claude Opus 4.1"
+        shortName: "Claude Opus 4.1",
+        modelSeries: "claude"
       }
     },
     // 免费模型
@@ -145,7 +156,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "DeepSeek提供的免费对话模型，具备良好的理解能力和基础推理能力，适合日常对话和简单分析",
         isRecommended: false,
         isFree: true,
-        shortName: "DeepSeek V3"
+        shortName: "DeepSeek V3",
+        modelSeries: "deepseek"
       },
       "deepseek-v3-0324-free": {
         modelName: "deepseek/deepseek-chat-v3-0324:free",
@@ -156,7 +168,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "DeepSeek最新发布的免费对话模型，基于685B参数的mixture-of-experts架构，具有出色的推理能力和知识广度",
         isRecommended: true,
         isFree: true,
-        shortName: "DeepSeek V3-0324"
+        shortName: "DeepSeek V3-0324",
+        modelSeries: "deepseek"
       },
       "glm-4.5-air-free": {
         modelName: "z-ai/glm-4.5-air:free",
@@ -167,7 +180,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "GLM-4.5 Air 的轻量免费版本，采用MoE与混合推理模式，支持思维链推理开关，适合实时交互与工具使用",
         isRecommended: true,
         isFree: true,
-        shortName: "GLM 4.5 Air"
+        shortName: "GLM 4.5 Air",
+        modelSeries: "glm"
       },
       "deepseek-r1-0528-free": {
         modelName: "deepseek/deepseek-r1-0528:free",
@@ -178,7 +192,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "DeepSeek R1 0528 版本的免费开源推理模型，支持开放的 reasoning tokens，性能接近同级闭源模型",
         isRecommended: false,
         isFree: true,
-        shortName: "DeepSeek R1 0528"
+        shortName: "DeepSeek R1 0528",
+        modelSeries: "deepseek"
       },
       "qwen3-coder-free": {
         modelName: "qwen/qwen3-coder:free",
@@ -189,7 +204,8 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         description: "Qwen3 Coder 免费版，基于MoE的代码生成模型，优化于工具调用、函数调用与长上下文推理",
         isRecommended: false,
         isFree: true,
-        shortName: "Qwen3 Coder"
+        shortName: "Qwen3 Coder",
+        modelSeries: "qwen"
       }
     }
   }

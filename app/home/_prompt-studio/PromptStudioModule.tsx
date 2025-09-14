@@ -12,12 +12,10 @@ export const PromptStudioModule = () => {
   const clearSelectedPrompt = usePromptStore((state) => state.clearSelectedPrompt);
 
   return (
-    <main className="relative w-full h-full bg-muted/20 overflow-y-auto">
+    <main className="relative w-full h-full bg-muted/20 overflow-y-auto bg-red-100">
 
       {/* 页面标题与说明 */}
-      <section className="px-6 pt-6 max-w-[70rem] w-full mx-auto">
-        <h2 className="text-2xl font-bold mb-8">功能卡片</h2>
-        <p className="mb-6 text-gray-600">将下方卡片拖动到上方操作区</p>
+      <section className="px-6 max-w-[70rem] w-full mx-auto">
 
         {/* 当前选择的提示词模块指示器 */}
         {selectedPrompt && (
@@ -53,6 +51,13 @@ export const PromptStudioModule = () => {
           </div>
         )}
       </section>
+
+
+      {/* 搜索区*/}
+      <section className="px-6 max-w-[70rem] w-full mx-auto"> 
+        
+      </section>
+      
       {/* 提示词管理区 */}
       <PromptBoard />
 
