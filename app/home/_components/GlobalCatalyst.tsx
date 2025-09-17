@@ -1,8 +1,10 @@
 "use client";
 
+import { useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { FaceIcon } from "@/components/FaceIcon";
 import { useFaceExpressionStore } from "@/store/home/faceExpressionStore";
+import { type ExpressionName } from "@/lib/expressions";
 
 interface GlobalCatalystProps {
   className?: string;
@@ -10,12 +12,23 @@ interface GlobalCatalystProps {
 
 export function GlobalCatalyst({ className }: GlobalCatalystProps) {
   // 从全局表情 store 订阅状态与动作，避免组件内管理计时器与复杂逻辑
-  const { expression, playExpression } = useFaceExpressionStore();
+  const { expression, playExpression, startAutoCycle } = useFaceExpressionStore();
 
   // 点击交互：播放临时的 surprised 表情，到时自动恢复
   const handleInteraction = () => {
     playExpression("surprised", 1500);
   };
+
+  // 组件挂载时启动自动表情循环，营造生动的AI助手形象
+  useEffect(() => {
+    // 目前使用基础表情集
+    const autoCycleExpressions: ExpressionName[] = ["blink"];
+    
+    // 启动自动循环：每 7000ms随机触发一个表情，每个表情持续 400ms 然后恢复 neutral
+    startAutoCycle(autoCycleExpressions, { interval: 7000, duration: 400 });
+    
+    // 组件卸载时自动清理，store 内部会处理计时器的清理
+  }, [startAutoCycle]);
 
   return (
     <div 

@@ -40,14 +40,14 @@ export function FaceIcon({ expression = "neutral", className }: FaceIconProps) {
         fill="none"
       />
 
-      {/* 左眼：一个点 */}
-      <motion.circle
+      {/* 左眼：椭圆形状，支持独立控制水平和垂直半径以实现眨眼效果 */}
+      <motion.ellipse
         animate={current[faceParts.leftEye]}
         transition={transition}
         fill="currentColor"
       />
-      {/* 右眼：一个点 */}
-      <motion.circle
+      {/* 右眼：椭圆形状，支持独立控制水平和垂直半径以实现眨眼效果 */}
+      <motion.ellipse
         animate={current[faceParts.rightEye]}
         transition={transition}
         fill="currentColor"
