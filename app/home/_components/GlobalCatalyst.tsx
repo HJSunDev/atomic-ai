@@ -1,34 +1,34 @@
 "use client";
 
-import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { FaceIcon } from "@/components/FaceIcon";
-import { useFaceExpressionStore } from "@/store/home/faceExpressionStore";
-import { type ExpressionName } from "@/lib/expressions";
+import { useAiPanelStore } from "@/store";
+import { useSidebarMenuStore } from "@/store";
+import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 
 interface GlobalCatalystProps {
   className?: string;
 }
 
 export function GlobalCatalyst({ className }: GlobalCatalystProps) {
-  // 从全局表情 store 订阅状态与动作，避免组件内管理计时器与复杂逻辑
-  const { expression, playExpression, startAutoCycle } = useFaceExpressionStore();
+  // 获取AI面板状态管理
+  const { showAiPanel, setAiPanelVisibility } = useAiPanelStore();
+  
+  // 获取当前菜单的元数据，判断是否支持AI面板
+  const { getActiveMenuMetadata } = useSidebarMenuStore();
+  const currentMenuMetadata = getActiveMenuMetadata();
 
-  // 点击交互：播放临时的 surprised 表情，到时自动恢复
+  // 点击交互：打开AI面板
   const handleInteraction = () => {
-    playExpression("surprised", 1500);
+    // 打开AI面板（此时已确保当前菜单支持AI面板且面板未打开）
+    setAiPanelVisibility(true);
   };
 
-  // 组件挂载时启动自动表情循环，营造生动的AI助手形象
-  useEffect(() => {
-    // 目前使用基础表情集
-    const autoCycleExpressions: ExpressionName[] = ["blink"];
-    
-    // 启动自动循环：每 7000ms随机触发一个表情，每个表情持续 400ms 然后恢复 neutral
-    startAutoCycle(autoCycleExpressions, { interval: 7000, duration: 400 });
-    
-    // 组件卸载时自动清理，store 内部会处理计时器的清理
-  }, [startAutoCycle]);
+  // 唤醒器只在满足以下条件时显示：
+  // 1. 当前菜单支持AI面板功能
+  // 2. AI面板当前未打开状态
+  if (!currentMenuMetadata.showAiPanel || showAiPanel) {
+    return null;
+  }
 
   return (
     <div 
@@ -40,18 +40,20 @@ export function GlobalCatalyst({ className }: GlobalCatalystProps) {
       <button
         onClick={handleInteraction}
         className={cn(
-          "relative flex items-center justify-center rounded-full",
-          "bg-white/80 hover:bg-white/90 cursor-pointer",
-          "border border-gray-100/50 hover:border-gray-200/60",
-          "text-gray-800",
-          "w-14 h-14 transition-all duration-300 ease-out",
-          "shadow-sm hover:shadow-lg",
-          "hover:scale-102",
-          "active:scale-97"
+          "cursor-pointer rounded-full",
+          "transition-transform duration-300 ease-out",
+          "hover:scale-102 active:scale-97"
         )}
         aria-label="全局AI助手"
       >
-        <FaceIcon expression={expression} />
+        <AiAssistantAvatar
+          className={cn(
+            // 当外层 button 被 hover 时，改变 avatar 的样式
+            "hover:bg-white/90",
+            "hover:border-gray-200/60",
+            "hover:shadow-lg"
+          )}
+        />
       </button>
     </div>
   );

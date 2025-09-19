@@ -25,6 +25,7 @@ export function FaceIcon({ expression = "neutral", className }: FaceIconProps) {
       <motion.path
         animate={current[faceParts.leftBrow]}
         transition={transition}
+        initial={false}
         stroke="currentColor"
         strokeWidth={strokeW}
         strokeLinecap="round"
@@ -34,6 +35,7 @@ export function FaceIcon({ expression = "neutral", className }: FaceIconProps) {
       <motion.path
         animate={current[faceParts.rightBrow]}
         transition={transition}
+        initial={false}
         stroke="currentColor"
         strokeWidth={strokeW}
         strokeLinecap="round"
@@ -44,12 +46,14 @@ export function FaceIcon({ expression = "neutral", className }: FaceIconProps) {
       <motion.ellipse
         animate={current[faceParts.leftEye]}
         transition={transition}
+        initial={false}
         fill="currentColor"
       />
       {/* 右眼：椭圆形状，支持独立控制水平和垂直半径以实现眨眼效果 */}
       <motion.ellipse
         animate={current[faceParts.rightEye]}
         transition={transition}
+        initial={false}
         fill="currentColor"
       />
 
@@ -57,6 +61,7 @@ export function FaceIcon({ expression = "neutral", className }: FaceIconProps) {
       <motion.path
         animate={current[faceParts.noseBridge]}
         transition={transition}
+        initial={false}
         stroke="currentColor"
         strokeWidth={strokeW}
         strokeLinecap="round"
@@ -66,6 +71,7 @@ export function FaceIcon({ expression = "neutral", className }: FaceIconProps) {
       <motion.path
         animate={current[faceParts.noseTip]}
         transition={transition}
+        initial={false}
         stroke="currentColor"
         strokeWidth={strokeW}
         strokeLinecap="round"

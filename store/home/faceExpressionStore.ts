@@ -8,6 +8,10 @@ import { type ExpressionName } from "@/lib/expressions";
 let playTimeoutId: ReturnType<typeof setTimeout> | null = null;
 let autoCycleIntervalId: ReturnType<typeof setInterval> | null = null;
 
+// 引用计数，用于管理自动循环的生命周期
+// 当第一个订阅者出现时启动循环，最后一个订阅者离开时停止
+let subscriberCount = 0;
+
 interface FaceExpressionState {
   // --- 状态 ---
   // 当前生效的表情
@@ -22,6 +26,22 @@ interface FaceExpressionState {
   };
 
   // --- 动作 ---
+
+  /**
+   * 订阅自动循环。
+   * 内部使用引用计数，当第一个组件订阅时启动循环。
+   * @param expressions 要循环的表情数组
+   * @param options.interval 触发间隔（毫秒）
+   * @param options.duration 每个表情的持续时长（毫秒）
+   */
+  subscribeAutoCycle: (expressions: ExpressionName[], options?: { interval?: number; duration?: number }) => void;
+
+  /**
+   * 取消订阅自动循环。
+   * 内部使用引用计数，当最后一个组件取消订阅时停止循环。
+   */
+  unsubscribeAutoCycle: () => void;
+
   /**
    * 设置持久表情并切换到手动模式
    * 适用于需要长期保持某种表情状态的场景
@@ -63,6 +83,24 @@ export const useFaceExpressionStore = create<FaceExpressionState>((set, get) => 
   autoCycleConfig: { expressions: [], interval: 4000, duration: 1200 },
 
   // --- 动作实现 ---
+
+  // 订阅自动循环
+  subscribeAutoCycle: (expressions, options) => {
+    subscriberCount++;
+    // 仅当第一个订阅者加入时启动
+    if (subscriberCount === 1) {
+      get().startAutoCycle(expressions, options);
+    }
+  },
+
+  // 取消订阅自动循环
+  unsubscribeAutoCycle: () => {
+    subscriberCount = Math.max(0, subscriberCount - 1);
+    // 仅当最后一个订阅者离开时停止
+    if (subscriberCount === 0) {
+      get().stopAutoCycle();
+    }
+  },
 
   // 设置持久表情
   setExpression: (expression) => {

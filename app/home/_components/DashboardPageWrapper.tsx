@@ -2,7 +2,7 @@
 
 import { ReactNode, useEffect, useRef } from "react";
 import { AiChatPanel } from "./AiChatPanel";
-import { Bot, ChevronLeft, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAiPanelStore } from "@/store";
 import { useSidebarMenuStore } from "@/store";
@@ -18,7 +18,7 @@ export function DashboardPageWrapper({ children }: DashboardPageWrapperProps) {
   const hasMounted = useHasMounted();
   
   // 使用全局状态管理中的AI面板状态和方法
-  const { showAiPanel, toggleAiPanel, setAiPanelVisibility } = useAiPanelStore();
+  const { showAiPanel, setAiPanelVisibility } = useAiPanelStore();
   
   // 获取当前活动菜单的元数据
   const { getActiveMenuMetadata, activeMenuId } = useSidebarMenuStore();
@@ -62,34 +62,27 @@ export function DashboardPageWrapper({ children }: DashboardPageWrapperProps) {
         {/* 如果当前菜单支持AI面板，则显示AI面板 */}
         {shouldShowAiPanel && (
           <>
-            {/* AI面板控制按钮 */}
-            <div 
-              className={cn(
-                "absolute top-1/2 -translate-y-1/2 transition-all duration-300 z-10",
-                showAiPanel ? "right-[45%] translate-x-0" : "right-0"
-              )}
-            >
-              <button 
-                onClick={toggleAiPanel}
+            {/* AI面板关闭按钮 - 只在面板打开时显示 */}
+            {showAiPanel && (
+              <div 
                 className={cn(
-                  "flex items-center justify-center bg-background cursor-pointer transition-all duration-200",
-                  "hover:shadow-md",
-                  showAiPanel 
-                    ? "h-16 w-6 border-y border-l border-muted/30 rounded-l-md shadow-[-1px_0px_3px_rgba(0,0,0,0.05)]" 
-                    : "rounded-l-md w-7 h-16 border-r border-y border-l border-muted/40 shadow-sm"
+                  "absolute top-1/2 -translate-y-1/2 transition-all duration-300 z-10",
+                  "right-[45%] translate-x-0"
                 )}
-                aria-label={showAiPanel ? "隐藏AI面板" : "显示AI面板"}
               >
-                {showAiPanel ? (
+                <button 
+                  onClick={() => setAiPanelVisibility(false)}
+                  className={cn(
+                    "flex items-center justify-center bg-background cursor-pointer transition-all duration-200",
+                    "hover:shadow-md",
+                    "h-16 w-6 border-y border-l border-muted/30 rounded-l-md shadow-[-1px_0px_3px_rgba(0,0,0,0.05)]"
+                  )}
+                  aria-label="隐藏AI面板"
+                >
                   <ChevronRight className="h-4 w-4 text-muted-foreground/70 hover:text-foreground transition-colors" />
-                ) : (
-                  <div className="flex flex-col items-center gap-1.5">
-                    <ChevronLeft className="h-4 w-4 text-primary" />
-                    <Bot className="h-4 w-4 text-primary" />
-                  </div>
-                )}
-              </button>
-            </div>
+                </button>
+              </div>
+            )}
 
             {/* AI聊天面板 */}
             {effectiveShowAiPanel && <AiChatPanel />}
