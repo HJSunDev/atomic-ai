@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { FaceIcon } from "@/components/FaceIcon";
+import { FaceIcon } from "@/components/ai-assistant/FaceIcon";
 import { useFaceExpressionStore } from "@/store/home/faceExpressionStore";
 import { type ExpressionName } from "@/lib/expressions";
 

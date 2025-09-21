@@ -1,6 +1,5 @@
 "use client";
 
-import { DashboardPageWrapper } from "./_components/DashboardPageWrapper";
 import { useSidebarMenuStore } from "@/store";
 import { ReactNode, useEffect } from "react";
 import { useRouter } from "next/navigation";
@@ -54,10 +53,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* 页面主内容与AI聊天侧栏的自适应布局容器；随菜单切换重置AI面板，并按需调整主区宽度 */}
-      <DashboardPageWrapper>
-        {currentContent}
-      </DashboardPageWrapper>
+      {currentContent}
     </>
   );
 } 
