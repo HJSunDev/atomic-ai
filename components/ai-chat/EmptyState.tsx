@@ -1,9 +1,7 @@
 import React from "react";
-import { Bot } from "lucide-react";
+import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 
 interface EmptyStateProps {
-  title?: string;
-  description?: string;
   promptCards?: Array<{
     title: string;
     description: string;
@@ -14,22 +12,18 @@ interface EmptyStateProps {
   className?: string;
 }
 
-export function EmptyState({ 
-  title = "Atomic",
-  description = "我是您的智能开发助手，随时为您提供编程相关问题的解答与支持",
+export function EmptyState({
   promptCards = [],
   className = ""
 }: EmptyStateProps) {
   return (
-    <div className={`flex flex-col items-center justify-center ${className}`}>
-      <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center mb-6 shadow-lg">
-        <Bot className="w-8 h-8 text-white" />
+    <div className={`flex flex-col items-center justify-center ${className} bg-red-100`}>
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-blue-100">
+        <AiAssistantAvatar />
       </div>
-      <h3 className="text-xl font-medium text-gray-800 dark:text-gray-200 mb-2">{title}</h3>
-      <p className="text-sm text-gray-500 dark:text-gray-400 mb-8 text-center max-w-[300px]">{description}</p>
       
       {promptCards.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 w-full max-w-md">
+        <div className="grid grid-cols-2 gap-3 w-full max-w-md bg-purple-100">
           {promptCards.map((card, index) => (
             <div 
               key={index}

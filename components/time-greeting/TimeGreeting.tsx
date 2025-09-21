@@ -31,17 +31,17 @@ export interface GreetingData {
 export const defaultGreetingConfig: Record<TimeOfDay, { greeting: string; message: string; period: string }> = {
   [TimeOfDay.EARLY_MORNING]: {
     greeting: '早晨好',
-    message: '清晨的第一缕阳光，为你带来新的希望 🌅',
+    message: '新的一天开始了，愿你充满活力 🌅',
     period: '清晨'
   },
   [TimeOfDay.MORNING]: {
     greeting: '上午好',
-    message: '美好的一天从现在开始，愿你精神饱满 ☕',
+    message: '新的一天开始了，来杯咖啡提提神吧 ☕',
     period: '早晨'
   },
   [TimeOfDay.LATE_MORNING]: {
     greeting: '上午好',
-    message: '上午时光正好，保持专注，你很棒 💪',
+    message: '上午时光正好，继续保持专注 💪',
     period: '上午'
   },
   [TimeOfDay.NOON]: {
@@ -51,7 +51,7 @@ export const defaultGreetingConfig: Record<TimeOfDay, { greeting: string; messag
   },
   [TimeOfDay.AFTERNOON]: {
     greeting: '下午好',
-    message: '下午的阳光很温暖，就像你的笑容一样 😊',
+    message: '下午时光，适合来点轻松的工作 😊',
     period: '下午'
   },
   [TimeOfDay.EARLY_EVENING]: {
@@ -61,7 +61,7 @@ export const defaultGreetingConfig: Record<TimeOfDay, { greeting: string; messag
   },
   [TimeOfDay.EVENING]: {
     greeting: '晚上好',
-    message: '夜晚来临，愿你拥有温馨的晚餐时光 🌙',
+    message: '晚上好，享受你的晚餐时光 🌙',
     period: '晚上'
   },
   [TimeOfDay.NIGHT]: {
