@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import { useAiPanelStore, useSidebarMenuStore } from "@/store";
 import { useHasMounted } from "@/hooks/use-has-mounted";
 import { ClientOnly } from "@/components/client-only";
+import { DocumentViewer } from "./_prompt-studio/_components/DocumentViewer";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -97,6 +98,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       </main>
       {/* 全场景AI助手 - 右上角固定定位，覆盖整个应用区域 */}
       <GlobalCatalyst />
+
+      {/* 全局挂载区 */}
+      {/* 文档视图容器 */}
+      <DocumentViewer />
     </div>
   );
 } 

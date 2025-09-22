@@ -16,7 +16,7 @@ export default function DocumentPage() {
   useEffect(() => {
     if (!isOpen) {
       // 异常访问场景（直接访问URL、刷新等）：重定向到主页
-      console.warn('全屏文档页面需要先打开文档，重定向到主页');
+      console.warn('全屏文档未打开，重定向到主页');
       router.replace('/home');
     }
   }, [isOpen, router]);
@@ -25,7 +25,6 @@ export default function DocumentPage() {
     <div className="h-screen flex flex-col bg-green-100">
       <DocumentContent onRequestClose={() => {
         useDocumentStore.getState().close();
-        router.push('/home');
       }} />
     </div>
   );

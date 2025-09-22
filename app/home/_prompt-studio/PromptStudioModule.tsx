@@ -2,8 +2,9 @@
 
 import { TestBlock } from "./_components/TestBlock";
 import { PromptBoard } from "./_components/PromptBoard";
-import { DocumentViewer } from "./_components/DocumentViewer";
+
 import { usePromptStore } from "@/store/home/promptStore";
+import { useDocumentStore } from "@/store/home/documentStore";
 import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
@@ -29,6 +30,12 @@ export const PromptStudioModule = () => {
   const selectedPrompt = usePromptStore((state) => state.selectedPrompt);
   // 清除当前选中提示词文档状态的函数
   const clearSelectedPrompt = usePromptStore((state) => state.clearSelectedPrompt);
+
+  // 打开文档创建对话框
+  const openCreateDocumentDialog = () => {
+    useDocumentStore.getState().switchDisplayMode('modal');
+    useDocumentStore.getState().openDocument();
+  };
 
   return (
     // 采用居中布局是为了聚焦输入主任务，后续功能区可按需扩展
@@ -118,10 +125,7 @@ export const PromptStudioModule = () => {
                       variant="ghost"
                       size="icon"
                       className="h-6 w-6 text-muted-foreground/70 hover:text-foreground ml-1 cursor-pointer"
-                      onClick={() => {
-                        // TODO: 实现新增document功能
-                        console.log('Add new document');
-                      }}
+                      onClick={openCreateDocumentDialog}
                     >
                       <Plus className="h-4 w-4" />
                       <span className="sr-only">Add new document</span>
@@ -218,12 +222,6 @@ export const PromptStudioModule = () => {
 
       {/* 提示词管理区 */}
       {/* <PromptBoard /> */}
-
-      {/* 全局挂载区 */}
-      {/* 文档视图容器 */}
-      {/* <DocumentViewer /> */}
-
-
 
 
     </main>

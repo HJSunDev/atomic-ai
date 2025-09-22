@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 
 import { WelcomePanel } from "./_components/WelcomePanel";
-import { DocumentViewer } from "../_prompt-studio/_components/DocumentViewer";
+
 import { RecentlyVisited } from './_components/RecentlyVisited';
 import TimeGreeting from "@/components/time-greeting/TimeGreeting";
 
@@ -116,13 +116,6 @@ export const HomeModule = () => {
 
       {/* 欢迎面板 */}
       <WelcomePanel />
-
-
-      {/* 全局挂载区 */}
-      {/* 文档视图容器 */}
-      <DocumentViewer />
-
-
 
       </div>
     </main>
