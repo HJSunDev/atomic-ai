@@ -48,8 +48,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
 
   return (
     <div className="flex h-screen overflow-hidden relative">
-      {/* 侧边栏 - 固定宽度 */}
+      {/* 应用侧边栏 - 固定宽度 */}
       <Sidebar />
+
       {/* 主内容区域 - 占用剩余空间 */}
       <main className="flex-1 overflow-hidden relative flex">
         {/* 主内容区域 - 宽度根据AI面板显示状态调整 */}
@@ -57,7 +58,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           className={cn(
             "flex flex-col transition-all duration-300 relative h-full",
             // 仅在客户端挂载后应用条件样式，避免水合不匹配
-            hasMounted && effectiveShowAiPanel ? 'w-[55%]' : 'w-full'
+            hasMounted && effectiveShowAiPanel ? 'w-[60%]' : 'w-full'
           )}
         >
           {children}
@@ -73,7 +74,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
                 <div 
                   className={cn(
                     "absolute top-1/2 -translate-y-1/2 transition-all duration-300 z-10",
-                    "right-[45%] translate-x-0"
+                    "right-[40%] translate-x-0"
                   )}
                 >
                   <button 
@@ -96,6 +97,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           )}
         </ClientOnly>
       </main>
+
       {/* 全场景AI助手 - 右上角固定定位，覆盖整个应用区域 */}
       <GlobalCatalyst />
 

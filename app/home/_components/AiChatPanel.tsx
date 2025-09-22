@@ -19,7 +19,7 @@ export function AiChatPanel() {
   // 使用核心组件
   return (
     // AI聊天面板 - 固定占据右侧宽度
-    <div className="relative w-[45%] h-full border-l bg-background flex flex-col overflow-hidden">
+    <div className="relative w-[40%] h-full border-l bg-background flex flex-col overflow-hidden">
       <AiChatCore 
         systemPrompt="你是一个专业的开发助手，擅长解答技术问题，尤其是关于Web开发、React和TypeScript的问题。"
       >

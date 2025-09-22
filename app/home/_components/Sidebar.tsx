@@ -23,41 +23,8 @@ import { createPortal } from "react-dom";
 import { useSidebarMenuStore } from "@/store/home";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import type { MenuItemId } from "@/store/home/use-sidebar-menu-store";
-import { HomeNavIcon } from "@/components/icons";
+import { HomeNavIcon, AIRobotIcon } from "@/components/icons";
 
-// 自定义AI机器人图标
-const AIRobotIcon = ({ className }: { className?: string }) => {
-  return (
-    <svg 
-      xmlns="http://www.w3.org/2000/svg" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="2" 
-      strokeLinecap="round" 
-      strokeLinejoin="round" 
-      className={className}
-    >
-      {/* 机器人头部 */}
-      <rect x="4" y="8" width="16" height="12" rx="2" ry="2" />
-      
-      {/* 机器人天线 */}
-      <path d="M12 4v4" />
-      <circle cx="12" cy="3" r="1" />
-      
-      {/* 机器人眼睛 */}
-      <circle cx="9" cy="13" r="1.5" />
-      <circle cx="15" cy="13" r="1.5" />
-      
-      {/* 机器人嘴巴 */}
-      <path d="M9 17h6" />
-      
-      {/* 机器人腿部 */}
-      <path d="M8 20v1" />
-      <path d="M16 20v1" />
-    </svg>
-  );
-};
 
 export function Sidebar() {
   // 更多菜单相关状态
@@ -78,20 +45,22 @@ export function Sidebar() {
   // 引用
   const moreButtonRef = useRef<HTMLDivElement>(null);
   
-  // 菜单显示隐藏定时器引用
+  // 菜单显示/隐藏的定时器引用 - 用于实现优雅的悬停交互
+  // 这些定时器确保菜单不会过于敏感地显示或隐藏，提升用户体验
   const showTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const hideTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   
-  // 客户端挂载后才能使用portal
+  // 客户端挂载后才能使用portal - 避免服务端渲染问题
   useEffect(() => {
     setMounted(true);
     return () => {
+      // 组件卸载时清理所有定时器，防止内存泄漏
       clearAllTimeouts();
       setShowMoreMenu(false);
     };
   }, []);
   
-  // 清除所有定时器
+  // 清理所有定时器 - 确保状态同步
   const clearAllTimeouts = () => {
     if (showTimeoutRef.current) {
       clearTimeout(showTimeoutRef.current);
@@ -104,29 +73,33 @@ export function Sidebar() {
   };
 
   
-  // 显示菜单时的处理函数
+  // 显示菜单时的处理函数 - 添加延迟防止误触
+  // 当用户鼠标悬停在"更多"按钮上时，延迟50ms显示菜单
+  // 这样可以避免用户快速移动鼠标时的意外触发
   const handleMenuShow = () => {
-    // 清除所有定时器
+    // 先清理所有定时器，确保状态一致
     clearAllTimeouts();
     
-    // 设置显示定时器，添加延迟以防止意外触发
+    // 设置显示定时器，给用户一个"确认"的时间窗口
     showTimeoutRef.current = setTimeout(() => {
       setShowMoreMenu(true);
     }, 50);
   };
   
-  // 隐藏菜单时的处理函数
+  // 隐藏菜单时的处理函数 - 添加延迟让交互更平滑
+  // 当用户鼠标离开"更多"按钮或菜单区域时，延迟120ms隐藏菜单
+  // 这个时间足够用户从按钮移动到菜单内容上
   const handleMenuHide = () => {
-    // 清除所有定时器
+    // 先清理所有定时器，避免冲突
     clearAllTimeouts();
     
-    // 设置隐藏定时器，添加延迟使交互更平滑
+    // 设置隐藏定时器，给用户移动鼠标的时间
     hideTimeoutRef.current = setTimeout(() => {
       setShowMoreMenu(false);
     }, 120);
   };
   
-  // 鼠标进入菜单时保持显示
+  // 鼠标进入菜单时保持显示 - 取消任何待执行的隐藏操作
   const handleMenuEnter = () => {
     clearAllTimeouts();
   };
@@ -135,7 +108,7 @@ export function Sidebar() {
     <aside 
       className={cn(
         "flex flex-col h-full bg-[#F9F8F7] text-[rgb(95,94,91)] dark:text-gray-300 dark:bg-[#1B1B1D] overflow-hidden dark:border-gray-800 shrink-0 relative z-10",
-        collapsed ? "w-[4rem]" : "w-[10.5rem]"
+        collapsed ? "w-[3.7rem]" : "w-[10.5rem]"
       )}
     >
       <header className={cn(
@@ -160,7 +133,7 @@ export function Sidebar() {
             {/* 展开收起按钮 */}
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center ml-1 w-5 h-5 cursor-pointer rounded-full bg-[#E6E6E8] dark:bg-[#2C2C2E]"
+              className="flex items-center justify-center ml-1 w-5 h-5 cursor-pointer rounded-full bg-[#ECEDEE]/50 dark:bg-[#27272A]/70 hover:bg-[#ECEDEE] dark:hover:bg-[#27272A] transition-colors"
             >
               <ArrowLeftToLine className="h-3 w-3 text-[rgb(95,94,91)] dark:text-gray-400" />
             </button>
@@ -173,7 +146,7 @@ export function Sidebar() {
             {/* 展开收起按钮 */}
             <button
               onClick={toggleCollapsed}
-              className="flex items-center justify-center w-6 h-6 mb-3 cursor-pointer rounded-full bg-[#E6E6E8] dark:bg-[#2C2C2E]"
+              className="flex items-center justify-center w-6 h-6 mb-3 cursor-pointer rounded-full bg-[#ECEDEE]/50 dark:bg-[#27272A]/70 hover:bg-[#ECEDEE] dark:hover:bg-[#27272A] transition-colors"
             >
               <ArrowRightFromLine className="h-3 w-3 text-[rgb(95,94,91)] dark:text-gray-400 translate-x-0.5" />
             </button>
@@ -209,7 +182,7 @@ export function Sidebar() {
                   size={18}
                   color="currentColor"
                   className={cn(
-                    "h-[18px] w-[18px]",
+                    "h-[1.125rem] w-[1.125rem]",
                     activeMenuId === "home"
                       ? "text-[rgb(95,94,91)] dark:text-gray-200"
                       : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
@@ -217,7 +190,7 @@ export function Sidebar() {
                 />
               </div>
               <span className={cn(
-                "text-[11px] mt-1",
+                "text-[0.6875rem] mt-1",
                 activeMenuId === "home" && "text-[rgb(95,94,91)] dark:text-gray-200 font-medium"
               )}>主页</span>
             </div>
@@ -235,7 +208,7 @@ export function Sidebar() {
                 size={16}
                 color="currentColor"
                 className={cn(
-                  "h-4 w-4 mr-3",
+                  "h-[1rem] w-[1rem] mr-3",
                   activeMenuId === "home"
                     ? "text-[rgb(95,94,91)] dark:text-gray-200"
                     : "text-gray-600 dark:text-gray-400"
@@ -261,14 +234,14 @@ export function Sidebar() {
                   : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <AIRobotIcon className={cn(
-                  "h-[18px] w-[18px]",
+                  "h-[1.125rem] w-[1.125rem]",
                   activeMenuId === "prompt-studio"
                     ? "text-[rgb(95,94,91)] dark:text-gray-200"
                     : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
-                "text-[11px] mt-1",
+                "text-[0.6875rem] mt-1",
                 activeMenuId === "prompt-studio" && "text-[rgb(95,94,91)] dark:text-gray-200 font-medium"
               )}>智创</span>
             </div>
@@ -283,7 +256,7 @@ export function Sidebar() {
               onClick={() => handleMenuClick("prompt-studio")}
             >
               <AIRobotIcon className={cn(
-                "h-4 w-4 mr-3",
+                "h-[1rem] w-[1rem] mr-3",
                 activeMenuId === "prompt-studio"
                   ? "text-[rgb(95,94,91)] dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
@@ -308,14 +281,14 @@ export function Sidebar() {
                   : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <MessageSquare className={cn(
-                  "h-[18px] w-[18px]",
+                  "h-[1.125rem] w-[1.125rem]",
                   activeMenuId === "chat"
                     ? "text-[rgb(95,94,91)] dark:text-gray-200"
                     : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
-                "text-[11px] mt-1",
+                "text-[0.6875rem] mt-1",
                 activeMenuId === "chat" && "text-[rgb(95,94,91)] dark:text-gray-200 font-medium"
               )}>聊天</span>
             </div>
@@ -330,7 +303,7 @@ export function Sidebar() {
               onClick={() => handleMenuClick("chat")}
             >
               <MessageSquare className={cn(
-                "h-4 w-4 mr-3",
+                "h-[1rem] w-[1rem] mr-3",
                 activeMenuId === "chat"
                   ? "text-[rgb(95,94,91)] dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
@@ -355,14 +328,14 @@ export function Sidebar() {
                   : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
               )}>
                 <Compass className={cn(
-                  "h-[18px] w-[18px]",
+                  "h-[1.125rem] w-[1.125rem]",
                   activeMenuId === "discovery"
                     ? "text-[rgb(95,94,91)] dark:text-gray-200"
                     : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
                 )} />
               </div>
               <span className={cn(
-                "text-[11px] mt-1",
+                "text-[0.6875rem] mt-1",
                 activeMenuId === "discovery" && "text-[rgb(95,94,91)] dark:text-gray-200 font-medium"
               )}>发现</span>
             </div>
@@ -377,7 +350,7 @@ export function Sidebar() {
               onClick={() => handleMenuClick("discovery")}
             >
               <Compass className={cn(
-                "h-4 w-4 mr-3",
+                "h-[1rem] w-[1rem] mr-3",
                 activeMenuId === "discovery"
                   ? "text-[rgb(95,94,91)] dark:text-gray-200"
                   : "text-gray-600 dark:text-gray-400"
@@ -406,9 +379,9 @@ export function Sidebar() {
                 "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
                 showMoreMenu ? "bg-[#ECEDEE] dark:bg-[#27272A]" : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70" 
               )}>
-                <MoreHorizontal className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
+                <MoreHorizontal className="h-[1.125rem] w-[1.125rem] text-gray-600 dark:text-gray-400" />
               </div>
-              <span className="text-[11px] mt-1">更多</span>
+              <span className="text-[0.6875rem] mt-1">更多</span>
             </div>
           ) : (
             <div
@@ -417,7 +390,7 @@ export function Sidebar() {
               onMouseEnter={handleMenuShow}
               onMouseLeave={handleMenuHide}
             >
-              <MoreHorizontal className="h-4 w-4 mr-3 text-gray-600 dark:text-gray-400" />
+              <MoreHorizontal className="h-[1rem] w-[1rem] mr-3 text-gray-600 dark:text-gray-400" />
               <span>更多</span>
             </div>
           )}
@@ -432,10 +405,10 @@ export function Sidebar() {
           : "flex justify-around items-center px-1"
       )}>
         <Link href="/" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer">
-          <Home className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
+          <Home className="h-[1.125rem] w-[1.125rem] text-gray-600 dark:text-gray-400" />
         </Link>
         <div className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer">
-          <HelpCircle className="h-[18px] w-[18px] text-gray-600 dark:text-gray-400" />
+          <HelpCircle className="h-[1.125rem] w-[1.125rem] text-gray-600 dark:text-gray-400" />
         </div>
         <ThemeToggle />
       </footer>
@@ -474,7 +447,7 @@ export function Sidebar() {
                     : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
                 )}>
                   <FileText className={cn(
-                    "h-4 w-4",
+                    "h-[1rem] w-[1rem]",
                     activeMenuId === "documents"
                       ? "text-primary dark:text-gray-200"
                       : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
@@ -494,7 +467,7 @@ export function Sidebar() {
                     : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
                 )}>
                   <BookOpen className={cn(
-                    "h-4 w-4",
+                    "h-[1rem] w-[1rem]",
                     activeMenuId === "knowledge-base"
                       ? "text-primary dark:text-gray-200"
                       : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
@@ -517,7 +490,7 @@ export function Sidebar() {
                     : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
                 )}>
                   <MessageSquare className={cn(
-                    "h-4 w-4",
+                    "h-[1rem] w-[1rem]",
                     activeMenuId === "feedback"
                       ? "text-primary dark:text-gray-200"
                       : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"

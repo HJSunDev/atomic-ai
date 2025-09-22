@@ -54,10 +54,10 @@ interface SidebarMenuState {
 export const useSidebarMenuStore = create<SidebarMenuState>()(
   persist(
     (set, get) => ({
-      // 默认不折叠
-      collapsed: false,
-      // 默认选中AI创作中心
-      activeMenuId: "prompt-studio",
+      // 默认折叠侧边栏
+      collapsed: true,
+      // 默认选中主页
+      activeMenuId: "home",
       
       // 设置折叠状态
       setCollapsed: (isCollapsed: boolean) => set({ collapsed: isCollapsed }),
