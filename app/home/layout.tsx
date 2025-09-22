@@ -62,6 +62,27 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           )}
         >
           {children}
+          {/* 将关闭按钮锚定在 article 右边缘，使其随宽度过渡一起移动，避免突兀出现 */}
+          {effectiveShowAiPanel && (
+            <div 
+              className={cn(
+                "absolute top-1/2 -translate-y-1/2 transition-all duration-300 z-10",
+                "right-0 translate-x-0"
+              )}
+            >
+              <button 
+                onClick={() => setAiPanelVisibility(false)}
+                className={cn(
+                  "flex items-center justify-center bg-background cursor-pointer transition-all duration-200",
+                  "hover:shadow-md",
+                  "h-16 w-6 border-y border-l border-muted/30 rounded-l-md shadow-[-1px_0px_3px_rgba(0,0,0,0.05)]"
+                )}
+                aria-label="隐藏AI面板"
+              >
+                <ChevronRight className="h-4 w-4 text-muted-foreground/70 hover:text-foreground transition-colors" />
+              </button>
+            </div>
+          )}
         </article>
         
         {/* 使用ClientOnly组件确保内容仅在客户端渲染 */}
@@ -69,28 +90,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           {/* 如果当前菜单支持AI面板，则显示AI面板 */}
           {shouldShowAiPanel && (
             <>
-              {/* AI面板关闭按钮 - 只在面板打开时显示 */}
-              {showAiPanel && (
-                <div 
-                  className={cn(
-                    "absolute top-1/2 -translate-y-1/2 transition-all duration-300 z-10",
-                    "right-[40%] translate-x-0"
-                  )}
-                >
-                  <button 
-                    onClick={() => setAiPanelVisibility(false)}
-                    className={cn(
-                      "flex items-center justify-center bg-background cursor-pointer transition-all duration-200",
-                      "hover:shadow-md",
-                      "h-16 w-6 border-y border-l border-muted/30 rounded-l-md shadow-[-1px_0px_3px_rgba(0,0,0,0.05)]"
-                    )}
-                    aria-label="隐藏AI面板"
-                  >
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/70 hover:text-foreground transition-colors" />
-                  </button>
-                </div>
-              )}
-
               {/* AI聊天面板 */}
               {effectiveShowAiPanel && <AiChatPanel />}
             </>
