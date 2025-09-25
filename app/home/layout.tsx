@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 import { useAiPanelStore } from "@/store";
 import { useHasMounted } from "@/hooks/use-has-mounted";
 import { ClientOnly } from "@/components/client-only";
-import { DocumentViewer } from "./_prompt-studio/_components/DocumentViewer";
+import { DocumentViewer } from "@/components/document/DocumentViewer";
 import { useAiContextStore } from "@/store/home/use-ai-context-store";
 
 interface DashboardLayoutProps {
