@@ -6,10 +6,11 @@ import { GlobalCatalyst } from "./_components/GlobalCatalyst";
 import { AiChatPanel } from "./_components/AiChatPanel";
 import { ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useAiPanelStore, useSidebarMenuStore } from "@/store";
+import { useAiPanelStore } from "@/store";
 import { useHasMounted } from "@/hooks/use-has-mounted";
 import { ClientOnly } from "@/components/client-only";
 import { DocumentViewer } from "./_prompt-studio/_components/DocumentViewer";
+import { useAiContextStore } from "@/store/home/use-ai-context-store";
 
 interface DashboardLayoutProps {
   children: ReactNode;
@@ -22,29 +23,29 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // 使用全局状态管理中的AI面板状态和方法
   const { showAiPanel, setAiPanelVisibility } = useAiPanelStore();
   
-  // 获取当前活动菜单的元数据
-  const { getActiveMenuMetadata, activeMenuId } = useSidebarMenuStore();
-  const currentMenuMetadata = getActiveMenuMetadata();
+  // 从新的Store中获取当前激活的AI上下文
+  const activeContext = useAiContextStore(state => state.getActiveContext());
   
-  // 根据当前菜单项元数据决定是否显示AI面板
-  const shouldShowAiPanel = currentMenuMetadata.showAiPanel;
+  // 根据当前激活的上下文决定AI面板是否“被支持”
+  const isAiPanelSupported = activeContext?.showAiAssistant ?? false;
   
-  // 记录上一次活动的菜单ID，用于检测菜单切换
-  const prevMenuIdRef = useRef(activeMenuId);
+  // 记录上一个激活的上下文ID，用于检测上下文切换
+  const prevContextIdRef = useRef(activeContext?.id);
   
-  // 当活动菜单项改变时，重置AI面板显示状态为不显示
+  // 当活动上下文改变时，重置AI面板显示状态为不显示
   useEffect(() => {
-    // 只有在菜单ID真正变化时才重置面板状态
-    if (prevMenuIdRef.current !== activeMenuId) {
-      // 每次菜单切换时，将AI面板状态重置为不显示
+    const currentContextId = activeContext?.id;
+    // 只有在上下文ID真正变化时才重置面板状态
+    if (prevContextIdRef.current !== currentContextId) {
+      // 每次上下文切换时，将AI面板状态重置为不显示
       setAiPanelVisibility(false);
-      // 更新前一个菜单ID引用
-      prevMenuIdRef.current = activeMenuId;
+      // 更新前一个上下文ID引用
+      prevContextIdRef.current = currentContextId;
     }
-  }, [activeMenuId, setAiPanelVisibility]);
+  }, [activeContext, setAiPanelVisibility]);
   
-  // 如果当前菜单不支持AI面板，则不显示面板和按钮
-  const effectiveShowAiPanel = shouldShowAiPanel ? showAiPanel : false;
+  // 最终决定AI面板是否显示（需要同时满足“被支持”和“已经打开”两个条件）
+  const effectiveShowAiPanel = isAiPanelSupported && showAiPanel;
 
   return (
     <div className="flex h-screen overflow-hidden relative">
@@ -87,10 +88,10 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         
         {/* 使用ClientOnly组件确保内容仅在客户端渲染 */}
         <ClientOnly>
-          {/* 如果当前菜单支持AI面板，则显示AI面板 */}
-          {shouldShowAiPanel && (
+          {/* 如果当前上下文支持AI面板，则挂载AI面板相关组件 */}
+          {isAiPanelSupported && (
             <>
-              {/* AI聊天面板 */}
+              {/* AI聊天面板，仅在 effectiveShowAiPanel 为 true 时才真正渲染内容并可见 */}
               {effectiveShowAiPanel && <AiChatPanel />}
             </>
           )}

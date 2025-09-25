@@ -16,21 +16,20 @@ export type MenuItemId =
 // 定义菜单项元数据接口
 export interface MenuItemMetadata {
   id: MenuItemId;
-  showAiPanel: boolean; // 是否显示AI面板
   // 未来可以添加更多元数据字段，比如icon, title, description等
 }
 
 // 菜单项元数据配置
 export const MENU_ITEMS_CONFIG: Record<MenuItemId, MenuItemMetadata> = {
-  "home": { id: "home", showAiPanel: true },
-  "prompt-studio": { id: "prompt-studio", showAiPanel: true },
-  "chat": { id: "chat", showAiPanel: false }, // 聊天模块不需要AI面板
-  "discovery": { id: "discovery", showAiPanel: true }, // 发现模块
-  "documents": { id: "documents", showAiPanel: true },
-  "knowledge-base": { id: "knowledge-base", showAiPanel: true },
-  "feedback": { id: "feedback", showAiPanel: true },
-  "settings": { id: "settings", showAiPanel: true },
-  "profile": { id: "profile", showAiPanel: true },
+  "home": { id: "home" },
+  "prompt-studio": { id: "prompt-studio" },
+  "chat": { id: "chat" },
+  "discovery": { id: "discovery" },
+  "documents": { id: "documents" },
+  "knowledge-base": { id: "knowledge-base" },
+  "feedback": { id: "feedback" },
+  "settings": { id: "settings" },
+  "profile": { id: "profile" },
 };
 
 // 定义侧边栏菜单状态类型
