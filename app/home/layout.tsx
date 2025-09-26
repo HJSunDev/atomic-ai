@@ -12,6 +12,36 @@ import { ClientOnly } from "@/components/client-only";
 import { DocumentViewer } from "@/components/document/DocumentViewer";
 import { useAiContextStore } from "@/store/home/use-ai-context-store";
 
+// 一个用于调试AI上下文堆栈的独立组件
+const AiContextStackDebugger = () => {
+  const contextStack = useAiContextStore(state => state.contextStack);
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: '1rem',
+        left: '1rem',
+        zIndex: 9999,
+        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+        color: 'white',
+        padding: '0.5rem',
+        borderRadius: '0.5rem',
+        maxWidth: '400px',
+        maxHeight: '90vh',
+        overflow: 'auto',
+        fontSize: '12px',
+        fontFamily: 'monospace',
+        border: '1px solid rgba(255, 255, 255, 0.2)',
+      }}
+    >
+      <h3 style={{ margin: '0 0 0.5rem', borderBottom: '1px solid white' }}>AI Context Stack (Top Last)</h3>
+      <pre>{JSON.stringify(contextStack, null, 2)}</pre>
+    </div>
+  );
+};
+
+
 interface DashboardLayoutProps {
   children: ReactNode;
 }
@@ -104,6 +134,9 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       {/* 全局挂载区 */}
       {/* 文档视图容器 */}
       <DocumentViewer />
+
+      {/* AI上下文堆栈调试器 */}
+      <AiContextStackDebugger />
     </div>
   );
 } 

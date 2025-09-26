@@ -10,13 +10,16 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Check, X, MoreHorizontal } from "lucide-react";
+import { LocalCatalyst } from "@/components/ai-assistant/LocalCatalyst";
 
 // 文档内容容器：统一的头部+主体布局，便于在不同容器中复用
 interface DocumentContentProps {
   onRequestClose?: () => void;
+  // 由父容器（如 DocumentViewer）传入的上下文ID，用于在局部渲染唤醒器
+  contextId?: string;
 }
 
-export const DocumentContent = ({ onRequestClose }: DocumentContentProps) => {
+export const DocumentContent = ({ onRequestClose, contextId }: DocumentContentProps) => {
   const router = useRouter();
   const displayMode = useDocumentStore((s) => s.displayMode);
   const close = useDocumentStore((s) => s.close);
@@ -120,11 +123,15 @@ export const DocumentContent = ({ onRequestClose }: DocumentContentProps) => {
 
   return (
     <section className="flex flex-col h-full bg-yellow-100">
-      {/* Notion风格的简洁头部 */}
-      <header className="flex items-center justify-between px-3 py-2 min-h-[48px]">
+      {/* Notion风格的简洁头部，需要相对定位以容纳局部唤醒器 */}
+      <header className="relative flex items-center justify-between px-3 py-2 min-h-[48px]">
         <div className="flex items-center gap-2">
           <DisplayModeSelector />
         </div>
+
+        {/* 局部 AI 唤醒器：当提供了 contextId 时显示 */}
+        {contextId && <LocalCatalyst ownerContextId={contextId} />}
+
         <div className="flex items-center gap-1">
           {/* 更多操作按钮 */}
           <button

@@ -20,8 +20,8 @@ export function LocalCatalyst({ ownerContextId, className }: LocalCatalystProps)
   };
 
   // 局部唤醒器的显示逻辑
-  const shouldShow = 
-    activeContext &&
+  const shouldShow =
+    !!activeContext &&
     activeContext.id === ownerContextId && // 确保是自己所属的上下文在顶层
     activeContext.catalystPlacement === 'local' &&
     !showAiPanel;
@@ -33,7 +33,7 @@ export function LocalCatalyst({ ownerContextId, className }: LocalCatalystProps)
   return (
     <div 
       className={cn(
-        "absolute top-2 right-14 z-10", // 绝对定位在右上角，并为关闭等按钮留出空间
+        "absolute top-12 right-16 z-10", // 绝对定位在右上角
         className
       )}
     >
