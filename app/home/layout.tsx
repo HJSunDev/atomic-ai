@@ -136,7 +136,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       <DocumentViewer />
 
       {/* AI上下文堆栈调试器 */}
-      <AiContextStackDebugger />
+      {/* <AiContextStackDebugger /> */}
     </div>
   );
 } 

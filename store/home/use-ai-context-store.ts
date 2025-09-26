@@ -92,6 +92,20 @@ export const useAiContextStore = create<AiContextState>()((set, get) => ({
   // 获取当前激活的上下文（栈顶元素）
   getActiveContext: () => {
     const stack = get().contextStack;
-    return stack.length > 0 ? stack[stack.length - 1] : null;
+    if (stack.length === 0) return null;
+
+    // 为了让局部模块（如对话框/抽屉等）在与路由/全局模块并存时具备更高优先级，
+    // 这里优先选择“最近入栈”的局部唤醒器上下文（catalystPlacement === 'local'）。
+    // 这样可以规避不同组件的 useEffect 执行时序差异所带来的栈顺序不确定性，
+    // 确保本地 UI（如 Document 的局部唤醒器）在可见时始终拥有优先控制权。
+    for (let i = stack.length - 1; i >= 0; i--) {
+      const candidate = stack[i];
+      if (candidate.catalystPlacement === 'local' && candidate.showAiAssistant) {
+        return candidate;
+      }
+    }
+
+    // 若不存在局部唤醒器上下文，则回退到栈顶元素
+    return stack[stack.length - 1];
   },
 }));

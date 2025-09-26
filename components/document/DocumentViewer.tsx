@@ -20,8 +20,16 @@ export const DocumentViewer = () => {
 
   // 响应文档打开/关闭/模式切换的副作用
   useEffect(() => {
-    if (isOpen) {
-      // 当文档打开或切换模式时，生成一个新的、唯一的上下文ID
+    // 只要依赖项变化，首先检查并清理上一个由该组件实例创建的上下文
+    // 这统一处理了“关闭”、“切换到全屏”以及“从一种模式切换到另一种模式”时的清理工作
+    if (contextIdRef.current) {
+      popContext(contextIdRef.current);
+      contextIdRef.current = null; // 清理后重置ref
+    }
+
+    // 仅当文档打开且显示模式为 drawer 或 modal 时，才创建并推入新的上下文
+    if (isOpen && (displayMode === 'drawer' || displayMode === 'modal')) {
+      // 生成一个新的、唯一的上下文ID
       const newContextId = `document-${displayMode}-${Date.now()}`;
       contextIdRef.current = newContextId;
 
@@ -34,18 +42,9 @@ export const DocumentViewer = () => {
         metadata: { displayMode } // 将显示模式作为元数据，未来可能有用
       };
       
-      // 将新上下文推入堆栈。
-      // useAiContextStore 的 pushContext 实现会处理好ID重复的情况（先移除旧的）。
+      // 将新上下文推入堆栈
       pushContext(context);
-    } else {
-      // 当文档关闭时，如果存在上一个上下文ID，则将其弹出
-      if (contextIdRef.current) {
-        popContext(contextIdRef.current);
-        // 清空ref，为下一次打开做准备
-        contextIdRef.current = null;
-      }
     }
-    // 依赖项：监听打开状态和显示模式的变化
   }, [isOpen, displayMode, pushContext, popContext]);
 
 
