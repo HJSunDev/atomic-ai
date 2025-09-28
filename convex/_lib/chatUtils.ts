@@ -171,6 +171,57 @@ export const handleStreamAndPersist = async (
 };
 
 /**
+ * 处理AI模型的响应流，并将其逐步持久化到 prompt module 的 `promptContent` 字段。
+ *
+ * @param ctx - Convex的Action上下文。
+ * @param chatModel - ChatOpenAI模型实例。
+ * @param langchainMessages - 发送给模型的历史消息。
+ * @param promptModuleId - 需要更新内容的提示词模块的ID。
+ * @returns 包含完整响应和token数量的对象。
+ */
+export const handlePromptStreamAndPersist = async (
+  ctx: ActionCtx,
+  chatModel: ChatOpenAI,
+  langchainMessages: BaseMessage[],
+  promptModuleId: Id<"promptModules">
+) => {
+  let fullResponse = "";
+  let tokenCount = 0;
+  let lastUpdateTime = Date.now();
+  const UPDATE_INTERVAL_MS = 200; // 每200ms更新一次数据库
+
+  const stream = await chatModel.stream(langchainMessages);
+
+  for await (const chunk of stream) {
+    const content = chunk.content;
+    if (typeof content === "string") {
+      fullResponse += content;
+      tokenCount++;
+
+      // 按时间间隔更新数据库，避免过于频繁的更新
+      const now = Date.now();
+      if (now - lastUpdateTime >= UPDATE_INTERVAL_MS) {
+        await ctx.runMutation(internal.prompt.mutations.updatePromptModuleContent, {
+          id: promptModuleId,
+          content: fullResponse,
+        });
+        lastUpdateTime = now;
+      }
+    }
+  }
+
+  // 循环内的更新是按时间间隔进行的。这最后一次调用是"保险"操作，
+  // 确保在流结束后，所有剩余内容（特别是那些在最后一个时间间隔内到达的）都被完整地写入数据库，
+  // 从而保证数据的最终完整性。
+  await ctx.runMutation(internal.prompt.mutations.updatePromptModuleContent, {
+    id: promptModuleId,
+    content: fullResponse,
+  });
+
+  return { fullResponse, tokenCount };
+};
+
+/**
  * 定义消息元数据的结构。
  */
 interface MessageMetadata {

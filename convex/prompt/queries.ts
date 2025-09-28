@@ -1,4 +1,4 @@
-import { query } from "../_generated/server";
+import { query, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 
@@ -126,6 +126,19 @@ export const listPromptModulesNotUsedAsChild = query({
 
     // 过滤掉空值
     return topLevelCandidates.filter((m) => m !== null);
+  },
+});
+
+/**
+ * [内部] 获取指定ID的提示词模块
+ * 用于action中验证模块存在性和所有权
+ */
+export const getPromptModuleById = internalQuery({
+  args: {
+    id: v.id("promptModules"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
   },
 });
 

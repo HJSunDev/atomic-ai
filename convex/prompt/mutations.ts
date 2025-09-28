@@ -1,4 +1,4 @@
-import { mutation } from "../_generated/server";
+import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
 import type { Doc } from "../_generated/dataModel";
 
@@ -177,6 +177,25 @@ export const deletePromptModule = mutation({
       removedParentRelations: parentRelations.length,
       removedChildRelations: childRelations.length,
     } as const;
+  },
+});
+
+
+/**
+ * [内部] 更新提示词模块的内容 (用于流式传输)
+ * - 这是一个内部mutation，只能被服务器端的action调用。
+ * - 它没有权限检查，以实现最高性能的流式写入。
+ * - 每次调用都会覆盖 `promptContent` 字段。
+ */
+export const updatePromptModuleContent = internalMutation({
+  args: {
+    id: v.id("promptModules"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.id, {
+      promptContent: args.content,
+    });
   },
 });
 
