@@ -48,32 +48,23 @@ export const DocumentViewer = () => {
   }, [isOpen, displayMode, pushContext, popContext]);
 
 
-  if (!isOpen) return null;
-
-  // 侧边抽屉模式
-  if (displayMode === 'drawer') {
-    return (
-      <Sheet open onOpenChange={(open) => !open && close()}>
+  return (
+    <>
+      {/* 侧边抽屉模式 */}
+      <Sheet open={isOpen && displayMode === 'drawer'} onOpenChange={(open) => !open && close()}>
         <SheetContent side="right" className="sm:max-w-[37rem] w-full p-0" showCloseButton={false}>
           <SheetTitle className="sr-only">文档查看器</SheetTitle>
           <DocumentContent contextId={contextIdRef.current ?? undefined} />
         </SheetContent>
       </Sheet>
-    );
-  }
-
-  // 居中模态框模式
-  if (displayMode === 'modal') {
-    return (
-      <Dialog open onOpenChange={(open) => !open && close()}>
+      
+      {/* 居中模态框模式 */}
+      <Dialog open={isOpen && displayMode === 'modal'} onOpenChange={(open) => !open && close()}>
         <DialogContent className="max-w-none sm:max-w-none w-[54rem] h-[84vh] p-0 overflow-hidden flex flex-col" showCloseButton={false}>
           <DialogTitle className="sr-only">文档查看器</DialogTitle>
           <DocumentContent contextId={contextIdRef.current ?? undefined} />
         </DialogContent>
       </Dialog>
-    );
-  }
-
-  // 全屏模式由路由页面处理，这里不渲染
-  return null;
+    </>
+  );
 };
