@@ -94,7 +94,7 @@ const PromptCard = ({ card }: PromptCardProps) => {
   const showBadge = true; // 当前设为true用于调试
 
   return (
-    <div className="relative p-[12px] bg-[#F3F3F3] rounded-[16px] cursor-pointer text-[#807d78] flex flex-col text-[12px] whitespace-nowrap">
+    <div className="relative p-[12px] bg-[#422303]/3 rounded-[16px] cursor-pointer text-[#807d78] flex flex-col text-[12px] whitespace-nowrap">
       <IconComponent className="w-4 h-4 text-muted-foreground/90 flex-shrink-0" />
       <span className="truncate mt-[6px]">{card.title}</span>
 
@@ -121,7 +121,7 @@ export const PromptStudioModule = () => {
 
   return (
     // 采用居中布局是为了聚焦输入主任务，后续功能区可按需扩展
-    <main className="relative w-full h-full overflow-y-auto bg-background flex flex-col justify-center">
+    <main className="relative w-full h-full overflow-y-auto bg-background flex flex-col">
 
       {/* 欢迎区*/}
       <section>
@@ -137,7 +137,7 @@ export const PromptStudioModule = () => {
       </section>
 
       {/* 输入区 */}
-      <section className="max-w-[43rem] w-full mx-auto flex flex-col items-center border border-border rounded-[18px] overflow-hidden">
+      <section className="max-w-[43rem] w-full mx-auto flex flex-col items-center border border-border rounded-[18px] overflow-hidden shrink-0">
         <header className="w-full p-2">
           <ContextAdder />
         </header>
@@ -160,6 +160,7 @@ export const PromptStudioModule = () => {
         </footer>
       </section>
 
+      {/* 卡片列表区 */}
       <section className="w-full max-w-[43rem] mx-auto mt-4 ">
         <header className="flex items-center justify-between text-sm text-muted-foreground/90 pl-2 ">
             <div className="flex items-center">
@@ -202,11 +203,9 @@ export const PromptStudioModule = () => {
               <MoreHorizontal className="h-4 w-4" />
             </Button>
         </footer>
+          {/* 提示词管理区 */}
+        <PromptBoard />
       </section>
-
-      {/* 提示词管理区 */}
-      {/* <PromptBoard /> */}
-
 
     </main>
   );
