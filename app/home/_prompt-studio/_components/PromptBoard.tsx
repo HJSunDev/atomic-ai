@@ -45,7 +45,8 @@ import { TutorialOverlay } from './TutorialOverlay';
 import type { GridItem } from './types';
 import { insertChildModule, reorderChildModules } from './helpers';
 // 拆分后的子组件
-import { ModuleCard } from './ModuleCard';
+import { ModuleCardWrapper } from './ModuleCardWrapper';
+import { GridCardContent } from './GridCardContent';
 import { OperationArea } from './OperationArea';
 import { ModuleDragPreview } from './ModuleDragPreview';
 
@@ -510,13 +511,17 @@ export function PromptBoard() {
                 {/* 占位卡片内容，可为空或加提示 */}
               </div>
             ) : (
-              <ModuleCard 
-                key={item.id} 
-                item={item} 
-                onDelete={handleDeleteGridItem}
+              <ModuleCardWrapper
+                key={item.id}
+                item={item}
                 onClick={() => handleItemClick(item)}
-                onPreview={() => handlePreviewClick(item)}
-              />
+              >
+                <GridCardContent 
+                  item={item}
+                  onDelete={handleDeleteGridItem}
+                  onPreview={() => handlePreviewClick(item)}
+                />
+              </ModuleCardWrapper>
             )
           ))}
         </main>
