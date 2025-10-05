@@ -1,8 +1,9 @@
 "use client";
 
 import type { GridItem } from './types';
-import { ModuleCardContent } from './ModuleCardContent';
 import { usePromptStore, PromptModule } from '@/store/home/promptStore';
+import { SummaryBadge } from './SummaryBadge';
+import { File } from 'lucide-react';
 
 interface GridCardContentProps {
   item: GridItem;
@@ -13,7 +14,7 @@ interface GridCardContentProps {
 /**
  * 网格区卡片内容组件
  * 
- * 职责：渲染网格区域中卡片的UI内容，包括按钮和主体内容
+ * 职责：渲染网格区域中卡片的完整UI内容
  */
 export function GridCardContent({ item, onDelete, onPreview }: GridCardContentProps) {
   const setSelectedPrompt = usePromptStore(state => state.setSelectedPrompt);
@@ -74,7 +75,13 @@ export function GridCardContent({ item, onDelete, onPreview }: GridCardContentPr
       </div>
 
       {/* 卡片主体内容 */}
-      <ModuleCardContent item={item} isOperationAreaItem={false} />
+      <div className="flex flex-col flex-grow text-[#807d78] text-[12px] whitespace-nowrap">
+        <File className="w-4 h-4 text-muted-foreground/90 flex-shrink-0" />
+        <span className="truncate mt-[6px]">{item.title}</span>
+      </div>
+
+      {/* 摘要徽章 */}
+      <SummaryBadge item={item} />
     </>
   );
 }

@@ -4,7 +4,6 @@ export { GridCardContent } from './GridCardContent';
 export { OperationCardContent } from './OperationCardContent';
 
 // 导出其他相关组件
-export { ModuleCardContent } from './ModuleCardContent';
 export { OperationArea } from './OperationArea';
 
 // 导出类型
