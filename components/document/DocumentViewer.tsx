@@ -6,6 +6,7 @@ import { useDocumentStore } from "@/store/home/documentStore";
 import { DocumentContent } from "@/components/document/DocumentContent";
 import { useEffect, useRef } from "react";
 import { useAiContextStore, AiContext } from "@/store/home/use-ai-context-store";
+import { useRouter } from "next/navigation";
 
 // 文档查看器：根据显示模式选择合适的容器（Sheet/Dialog/路由）
 export const DocumentViewer = () => {
@@ -13,6 +14,8 @@ export const DocumentViewer = () => {
   const isOpen = useDocumentStore((state) => state.isOpen);
   const displayMode = useDocumentStore((state) => state.displayMode);
   const close = useDocumentStore((state) => state.close);
+  const { switchDisplayMode } = useDocumentStore();
+  const router = useRouter();
 
   const { pushContext, popContext } = useAiContextStore();
   // 使用 ref 为每一次“打开”会话创建一个稳定的上下文ID
@@ -39,7 +42,15 @@ export const DocumentViewer = () => {
         type: "document",
         showAiAssistant: true, // 文档视图始终需要AI助手
         catalystPlacement: 'local', // 在Dialog或Sheet中，使用局部唤醒器
-        metadata: { displayMode } // 将显示模式作为元数据，未来可能有用
+        metadata: { displayMode }, // 将显示模式作为元数据，未来可能有用
+        // 注入自定义点击行为：切换到全屏并打开AI面板
+        onCatalystClick: () => {
+          switchDisplayMode('fullscreen', {
+            onNavigateToFullscreen: () => {
+              router.push('/home/prompt-document?openAi=true');
+            },
+          });
+        }
       };
       
       // 将新上下文推入堆栈

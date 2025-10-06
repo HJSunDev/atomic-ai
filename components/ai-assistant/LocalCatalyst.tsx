@@ -16,7 +16,14 @@ export function LocalCatalyst({ ownerContextId, className }: LocalCatalystProps)
   const activeContext = useAiContextStore(state => state.getActiveContext());
 
   const handleInteraction = () => {
-    setAiPanelVisibility(true);
+    // 检查当前激活的上下文是否提供了自定义点击行为
+    if (activeContext && typeof activeContext.onCatalystClick === 'function') {
+      // 如果有，则执行该自定义行为
+      activeContext.onCatalystClick();
+    } else {
+      // 否则，执行默认行为：直接打开AI面板
+      setAiPanelVisibility(true);
+    }
   };
 
   // 局部唤醒器的显示逻辑

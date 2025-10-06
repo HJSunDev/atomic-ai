@@ -37,6 +37,13 @@ export interface AiContext {
   catalystPlacement: 'global' | 'local' | 'none';
   
   /**
+   * [可选] 定义局部唤醒器被点击时的自定义行为。
+   * 如果提供了此函数，`LocalCatalyst` 将执行它，而不是默认的打开AI面板行为。
+   * 这允许每个模块根据自身需求，为唤醒器注入特定的交互逻辑，例如页面跳转、模式切换等。
+   */
+  onCatalystClick?: () => void;
+
+  /**
    * [未来扩展] 针对此上下文的AI助手特定配置。
    * 可用于存储场景化的初始提示、可用工具集等。
    */
