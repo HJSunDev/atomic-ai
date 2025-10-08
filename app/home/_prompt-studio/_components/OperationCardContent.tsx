@@ -29,18 +29,18 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
 
   return (
     <>
-      {/* 右上角操作按钮 */}
-      <div className="absolute top-2 right-2 flex gap-2 z-20">
+      {/* 右上角操作按钮：与网格卡片一致，默认弱化，悬停/聚焦时增强，避免干扰主体内容 */}
+      <div className="absolute top-2 right-1 flex gap-[4px] z-20 opacity-60 group-hover:opacity-100 transition-opacity">
         {onSave && (
           <button
-            className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-green-500 hover:bg-green-100 rounded-full transition-colors cursor-pointer"
+            className="h-[26px] w-[26px] flex items-center justify-center rounded-[6px] text-[#807d78]/70 hover:text-[#807d78] bg-transparent hover:bg-[#422303]/8 transition-colors duration-150 cursor-pointer border border-transparent hover:border-[#422303]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#422303]/30 focus-visible:ring-offset-0"
             title="保存到网格列表"
             onClick={e => {
               e.stopPropagation();
               onSave(item);
             }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
               <polyline points="17 21 17 13 7 13 7 21"></polyline>
               <polyline points="7 3 7 8 15 8"></polyline>
@@ -49,14 +49,14 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
         )}
         {onDelete && (
           <button
-            className="h-7 w-7 flex items-center justify-center text-gray-400 hover:text-red-500 hover:bg-red-100 rounded-full transition-colors cursor-pointer"
+            className="h-[26px] w-[26px] flex items-center justify-center rounded-[6px] text-[#807d78]/70 hover:text-[#807d78] bg-transparent hover:bg-[#422303]/8 transition-colors duration-150 cursor-pointer border border-transparent hover:border-[#422303]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#422303]/30 focus-visible:ring-offset-0"
             title="删除此模块"
             onClick={e => {
               e.stopPropagation();
               onDelete(item.id);
             }}
           >
-            <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="18" y1="6" x2="6" y2="18"></line>
               <line x1="6" y1="6" x2="18" y2="18"></line>
             </svg>

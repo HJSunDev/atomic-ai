@@ -28,88 +28,6 @@ import {
   Plus,
 } from "lucide-react";
 
-// 为了实现数据与UI的解耦，提高代码的可维护性和可扩展性
-// 定义卡片数据接口，确保类型安全
-interface PromptCardData {
-  id: string;
-  title: string;
-  icon: React.ComponentType<{ className?: string }>;
-}
-
-// 模拟的卡片数据，集中管理以便后续维护和扩展
-const mockPromptCards: PromptCardData[] = [
-  {
-    id: "notion-ai",
-    title: "What's new in Notion AI",
-    icon: File,
-  },
-  {
-    id: "meeting-agenda",
-    title: "Write meeting agenda",
-    icon: File,
-  },
-  {
-    id: "analyze-pdfs",
-    title: "Analyze PDFs or images",
-    icon: File,
-  },
-  {
-    id: "task-tracker",
-    title: "Create a task tracker",
-    icon: File,
-  },
-  {
-    id: "video-presentation",
-    title: "Create video presentation",
-    icon: File,
-  },
-  {
-    id: "project-proposal",
-    title: "Draft project proposal",
-    icon: File,
-  },
-  {
-    id: "summary-report",
-    title: "Generate summary report",
-    icon: File,
-  },
-  {
-    id: "presentation-slides",
-    title: "Design presentation slides",
-    icon: File,
-  },
-];
-
-// 为了提高代码的模块化和可重用性，创建独立的卡片组件
-// 单一职责原则：只负责单个卡片的渲染
-interface PromptCardProps {
-  card: PromptCardData;
-}
-
-const PromptCard = ({ card }: PromptCardProps) => {
-  const IconComponent = card.icon;
-
-  // 为了在调试阶段显示右下角的文件图标和数字
-  // 后续可以根据实际需求调整显示条件
-  const showBadge = true; // 当前设为true用于调试
-
-  return (
-    <div className="relative p-[12px] bg-[#422303]/3 rounded-[16px] cursor-pointer text-[#807d78] flex flex-col text-[12px] whitespace-nowrap">
-      <IconComponent className="w-4 h-4 text-muted-foreground/90 flex-shrink-0" />
-      <span className="truncate mt-[6px]">{card.title}</span>
-
-      {/* 右下角的文件图标和数字徽章 - 条件显示 */}
-      {showBadge && (
-        <div className="absolute bottom-[-1] right-[0.5]">
-          <div className="flex items-center gap-[4px] bg-white rounded-[6px] px-1 py-[2px] border border-border/50 shadow-sm">
-            <File className="w-[10px] h-[10px] text-muted-foreground/70" />
-            <span className="text-[12px] text-black leading-none">3</span>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-};
 
 export const PromptStudioModule = () => {
 
@@ -192,19 +110,13 @@ export const PromptStudioModule = () => {
               />
             </div>
         </header>
-        {/* 使用数据驱动的方式渲染卡片列表，提高可维护性 */}
-        <article className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-          {mockPromptCards.map((card) => (
-            <PromptCard key={card.id} card={card} />
-          ))}
-        </article>
-        <footer className="mt-1 flex justify-end">
-            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/70">
+        {/* 提示词管理区 */}
+        <PromptBoard />
+        <footer className="flex justify-end">
+            <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/70 cursor-pointer">
               <MoreHorizontal className="h-4 w-4" />
             </Button>
         </footer>
-          {/* 提示词管理区 */}
-        <PromptBoard />
       </section>
 
     </main>

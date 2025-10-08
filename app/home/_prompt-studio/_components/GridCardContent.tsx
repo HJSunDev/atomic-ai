@@ -28,7 +28,7 @@ export function GridCardContent({ item, onDelete, onPreview }: GridCardContentPr
     <>
       {/* 左上角删除按钮 (hover显示) */}
       {onDelete && (
-        <div className="absolute -top-2 -left-2 opacity-0 group-hover:opacity-100 z-20 transition-opacity duration-200">
+        <div className="absolute -top-3 -left-3 opacity-0 group-hover:opacity-100 z-20 transition-opacity duration-200">
           <button
             className="h-7 w-7 flex items-center justify-center text-red-500 bg-white rounded-full transition-all duration-200 cursor-pointer shadow-md transform -rotate-12 opacity-75 hover:opacity-100 hover:rotate-0 hover:scale-110"
             title="删除此模块"
@@ -47,35 +47,37 @@ export function GridCardContent({ item, onDelete, onPreview }: GridCardContentPr
         </div>
       )}
 
-      {/* 右上角按钮区域 (固定显示) */}
-      <div className="absolute top-2 right-2 flex gap-1.5 z-20">
+      {/* 右上角按钮区域：默认弱化，悬停或聚焦时增强可用性，避免喧宾夺主 */}
+      <div className="absolute top-1 right-1 flex gap-[4px] z-20 opacity-60 group-hover:opacity-100 transition-opacity">
         <button
-          className="h-7 w-7 flex items-center justify-center text-gray-500 rounded-full transition-colors cursor-pointer hover:bg-teal-100 hover:text-teal-600"
+          className="h-[26px] w-[26px] flex items-center justify-center rounded-[6px] text-[#807d78]/70 hover:text-[#807d78] bg-transparent hover:bg-[#422303]/8 transition-colors duration-150 cursor-pointer border border-transparent hover:border-[#422303]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#422303]/30 focus-visible:ring-offset-0"
           title="预览完整提示词"
+          aria-label="预览完整提示词"
           onClick={(e) => {
             e.stopPropagation();
             onPreview?.();
           }}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
             <circle cx="12" cy="12" r="3"></circle>
           </svg>
         </button>
 
         <button
-          className="h-7 w-7 flex items-center justify-center text-gray-500 rounded-full transition-colors cursor-pointer hover:bg-blue-100 hover:text-blue-600"
+          className="h-[26px] w-[26px] flex items-center justify-center rounded-[6px] text-[#807d78]/70 hover:text-[#807d78] bg-transparent hover:bg-[#422303]/8 transition-colors duration-150 cursor-pointer border border-transparent hover:border-[#422303]/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#422303]/30 focus-visible:ring-offset-0"
           title="引用此提示词模块"
+          aria-label="引用此提示词模块"
           onClick={handleUsePrompt}
         >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
           </svg>
         </button>
       </div>
 
       {/* 卡片主体内容 */}
-      <div className="flex flex-col flex-grow text-[#807d78] text-[12px] whitespace-nowrap">
+      <div className="flex flex-col flex-grow text-[#807d78] text-[12px] whitespace-nowrap ">
         <File className="w-4 h-4 text-muted-foreground/90 flex-shrink-0" />
         <span className="truncate mt-[6px]">{item.title}</span>
       </div>

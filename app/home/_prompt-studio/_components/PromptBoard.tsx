@@ -485,7 +485,7 @@ export function PromptBoard() {
       // 监听拖拽经过事件
       onDragOver={handleDragOver}
     >
-      <main className={`h-auto rounded-lg max-w-[70rem] w-full mx-auto bg-blue-100`}>
+      <main className={`h-auto rounded-lg max-w-[70rem] w-full mx-auto`}>
         
         
         {/* 操作区显示控制 */}
