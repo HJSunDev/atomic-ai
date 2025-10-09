@@ -24,15 +24,15 @@ const MenuPlaceholder = ({ title, description }: PlaceholderProps) => (
 
 // 定义菜单模块到AI上下文的映射关系
 const MENU_TO_AI_CONTEXT: Record<string, AiContext | null> = {
-  "home": { id: "home-module", type: "home", showAiAssistant: true, catalystPlacement: 'global' },
-  "prompt-studio": { id: "prompt-studio-module", type: "prompt-studio", showAiAssistant: false, catalystPlacement: 'global' },
-  "chat": { id: "chat-module", type: "chat", showAiAssistant: false, catalystPlacement: 'global' },
-  "discovery": { id: "discovery-module", type: "discovery", showAiAssistant: false, catalystPlacement: 'global' },
-  "documents": { id: "documents-module", type: "documents", showAiAssistant: false, catalystPlacement: 'global' },
-  "knowledge-base": { id: "knowledge-base-module", type: "knowledge-base", showAiAssistant: false, catalystPlacement: 'global' },
-  "feedback": { id: "feedback-module", type: "feedback", showAiAssistant: false, catalystPlacement: 'global' },
-  "settings": { id: "settings-module", type: "settings", showAiAssistant: false, catalystPlacement: 'global' },
-  "profile": { id: "profile-module", type: "profile", showAiAssistant: false, catalystPlacement: 'global' },
+  "home": { id: "home-module", type: "home", showCatalyst: true, catalystPlacement: 'global' },
+  "prompt-studio": { id: "prompt-studio-module", type: "prompt-studio", showCatalyst: false, catalystPlacement: 'global' },
+  "chat": { id: "chat-module", type: "chat", showCatalyst: false, catalystPlacement: 'global' },
+  "discovery": { id: "discovery-module", type: "discovery", showCatalyst: false, catalystPlacement: 'global' },
+  "documents": { id: "documents-module", type: "documents", showCatalyst: false, catalystPlacement: 'global' },
+  "knowledge-base": { id: "knowledge-base-module", type: "knowledge-base", showCatalyst: false, catalystPlacement: 'global' },
+  "feedback": { id: "feedback-module", type: "feedback", showCatalyst: false, catalystPlacement: 'global' },
+  "settings": { id: "settings-module", type: "settings", showCatalyst: false, catalystPlacement: 'global' },
+  "profile": { id: "profile-module", type: "profile", showCatalyst: false, catalystPlacement: 'global' },
 };
 
 // 负责管理AI上下文生命周期的包装组件

@@ -40,7 +40,7 @@ export const DocumentViewer = () => {
       const context: AiContext = {
         id: newContextId,
         type: "document",
-        showAiAssistant: true, // 文档视图始终需要AI助手
+        showCatalyst: true, // 文档视图始终显示唤醒器
         catalystPlacement: 'local', // 在Dialog或Sheet中，使用局部唤醒器
         metadata: { displayMode }, // 将显示模式作为元数据，未来可能有用
         // 注入自定义点击行为：切换到全屏并打开AI面板

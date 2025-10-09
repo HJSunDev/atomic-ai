@@ -24,9 +24,11 @@ export interface AiContext {
   type: string; 
   
   /**
-   * 决定在此上下文中，AI助手功能是否可用。
+   * 决定在此上下文中，AI助手唤醒器（Catalyst）是否可用。
+   * 注意：此字段仅控制唤醒器的显示，不影响AI面板的显示。
+   * AI面板的显示完全由 useAiPanelStore 控制。
    */
-  showAiAssistant: boolean; 
+  showCatalyst: boolean; 
   
   /**
    * 定义AI助手唤醒器的渲染位置。
@@ -107,7 +109,7 @@ export const useAiContextStore = create<AiContextState>()((set, get) => ({
     // 确保本地 UI（如 Document 的局部唤醒器）在可见时始终拥有优先控制权。
     for (let i = stack.length - 1; i >= 0; i--) {
       const candidate = stack[i];
-      if (candidate.catalystPlacement === 'local' && candidate.showAiAssistant) {
+      if (candidate.catalystPlacement === 'local' && candidate.showCatalyst) {
         return candidate;
       }
     }

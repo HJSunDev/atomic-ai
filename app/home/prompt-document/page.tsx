@@ -20,7 +20,7 @@ export default function DocumentPage() {
   const documentPageContext = useMemo<AiContext>(() => ({
     id: "document-fullscreen-module",
     type: "document",
-    showAiAssistant: true, // 在文档页面，AI助手是核心功能
+    showCatalyst: true, // 在文档页面，显示全局唤醒器
     catalystPlacement: 'global', // 全屏模式下，使用全局唤醒器
   }), []);
 

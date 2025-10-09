@@ -56,9 +56,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // 从新的Store中获取当前激活的AI上下文
   const activeContext = useAiContextStore(state => state.getActiveContext());
   
-  // 根据当前激活的上下文决定AI面板是否“被支持”
-  const isAiPanelSupported = activeContext?.showAiAssistant ?? false;
-  
   // 记录上一个激活的上下文ID，用于检测上下文切换
   const prevContextIdRef = useRef(activeContext?.id);
   
@@ -73,9 +70,6 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
       prevContextIdRef.current = currentContextId;
     }
   }, [activeContext, setAiPanelVisibility]);
-  
-  // 最终决定AI面板是否显示（需要同时满足“被支持”和“已经打开”两个条件）
-  const effectiveShowAiPanel = isAiPanelSupported && showAiPanel;
 
   return (
     <div className="flex h-screen overflow-hidden relative">
@@ -89,12 +83,12 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           className={cn(
             "flex flex-col transition-all duration-300 relative h-full",
             // 仅在客户端挂载后应用条件样式，避免水合不匹配
-            hasMounted && effectiveShowAiPanel ? 'w-[60%]' : 'w-full'
+            hasMounted && showAiPanel ? 'w-[60%]' : 'w-full'
           )}
         >
           {children}
           {/* 将关闭按钮锚定在 article 右边缘，使其随宽度过渡一起移动，避免突兀出现 */}
-          {effectiveShowAiPanel && (
+          {showAiPanel && (
             <div 
               className={cn(
                 "absolute top-1/2 -translate-y-1/2 transition-all duration-300 z-10",
@@ -118,20 +112,17 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
         
         {/* 使用ClientOnly组件确保内容仅在客户端渲染 */}
         <ClientOnly>
-          {/* 如果当前上下文支持AI面板，则挂载AI面板相关组件 */}
-          {isAiPanelSupported && (
-            <>
-              {/* AI聊天面板，仅在 effectiveShowAiPanel 为 true 时才真正渲染内容并可见 */}
-              {effectiveShowAiPanel && <AiChatPanel />}
-            </>
-          )}
+          {/* AI聊天面板由自己的 store 控制显示，与上下文无关 */}
+          {showAiPanel && <AiChatPanel />}
         </ClientOnly>
       </main>
+
+
+      {/* 全局挂载区 */}
 
       {/* 全场景AI助手 - 右上角固定定位，覆盖整个应用区域 */}
       <GlobalCatalyst />
 
-      {/* 全局挂载区 */}
       {/* 文档视图容器 */}
       <DocumentViewer />
 

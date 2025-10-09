@@ -22,14 +22,14 @@ export function GlobalCatalyst({ className }: GlobalCatalystProps) {
     setAiPanelVisibility(true);
   };
 
-  // 唤醒器新的显示逻辑：
+  // 唤醒器的显示逻辑：
   // 1. 必须存在一个激活的上下文。
-  // 2. 该上下文必须允许显示AI助手。
+  // 2. 该上下文必须允许显示唤醒器。
   // 3. 该上下文必须指定唤醒器位置为 'global'。
   // 4. AI面板当前未打开。
   const shouldShow = 
     activeContext && 
-    activeContext.showAiAssistant && 
+    activeContext.showCatalyst && 
     activeContext.catalystPlacement === 'global' &&
     !showAiPanel;
 
