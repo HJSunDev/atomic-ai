@@ -5,8 +5,23 @@ import { AiChatCore } from "@/components/ai-chat/AiChatCore";
 import { MessageList } from "@/components/ai-chat/MessageList";
 import { ChatInput } from "@/components/ai-chat/ChatInput";
 import { EmptyState } from "@/components/ai-chat/EmptyState";
+import { useAiPanelStore, AiPanelMode } from "@/store/home/use-ai-panel-store";
+import { useAiContextStore } from "@/store/home/use-ai-context-store";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { MessageSquare, RefreshCw } from "lucide-react";
 
 export function AiChatPanel() {
+
+  const panelMode = useAiPanelStore((state) => state.panelMode);
+  const setPanelMode = useAiPanelStore((state) => state.setPanelMode);
+
+  const activeContext = useAiContextStore((state) => state.getActiveContext());
+  const sceneName = activeContext?.metadata?.name ?? activeContext?.type ?? "无场景";
+
+  // 处理模式切换
+  const handleModeSwitch = (targetMode: AiPanelMode) => {
+    setPanelMode(targetMode);
+  };
   // 定义提示卡片数据
   const promptCards = [
     {
@@ -38,8 +53,44 @@ export function AiChatPanel() {
           streamingMessageId
         }) => (
           <>
+            {/* 左上角模式指示 */}
+            <aside className="absolute top-1 left-2 z-20 select-none text-muted-foreground/70">
+              <div className="flex items-center gap-1">
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className={`h-5 w-5 flex items-center justify-center rounded-sm cursor-pointer transition-colors ${panelMode === "chat" ? "text-foreground/80 hover:text-foreground" : "text-muted-foreground/40 hover:text-muted-foreground/70"}`}
+                      onClick={() => handleModeSwitch("chat")}
+                      aria-label="切换到Chat模式：多轮对话"
+                    >
+                      <MessageSquare className="h-[14px] w-[14px]" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent sideOffset={4}>Chat 模式：多轮对话</TooltipContent>
+                </Tooltip>
+
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      className={`inline-flex items-center gap-1 h-5 px-2 py-0.5 rounded-md border cursor-pointer transition-colors ${panelMode === "context" ? "text-foreground/80 border-border/60 bg-muted/50 hover:bg-muted/60" : "text-muted-foreground/40 border-border/30 bg-muted/20 hover:bg-muted/30 hover:text-muted-foreground/60"}`}
+                      onClick={() => handleModeSwitch("context")}
+                      aria-label="切换到Context模式：场景化交互"
+                    >
+                      <RefreshCw className="h-[14px] w-[14px]" />
+                      {/* 场景名称 */}
+                      <span className="text-[11px] leading-none font-medium">
+                        {sceneName}
+                      </span>
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent sideOffset={4}>Context 模式：场景化交互</TooltipContent>
+                </Tooltip>
+              </div>
+            </aside>
             {/* 内容区域 */}
-            <div className="flex-1 overflow-y-auto">
+            <article className="flex-1 overflow-y-auto">
               <MessageList 
                 messages={messages} 
                 messagesEndRef={messagesEndRef}
@@ -55,7 +106,7 @@ export function AiChatPanel() {
                   />
                 }
               />
-            </div>
+            </article>
             
             {/* 输入区域 */}
             <ChatInput
