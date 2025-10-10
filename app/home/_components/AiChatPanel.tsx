@@ -67,7 +67,7 @@ export function AiChatPanel() {
                       <MessageSquare className="h-[14px] w-[14px]" />
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent sideOffset={4}>Chat 模式：多轮对话</TooltipContent>
+                  <TooltipContent sideOffset={4}>Chat 模式</TooltipContent>
                 </Tooltip>
 
                 <Tooltip>
@@ -85,7 +85,7 @@ export function AiChatPanel() {
                       </span>
                     </button>
                   </TooltipTrigger>
-                  <TooltipContent sideOffset={4}>Context 模式：场景化交互</TooltipContent>
+                  <TooltipContent sideOffset={4}>场景交互</TooltipContent>
                 </Tooltip>
               </div>
             </aside>

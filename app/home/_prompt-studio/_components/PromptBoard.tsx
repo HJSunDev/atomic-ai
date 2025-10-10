@@ -48,7 +48,7 @@ import { insertChildModule, reorderChildModules } from './helpers';
 import { ModuleCardWrapper } from './ModuleCardWrapper';
 import { GridCardContent } from './GridCardContent';
 import { OperationArea } from './OperationArea';
-import { ModuleDragPreview } from './ModuleDragPreview';
+import { ModuleCardDragOverlay } from './ModuleCardDragOverlay';
 
 
 export function PromptBoard() {
@@ -156,7 +156,7 @@ export function PromptBoard() {
   // 当前正在拖拽的模块 ID
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
   
-  // 获取当前正在拖拽的模块数据
+  // 正在正在拖动的 模块 （操作区或网格区）
   // 由于操作区和网格区 id 可能不同，需分别查找
   const draggingItem = draggingItemId
     ? items.find(item => item.id === draggingItemId) || operationItems.find(item => item.id === draggingItemId) || null
@@ -495,6 +495,7 @@ export function PromptBoard() {
             onClear={() => setOperationItems([])}
             onDelete={handleDeleteOperationItem}
             onSave={handleSaveToGrid}
+            draggingItemId={draggingItemId}
           />
         )}
         
@@ -505,10 +506,13 @@ export function PromptBoard() {
             draggingItemId === item.id ? (
               <div
                 key={item.id}
-                className="p-4 rounded-lg border-2 border-dashed border-gray-300 bg-gray-200 opacity-40 flex flex-col justify-center items-center min-h-[120px] transition-all"
-                style={{ minHeight: '120px', minWidth: '100%' }}
+                aria-hidden="true"
+                className="rounded-lg border border-neutral-200 bg-white/60 backdrop-blur-[1px] shadow-sm ring-1 ring-black/5 flex flex-col justify-center p-3"
+                style={{ minHeight: '88px' }}
               >
-                {/* 占位卡片内容，可为空或加提示 */}
+                {/* 占位采用与卡片一致的骨架块，保持尺寸与层级感一致 */}
+                <div className="h-3 w-3/5 bg-neutral-200/90 rounded mb-2" />
+                <div className="h-2.5 w-4/5 bg-neutral-200/80 rounded" />
               </div>
             ) : (
               <ModuleCardWrapper
@@ -546,7 +550,7 @@ export function PromptBoard() {
 
       {/* 拖拽时显示的覆盖层元素 */}
       <DragOverlay>
-        {draggingItem ? <ModuleDragPreview item={draggingItem} /> : null}
+        {draggingItem ? <ModuleCardDragOverlay item={draggingItem} /> : null}
       </DragOverlay>
       
       {/* 新手指引覆盖层 */}
