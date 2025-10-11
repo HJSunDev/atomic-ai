@@ -277,7 +277,7 @@ export function PromptBoard() {
     return () => {
       window.removeEventListener('promote-to-top', handlePromoteToTop);
     };
-  }, []); // 空依赖数组，确保效果只运行一次
+  }, []); // 空依赖数组，只运行一次
 
   // 配置拖拽传感器
   // 使用useSensors组合多个传感器配置
@@ -361,6 +361,7 @@ export function PromptBoard() {
         newItems = insertChildModule(newItems, targetId, draggedFromOperation);
         setOperationItems(newItems);
       }
+    // 如果拖拽释放目标为操作区，则将模块插入到操作区
     } else if (enteredOperationArea) {
       // 原有逻辑：从网格区拖拽副本到操作区
       const draggedItem = items.find(item => item.id === active.id);
