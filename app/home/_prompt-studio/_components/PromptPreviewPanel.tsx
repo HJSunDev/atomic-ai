@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from 'react';
+import { X, MoreHorizontal, GripVertical } from 'lucide-react';
 import type { GridItem } from './types';
 
 interface PromptPreviewPanelProps {
@@ -8,99 +8,123 @@ interface PromptPreviewPanelProps {
   onClose: () => void;
 }
 
-export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
-  const [fullPrompt, setFullPrompt] = useState('');
+interface Block {
+  id: string;
+  type: 'text' | 'reference';
+  content?: string;
+  referenceTitle?: string;
+  referenceContent?: string;
+  order: number;
+}
 
-  // 根据模块及其子模块生成完整提示词文本
-  useEffect(() => {
-    const generateFullPrompt = (item: GridItem): string => {
-      let result = item.content.trim();
-      
-      // 如果有子模块，添加子模块内容
-      if (item.children && item.children.length > 0) {
-        const childrenText = item.children
-          .map(child => generateFullPrompt(child))
-          .join('\n\n');
-        
-        if (result && childrenText) {
-          result += '\n\n' + childrenText;
-        } else if (childrenText) {
-          result = childrenText;
-        }
-      }
-      
-      return result;
-    };
-    
-    setFullPrompt(generateFullPrompt(item));
-  }, [item]);
+export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
+  // 将旧的模块结构转换为新的块结构（过渡方案）
+  // 主模块的 content 作为第一个文本块，子模块作为引用块
+  const blocks: Block[] = [
+    {
+      id: 'main-block',
+      type: 'text',
+      content: item.content,
+      order: 0
+    },
+    ...item.children.map((child, index) => ({
+      id: `ref-${child.id}`,
+      type: 'reference' as const,
+      referenceTitle: child.title,
+      referenceContent: child.content,
+      order: index + 1
+    }))
+  ];
 
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center p-8 overflow-hidden">
-      <div className="bg-white rounded-lg shadow-2xl w-4/5 max-w-4xl max-h-[85vh] flex flex-col overflow-hidden">
-        {/* 头部 */}
-        <div className="p-6 border-b border-gray-200 flex justify-between items-center bg-gray-50">
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">{item.title}</h2>
-            <p className="text-gray-500 mt-1">
-              包含 {item.children.length} 个子模块的完整提示词
-            </p>
+    <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center p-8">
+      <div className="bg-white rounded-lg shadow-2xl w-[54rem] h-[84vh] flex flex-col overflow-hidden">
+        {/* Notion 风格的简洁头部 */}
+        <header className="relative flex items-center justify-between px-3 py-2 min-h-[48px]">
+          <div className="flex items-center pl-3">
+            {/* 标题 */}
+            <h1 className="text-[20px] font-[550] text-gray-900 leading-tight">
+              {item.title || '无标题'}
+            </h1>
           </div>
-          <button
-            className="p-2 hover:bg-gray-200 rounded-full transition-colors"
-            onClick={onClose}
-            aria-label="关闭"
-          >
-            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
-        </div>
+
+          <div className="flex items-center gap-1">
+            {/* 更多操作按钮 */}
+            <button
+              className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none focus:bg-gray-100"
+              aria-label="更多操作"
+              title="更多操作"
+            >
+              <MoreHorizontal className="h-4 w-4" />
+            </button>
+            {/* 关闭按钮 */}
+            <button
+              className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none focus:bg-gray-100"
+              onClick={onClose}
+              aria-label="关闭"
+              title="关闭"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          </div>
+        </header>
         
-        {/* 内容区域 */}
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="prose prose-lg max-w-none">
-            <h3 className="text-xl font-semibold border-b pb-2 mb-4">提示词内容预览</h3>
-            <pre className="whitespace-pre-wrap text-base font-mono bg-gray-50 p-6 rounded border border-gray-200 shadow-inner overflow-auto">
-              {fullPrompt}
-            </pre>
-          </div>
-          
-          {/* 模块结构可视化 */}
-          {item.children.length > 0 && (
-            <div className="mt-8">
-              <h3 className="text-xl font-semibold border-b pb-2 mb-4">模块结构</h3>
-              <div className="bg-gray-50 p-4 rounded border border-gray-200">
-                <div className="p-3 bg-blue-50 border border-blue-200 rounded">
-                  <p className="font-bold">{item.title}</p>
-                  <p className="text-gray-600 text-sm">{item.content.substring(0, 100)}{item.content.length > 100 ? '...' : ''}</p>
-                </div>
-                
-                {item.children.length > 0 && (
-                  <div className="ml-8 mt-4 space-y-3">
-                    {item.children.map(child => (
-                      <div key={child.id} className="p-3 bg-green-50 border border-green-200 rounded">
-                        <p className="font-bold">{child.title}</p>
-                        <p className="text-gray-600 text-sm">{child.content.substring(0, 80)}{child.content.length > 80 ? '...' : ''}</p>
-                      </div>
-                    ))}
+        {/* 内容区：按块显示 */}
+        <main className="flex-1 overflow-auto px-24">
+          <article className="max-w-[42rem] mx-auto pt-8 pb-12">
+            {/* 前置信息 */}
+            <section className="text-sm text-gray-500 leading-relaxed mb-6">
+              你是一个专业的AI助手，请根据以下要求回答用户的问题。始终保持礼貌、专业和有帮助的态度。回答应该准确、简洁且易于理解。
+            </section>
+
+            {/* 内容块列表 */}
+            <section className="space-y-1">
+              {blocks.map((block, index) => (
+                <div
+                  key={block.id}
+                  className={`relative transition-all duration-200 hover:rounded-md hover:border hover:border-neutral-300/70 hover:bg-white/40 hover:backdrop-blur-[3px] hover:ring-1 hover:ring-[#422303]/10 group cursor-grab active:cursor-grabbing`}
+                >
+                  <div
+                    className={`absolute left-0 top-0 h-full w-[3px] transition-opacity duration-150 group-hover:opacity-0 ${
+                      block.type === 'text'
+                        ? 'bg-[#d1d5db]'
+                        : 'bg-[repeating-linear-gradient(to_bottom,_#d1d5db_0_6px,_transparent_6px_12px)]'
+                    }`}
+                  />
+                  <button
+                    className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 p-1 rounded cursor-grab active:cursor-grabbing transition-colors"
+                    aria-label="拖拽排序"
+                    title="拖拽排序"
+                    type="button"
+                  >
+                    <GripVertical className="h-4 w-4" />
+                  </button>
+                  <div className="py-4 px-5 font-serif text-[15px] text-gray-800 group-hover:text-gray-900 leading-relaxed">
+                    {block.type === 'text' ? (
+                      block.content || <span className="text-gray-400 italic">开始写作...</span>
+                    ) : (
+                      block.referenceContent
+                    )}
                   </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* 底部 */}
-        <div className="p-6 border-t border-gray-200 bg-gray-50 flex justify-end">
-          <button
-            className="px-6 py-2 bg-gray-200 text-gray-800 rounded hover:bg-gray-300 transition-colors font-medium"
-            onClick={onClose}
-          >
-            关闭预览
-          </button>
-        </div>
+                </div>
+              ))}
+            </section>
+
+            {/* 后置信息 */}
+            <section className="text-sm text-gray-500 leading-relaxed mt-6">
+              请用中文回答。如果用户的问题比较复杂，请提供详细的解释。如果用户要求提供代码示例，请确保代码正确、可运行。
+            </section>
+
+            {/* 空状态提示 */}
+            {blocks.length === 0 && (
+              <section className="py-20">
+                <div className="text-center text-gray-400">
+                  <p className="text-base font-serif">开始写作...</p>
+                </div>
+              </section>
+            )}
+          </article>
+        </main>
       </div>
     </div>
   );
