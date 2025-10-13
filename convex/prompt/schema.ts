@@ -72,7 +72,7 @@ export const promptSchema = {
     documentId: v.id("documents"),
     // 块的类型。初期支持 'text' 和 'reference'
     type: v.union(v.literal("text"), v.literal("reference")),
-    // 文本内容。仅当 type === 'text' 时有值
+    // 文本内容。为内容块时，有值；为引用块时，为空
     content: v.optional(v.string()),
     // 引用的文档ID。仅当 type === 'reference' 时有值，关联到documents表的_id字段
     referenceId: v.optional(v.id("documents")),

@@ -2,132 +2,7 @@ import { query, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 
-// 定义返回类型：在原始模块文档基础上扩展 children 字段
-export type PromptModuleWithChildren = Doc<"promptModules"> & {
-  children: Doc<"promptModules">[];
-};
 
-/**
- * 查询当前用户的提示词模块列表（排除已归档），并为每个模块附带其直接子模块列表。
- * - 仅支持两层（父 -> 子）关系；
- * - 不区分是否为顶层模块：所有未归档模块都会返回；
- * - 子模块顺序按照关系表中的 order 升序排列；
- * - 为未来支持多级嵌套预留了可扩展的内部结构（当前 depth 固定为 1）。
- */
-export const listPromptModulesWithChildren = query({
-  args: {},
-  handler: async (ctx): Promise<PromptModuleWithChildren[]> => {
-    // 权限校验：获取当前用户ID
-    const userId = (await ctx.auth.getUserIdentity())?.subject;
-    if (!userId) throw new Error("未授权访问");
-
-    // 查询当前用户的未归档提示词模块
-    const modules = (await ctx.db
-      .query("promptModules")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect())
-      .filter((m) => m.isArchived !== true);
-
-    if (modules.length === 0) return [];
-
-    // 内部工具：按父模块ID查询其直接子关系，并返回按顺序的子模块文档
-    const fetchDirectChildren = async (
-      parentId: Id<"promptModules">
-    ): Promise<Doc<"promptModules">[]> => {
-      // 读取父 -> 子 的关系记录，按 order 升序排列
-      // orderedChildRecords 结构示例：
-      // [
-      //   {
-      //     _id: "abc123...",
-      //     _creationTime: 1700000000000,
-      //     parentId: "parent_module_id",  // 当前传入的 parentId
-      //     childId: "child_module_1",     // 子模块1的ID
-      //     order: 1                       // 排序：第1个子模块
-      //   },
-      //   {
-      //     _id: "def456...",
-      //     _creationTime: 1700000001000,
-      //     parentId: "parent_module_id",  // 同样的父模块
-      //     childId: "child_module_2",     // 子模块2的ID
-      //     order: 2                       // 排序：第2个子模块
-      //   }
-      // ]
-      const orderedChildRecords = await ctx.db
-        .query("promptModuleRelationships")
-        .withIndex("by_parentId_order", (q) => q.eq("parentId", parentId))
-        .order("asc")
-        .collect();
-
-      if (orderedChildRecords.length === 0) return [];
-
-      // 依序读取子模块文档，保持与 orderedChildRecords 的顺序一致
-      const children = await Promise.all(
-        orderedChildRecords.map(async (record) => {
-          // 安全防御：避免父子自指
-          if (record.childId === parentId) return null;
-          const child = await ctx.db.get(record.childId);
-          // 仅返回当前用户的未归档模块，避免越权或脏数据
-          if (!child) return null;
-          if (child.userId !== userId) return null;
-          if (child.isArchived === true) return null;
-          return child;
-        })
-      );
-
-      // 过滤掉空值并保持顺序
-      return children.filter((c): c is Doc<"promptModules"> => c !== null);
-    };
-
-    // 构建结果：每个模块附带其直接子模块
-    const result = await Promise.all(
-      modules.map(async (mod) => {
-        const children = await fetchDirectChildren(mod._id);
-        return { ...mod, children } as PromptModuleWithChildren;
-      })
-    );
-
-    return result;
-  },
-});
-
-/**
- * 查询当前用户未作为其他模块子模块的提示词模块列表（排除已归档）。
- * - 使用关系表索引 `by_childId` 判断模块是否被引用为子模块；
- * - 仅返回当前用户的未归档模块；
- * - 不关心父模块的归档状态或归属用户，只要存在引用即视为“已作为子模块”。
- */
-export const listPromptModulesNotUsedAsChild = query({
-  args: {},
-  handler: async (ctx) => {
-    // 权限校验：获取当前用户ID
-    const userId = (await ctx.auth.getUserIdentity())?.subject;
-    if (!userId) throw new Error("未授权访问");
-
-    // 查询当前用户的未归档提示词模块
-    const modules = (await ctx.db
-      .query("promptModules")
-      .withIndex("by_userId", (q) => q.eq("userId", userId))
-      .collect())
-      .filter((m) => m.isArchived !== true);
-
-    if (modules.length === 0) return [];
-
-    // 过滤掉“已作为子模块”的模块
-    const topLevelCandidates = await Promise.all(
-      modules.map(async (mod) => {
-        // 通过 childId 索引快速判断是否存在引用
-        const usedAsChild = await ctx.db
-          .query("promptModuleRelationships")
-          .withIndex("by_childId", (q) => q.eq("childId", mod._id))
-          .first();
-        return usedAsChild ? null : mod;
-      })
-    );
-
-    // 过滤掉空值
-    return topLevelCandidates.filter((m) => m !== null);
-  },
-});
 
 /**
  * [内部] 获取指定ID的提示词模块
@@ -142,4 +17,216 @@ export const getPromptModuleById = internalQuery({
   },
 });
 
+
+
+
+/**
+ * 查询当前用户的所有未归档文档列表
+ * 
+ * 此接口不返回文档的块内容，因为：
+ * 1. 列表场景下加载所有块会导致不必要的性能开销
+ * 2. 前端通常只需要文档元信息用于列表展示
+ * 3. 块内容应当在用户打开特定文档时按需加载
+ */
+export const listDocuments = query({
+  args: {},
+  handler: async (ctx): Promise<Doc<"documents">[]> => {
+    // 权限校验：必须是已认证用户才能访问
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    // 查询当前用户的所有未归档文档
+    const documents = await ctx.db
+      .query("documents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .collect();
+
+    // 过滤出未归档的文档
+    return documents.filter((doc) => doc.isArchived !== true);
+  },
+});
+
+
+/**
+ * 块数据结构（含递归引用文档）
+ */
+type EnrichedBlock = Doc<"blocks"> & {
+  // 当块类型为reference时，此字段包含被引用文档的完整数据（递归结构）
+  referencedDocument: DocumentWithBlocks | null;
+};
+
+/**
+ * 文档数据结构（含完整块列表）
+ */
+type DocumentWithBlocks = {
+  // 文档元数据
+  document: Doc<"documents">;
+  // 文档的所有块（按order排序，引用块包含递归的子文档数据）
+  blocks: EnrichedBlock[];
+};
+
+
+/**
+ * 获取文档及其所有块内容（支持递归获取引用文档）
+ * 
+ * 设计特性：
+ * - 递归深度限制：默认2层（包括根文档），避免过深递归导致性能问题
+ * - 循环引用防护：通过路径追踪机制，自动跳过循环引用的文档
+ * - 缓存优化：同一文档在递归树中只会查询一次，大幅提升性能
+ * - 权限隔离：仅返回当前用户拥有的文档数据
+ * - 允许重复引用：支持一个文档的多个块引用同一个目标文档
+ * 
+ * 使用场景：
+ * - 用户点击文档进行详细查看
+ * - 需要完整渲染文档内容（包括引用的子文档）
+ * 
+ * 返回的结构：
+ * {
+    document: {
+      _id: "doc-a",
+      _creationTime: 1234567890,
+      userId: "user_xxx",
+      title: "我的文档A",
+      description: "这是一个示例文档",
+      promptPrefix: "你是一个助手...",
+      promptSuffix: "请用markdown格式输出",
+      isArchived: false
+    },
+    blocks: [
+      {
+        _id: "block-1",
+        documentId: "doc-a",
+        type: "text",
+        content: "这是文本内容",
+        order: 0,
+        referencedDocument: null  // 文本块没有引用
+      },
+      {
+        _id: "block-2",
+        documentId: "doc-a",
+        type: "reference",
+        referenceId: "doc-b",
+        order: 1,
+        referencedDocument: {
+          document: {  // ← 被引用文档的完整信息
+            _id: "doc-b",
+            userId: "user_xxx",
+            title: "被引用的文档B",
+            description: "...",
+            // ... 其他字段
+          },
+          blocks: [
+            // 文档B的块
+          ]
+        }
+      }
+    ]
+  }
+ */
+export const getDocumentWithBlocks = query({
+  args: {
+    documentId: v.id("documents"),
+  },
+  handler: async (ctx, args): Promise<DocumentWithBlocks | null> => {
+    // 权限校验：必须是已认证用户才能访问
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    // 递归深度限制（包括根文档）
+    const MAX_DEPTH = 2;
+
+    // 全局缓存：避免同一文档被重复查询
+    const documentCache = new Map<Id<"documents">, Doc<"documents">>();
+    const blocksCache = new Map<Id<"documents">, Doc<"blocks">[]>();
+
+    /**
+     * 递归获取文档及其块内容
+     * 
+     * @param docId 要查询的文档ID
+     * @param currentDepth 当前递归深度（根文档为1）
+     * @param visitedInPath 当前路径中已访问的文档ID集合（用于检测循环引用）
+     */
+    async function fetchDocumentRecursive(
+      docId: Id<"documents">,
+      currentDepth: number,
+      visitedInPath: Set<Id<"documents">>
+    ): Promise<DocumentWithBlocks | null> {
+
+      // 终止条件: 深度超限
+      if (currentDepth > MAX_DEPTH) {
+        return null;
+      }
+
+      // 终止条件: 循环引用检测,如果当前路径中已包含该文档，则停止递归
+      if (visitedInPath.has(docId)) {
+        return null;
+      }
+
+      // 从缓存获取文档（缓存未命中时查询数据库）
+      let document = documentCache.get(docId);
+      if (!document) {
+        // 获取文档信息,并缓存，文档信息用于
+        const fetchedDoc = await ctx.db.get(docId);
+        if (!fetchedDoc) return null;
+        document = fetchedDoc;
+        documentCache.set(docId, fetchedDoc);
+      }
+
+      // 终止条件：文档不属于当前用户
+      if (document.userId !== userId) {
+        return null;
+      }
+
+      // 终止条件：文档已归档
+      if (document.isArchived) {
+        return null;
+      }
+
+      // 从缓存获取块列表（缓存未命中时查询数据库）
+      let blocks = blocksCache.get(docId);
+      if (!blocks) {
+        blocks = await ctx.db
+          .query("blocks")
+          .withIndex("by_documentId_order", (q) => q.eq("documentId", docId))
+          .collect();
+        blocksCache.set(docId, blocks);
+      }
+
+      // 更新路径访问记录（创建新Set以避免影响其他分支）
+      const newVisitedInPath = new Set(visitedInPath);
+      newVisitedInPath.add(docId);
+
+      // 处理每个块：对于引用类型的块，递归获取被引用文档的完整数据
+      const enrichedBlocks: EnrichedBlock[] = await Promise.all(
+        blocks.map(async (block): Promise<EnrichedBlock> => {
+          // 引用块，递归获取被引用文档的完整数据
+          if (block.type === "reference" && block.referenceId) {
+            const referencedDoc = await fetchDocumentRecursive(
+              block.referenceId,
+              currentDepth + 1,
+              newVisitedInPath
+            );
+            return {
+              ...block,
+              referencedDocument: referencedDoc,
+            };
+          }
+          // 内容块，直接返回
+          return {
+            ...block,
+            referencedDocument: null,
+          };
+        })
+      );
+
+      return {
+        document,
+        blocks: enrichedBlocks,
+      };
+    }
+
+    // 从根文档开始递归查询（深度为1，访问路径为空）
+    return await fetchDocumentRecursive(args.documentId, 1, new Set());
+  },
+});
 
