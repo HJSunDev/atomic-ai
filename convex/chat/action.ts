@@ -2,6 +2,7 @@ import { action } from "../_generated/server";
 import { v } from "convex/values";
 import { AVAILABLE_MODELS, DEFAULT_MODEL_ID } from "../_lib/models";
 import { api, internal } from "../_generated/api";
+import type { Id } from "../_generated/dataModel";
 
 import {
   getApiKey,
@@ -210,12 +211,12 @@ export const executeTask = action({
 
 /**
  * 流式生成提示词内容的通用 action
- * 无状态的流式AI生成，直接更新指定的提示词模块
+ * 无状态的流式AI生成，直接更新指定文档的内容块
  * 不依赖会话历史，不存储用户消息
  */
 export const streamGeneratePromptContent = action({
   args: {
-    promptModuleId: v.id("promptModules"),
+    documentId: v.id("documents"),
     userPrompt: v.string(),
     systemPrompt: v.optional(v.string()),
     modelId: v.optional(v.string()),
@@ -228,23 +229,32 @@ export const streamGeneratePromptContent = action({
   },
   handler: async (ctx, args) => {
     const startTime = Date.now();
-    let originalContent: string | undefined; // 用于在出错时回滚
+    let contentBlockId: Id<"blocks"> | undefined;
+    let originalContent: string | undefined;
 
     try {
       // 1. 身份验证
       const userId = (await ctx.auth.getUserIdentity())?.subject;
       if (!userId) throw new Error("未授权访问");
 
-      // 2. 授权: 检查用户是否拥有该提示词模块
-      const existingModule = await ctx.runQuery(internal.prompt.queries.getPromptModuleById, {
-        id: args.promptModuleId,
+      // 2. 授权: 检查用户是否拥有该文档
+      const document = await ctx.runQuery(internal.prompt.queries.getDocumentById, {
+        id: args.documentId,
       });
-      if (!existingModule) throw new Error("提示词模块不存在");
-      if (existingModule.userId !== userId) throw new Error("无权修改此提示词模块");
-      
-      originalContent = existingModule.promptContent; // 保存原始内容以便回滚
+      if (!document) throw new Error("文档不存在");
+      if (document.userId !== userId) throw new Error("无权修改此文档");
+      if (document.isArchived) throw new Error("文档已归档");
 
-      // 3. 获取模型配置和API密钥
+      // 3. 获取文档的内容块
+      const contentBlock = await ctx.runQuery(internal.prompt.queries.getDocumentContentBlock, {
+        documentId: args.documentId,
+      });
+      if (!contentBlock) throw new Error("文档内容块不存在");
+      
+      contentBlockId = contentBlock._id;
+      originalContent = contentBlock.content;
+
+      // 4. 获取模型配置和API密钥
       const modelId = args.modelId || DEFAULT_MODEL_ID;
       const modelConfig = AVAILABLE_MODELS[modelId];
       if (!modelConfig) throw new Error(`不支持的模型ID: ${modelId}`);
@@ -252,29 +262,29 @@ export const streamGeneratePromptContent = action({
       const apiKey = getApiKey(modelConfig, args.userApiKey);
       if (!apiKey) throw new Error("缺少API密钥，请提供有效的API密钥");
 
-      // 4. 构建 LangChain 消息（无历史记录，纯粹的单次生成）
+      // 5. 构建 LangChain 消息（无历史记录，纯粹的单次生成）
       const langchainMessages = [];
       if (args.systemPrompt) {
         langchainMessages.push(new SystemMessage(args.systemPrompt));
       }
       langchainMessages.push(new HumanMessage(args.userPrompt));
 
-      // 5. 创建流式聊天模型
+      // 6. 创建流式聊天模型
       const chatModel = createChatModel({
         apiKey,
         modelConfig,
         streaming: true,
       });
 
-      // 6. 处理流式生成并持久化到提示词模块
+      // 7. 处理流式生成并持久化到内容块
       const { fullResponse, tokenCount } = await handlePromptStreamAndPersist(
         ctx,
         chatModel,
         langchainMessages,
-        args.promptModuleId
+        contentBlockId
       );
 
-      // 7. 成功返回
+      // 8. 成功返回
       const endTime = Date.now();
       const durationMs = endTime - startTime;
 
@@ -293,9 +303,9 @@ export const streamGeneratePromptContent = action({
       const errorMessage = error instanceof Error ? error.message : "未知错误";
 
       // 如果出错，并且已保存原始版本，则执行回滚操作
-      if (originalContent !== undefined) {
-        await ctx.runMutation(internal.prompt.mutations.updatePromptModuleContent, {
-          id: args.promptModuleId,
+      if (contentBlockId && originalContent !== undefined) {
+        await ctx.runMutation(internal.prompt.mutations.updateBlockContent, {
+          blockId: contentBlockId,
           content: originalContent,
         });
       }

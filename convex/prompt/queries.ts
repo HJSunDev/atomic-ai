@@ -3,23 +3,6 @@ import { v } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 
 
-
-/**
- * [内部] 获取指定ID的提示词模块
- * 用于action中验证模块存在性和所有权
- */
-export const getPromptModuleById = internalQuery({
-  args: {
-    id: v.id("promptModules"),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db.get(args.id);
-  },
-});
-
-
-
-
 /**
  * 查询当前用户的所有未归档文档列表
  * 
@@ -230,3 +213,37 @@ export const getDocumentWithBlocks = query({
   },
 });
 
+
+
+
+/**
+ * [内部] 获取指定ID的文档
+ * 用于action中验证文档存在性和所有权
+ */
+export const getDocumentById = internalQuery({
+  args: {
+    id: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.id);
+  },
+});
+
+
+/**
+ * [内部] 获取文档的内容块
+ * 用于action中获取需要更新的block
+ */
+export const getDocumentContentBlock = internalQuery({
+  args: {
+    documentId: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db
+      .query("blocks")
+      .withIndex("by_documentId_type", (q) => 
+        q.eq("documentId", args.documentId).eq("type", "text")
+      )
+      .first();
+  },
+});

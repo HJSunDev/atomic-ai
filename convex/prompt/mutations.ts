@@ -1,25 +1,5 @@
 import { mutation, internalMutation } from "../_generated/server";
 import { v } from "convex/values";
-import type { Doc } from "../_generated/dataModel";
-
-
-/**
- * [内部] 更新提示词模块的内容 (用于流式传输)
- * - 这是一个内部mutation，只能被服务器端的action调用。
- * - 它没有权限检查，以实现最高性能的流式写入。
- * - 每次调用都会覆盖 `promptContent` 字段。
- */
-export const updatePromptModuleContent = internalMutation({
-  args: {
-    id: v.id("promptModules"),
-    content: v.string(),
-  },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.id, {
-      promptContent: args.content,
-    });
-  },
-});
 
 
 /**
@@ -296,3 +276,28 @@ export const deleteDocument = mutation({
 
 
 
+
+/**
+ * [内部] 更新块内容 (用于流式传输)
+ * 
+ * 设计特性：
+ * - 作为内部mutation，只能被服务器端的action调用，保证安全性
+ * - 无权限检查，因为权限验证已在调用方action中完成，避免重复开销
+ * - 专为流式写入场景优化：零查询，直接patch，最高性能
+ * - 每次调用都会覆盖块的content字段
+ * 
+ * 使用场景：
+ * - AI流式生成内容时，高频调用更新块内容
+ * - 从action或工具函数中调用
+ */
+export const updateBlockContent = internalMutation({
+  args: {
+    blockId: v.id("blocks"),
+    content: v.string(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.blockId, { 
+      content: args.content 
+    });
+  },
+});
