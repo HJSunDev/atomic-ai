@@ -9,7 +9,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { Eraser } from 'lucide-react';
 
 // 创建操作区组件，可以作为放置目标
-export function OperationArea({ items, onClear, onDelete, onSave, draggingItemId }: { items: GridItem[], onClear: () => void, onDelete: (id: string) => void, onSave: (item: GridItem) => void, draggingItemId?: string | null }) {
+export function OperationArea({ items, onClear, onDelete, onSave }: { items: GridItem[], onClear: () => void, onDelete: (id: string) => void, onSave: (item: GridItem) => void }) {
   // 使用useDroppable钩子使元素成为放置目标
   const { setNodeRef, isOver } = useDroppable({ id: 'operation-area' });
 
@@ -59,30 +59,17 @@ export function OperationArea({ items, onClear, onDelete, onSave, draggingItemId
       {items.length > 0 ? (
         <div className="flex flex-wrap gap-4">
           {items.map(item => (
-            draggingItemId === item.id ? (
-              <div
-                key={item.id}
-                aria-hidden="true"
-                className="rounded-lg border border-neutral-200 bg-white/60 backdrop-blur-[1px] shadow-sm ring-1 ring-black/5 flex flex-col justify-center p-3"
-                style={{ minHeight: '88px', width: '208px' }}
-              >
-                {/* 占位采用与卡片一致的骨架块，保持尺寸与层级感一致 */}
-                <div className="h-3 w-3/5 bg-neutral-200/90 rounded mb-2" />
-                <div className="h-2.5 w-4/5 bg-neutral-200/80 rounded" />
-              </div>
-            ) : (
-              <ModuleCardWrapper
-                key={item.id}
+            <ModuleCardWrapper
+              key={item.id}
+              item={item}
+              isOperationAreaItem={true}
+            >
+              <OperationCardContent 
                 item={item}
-                isOperationAreaItem={true}
-              >
-                <OperationCardContent 
-                  item={item}
-                  onDelete={onDelete}
-                  onSave={onSave}
-                />
-              </ModuleCardWrapper>
-            )
+                onDelete={onDelete}
+                onSave={onSave}
+              />
+            </ModuleCardWrapper>
           ))}
         </div>
       ) : (

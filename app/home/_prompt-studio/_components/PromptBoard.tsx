@@ -30,14 +30,14 @@ import {
 } from '@dnd-kit/core';
 // 引入 uuid 用于生成唯一 id
 import { v4 as uuidv4 } from 'uuid';
-// 导入PromptDetailPanel组件
-import { PromptDetailPanel } from './PromptDetailPanel';
 // 导入预览面板组件
 import { PromptPreviewPanel } from './PromptPreviewPanel';
 // 导入 toast 提示
 import { toast } from 'sonner';
 // 导入新手指引组件
 import { TutorialOverlay } from './TutorialOverlay';
+import { useDocumentStore } from '@/store/home/documentStore';
+import { useRouter } from 'next/navigation';
 
 
 
@@ -172,10 +172,9 @@ export function PromptBoard() {
   const [showOperationArea, setShowOperationArea] = useState(false);
   const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
 
-  // 控制详情面板显示状态
-  const [showDetailPanel, setShowDetailPanel] = useState(false);
-  // 当前选中的模块
-  const [selectedItem, setSelectedItem] = useState<GridItem | null>(null);
+  // 文档查看器
+  const openDocument = useDocumentStore(state => state.openDocument);
+  const router = useRouter();
   
   // 控制预览面板显示状态
   const [showPreviewPanel, setShowPreviewPanel] = useState(false);
@@ -409,26 +408,17 @@ export function PromptBoard() {
     setItems(prevItems => prevItems.filter(item => item.id !== id));
   }, []);
 
-  // 处理模块点击事件
+  // 处理模块点击事件：打开全局文档查看器
   const handleItemClick = useCallback((item: GridItem) => {
-    setSelectedItem(item);
-    setShowDetailPanel(true);
-  }, []);
-
-  // 处理关闭详情面板
-  const handleCloseDetailPanel = useCallback(() => {
-    setShowDetailPanel(false);
-    setSelectedItem(null);
-  }, []);
-
-  // 处理保存编辑后的模块
-  const handleSaveItem = useCallback((updatedItem: GridItem) => {
-    setItems(prevItems => 
-      prevItems.map(item => 
-        item.id === updatedItem.id ? updatedItem : item
-      )
-    );
-  }, []);
+    openDocument({
+      initialData: {
+        title: item.title,
+        description: '',
+        content: item.content,
+      },
+      onNavigateToFullscreen: () => router.push('/home/prompt-document'),
+    });
+  }, [openDocument, router]);
 
   // 处理预览按钮点击事件
   const handlePreviewClick = useCallback((item: GridItem) => {
@@ -496,50 +486,26 @@ export function PromptBoard() {
             onClear={() => setOperationItems([])}
             onDelete={handleDeleteOperationItem}
             onSave={handleSaveToGrid}
-            draggingItemId={draggingItemId}
           />
         )}
         
         {/* 使用网格布局显示卡片列表 */}
         <main className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {items.map(item => (
-            // 拖拽时在原位置渲染半透明占位卡片
-            draggingItemId === item.id ? (
-              <div
-                key={item.id}
-                aria-hidden="true"
-                className="rounded-lg border border-neutral-200 bg-white/60 backdrop-blur-[1px] shadow-sm ring-1 ring-black/5 flex flex-col justify-center p-3"
-                style={{ minHeight: '88px' }}
-              >
-                {/* 占位采用与卡片一致的骨架块，保持尺寸与层级感一致 */}
-                <div className="h-3 w-3/5 bg-neutral-200/90 rounded mb-2" />
-                <div className="h-2.5 w-4/5 bg-neutral-200/80 rounded" />
-              </div>
-            ) : (
-              <ModuleCardWrapper
-                key={item.id}
+            <ModuleCardWrapper
+              key={item.id}
+              item={item}
+              onClick={() => handleItemClick(item)}
+            >
+              <GridCardContent 
                 item={item}
-                onClick={() => handleItemClick(item)}
-              >
-                <GridCardContent 
-                  item={item}
-                  onDelete={handleDeleteGridItem}
-                  onPreview={() => handlePreviewClick(item)}
-                />
-              </ModuleCardWrapper>
-            )
+                onDelete={handleDeleteGridItem}
+                onPreview={() => handlePreviewClick(item)}
+              />
+            </ModuleCardWrapper>
           ))}
         </main>
 
-        {/* 使用PromptDetailPanel组件 */}
-        {showDetailPanel && selectedItem && (
-          <PromptDetailPanel
-            item={selectedItem}
-            onClose={handleCloseDetailPanel}
-            onSave={handleSaveItem}
-          />
-        )}
-        
         {/* 使用PromptPreviewPanel组件 */}
         {showPreviewPanel && previewItem && (
           <PromptPreviewPanel

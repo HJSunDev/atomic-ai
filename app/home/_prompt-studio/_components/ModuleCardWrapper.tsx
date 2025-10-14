@@ -44,9 +44,13 @@ export function ModuleCardWrapper({
     activeDragInfo.parentId === item.id;
 
   const style = {
-    transform: CSS.Translate.toString(transform),
+    // 拖动时不应用 transform，让元素留在原地作为占位符
+    transform: isDragging ? undefined : CSS.Translate.toString(transform),
     boxShadow: isOver && !isDragging && !isDraggingOwnChild ? '0 0 0 3px #3b82f6' : undefined,
     zIndex: isDragging ? 50 : undefined,
+    // 拖动时显示为半透明占位符
+    opacity: isDragging ? 0.4 : 1,
+    pointerEvents: isDragging ? 'none' : 'auto',
   } as React.CSSProperties;
 
   // 组合 ref：既要支持拖拽（draggable），又要支持放置（droppable）

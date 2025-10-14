@@ -51,7 +51,7 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
           <div className="flex items-center gap-1">
             {/* 更多操作按钮 */}
             <button
-              className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none focus:bg-gray-100"
+              className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none focus:bg-gray-100 cursor-pointer"
               aria-label="更多操作"
               title="更多操作"
             >
@@ -59,7 +59,7 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
             </button>
             {/* 关闭按钮 */}
             <button
-              className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none focus:bg-gray-100"
+              className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none focus:bg-gray-100 cursor-pointer"
               onClick={onClose}
               aria-label="关闭"
               title="关闭"
@@ -71,9 +71,9 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
         
         {/* 内容区：按块显示 */}
         <main className="flex-1 overflow-auto px-24">
-          <article className="max-w-[42rem] mx-auto pt-8 pb-12">
+          <article className="max-w-[40rem] mx-auto pt-8 pb-12 font-serif text-[16px] leading-[1.75] text-neutral-800 antialiased">
             {/* 前置信息 */}
-            <section className="text-sm text-gray-500 leading-relaxed mb-6">
+            <section className="text-sm text-neutral-600 mb-6">
               你是一个专业的AI助手，请根据以下要求回答用户的问题。始终保持礼貌、专业和有帮助的态度。回答应该准确、简洁且易于理解。
             </section>
 
@@ -82,13 +82,13 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
               {blocks.map((block, index) => (
                 <div
                   key={block.id}
-                  className={`relative transition-all duration-200 hover:rounded-md hover:border hover:border-neutral-300/70 hover:bg-white/40 hover:backdrop-blur-[3px] hover:ring-1 hover:ring-[#422303]/10 group cursor-grab active:cursor-grabbing`}
+                  className={`relative transition-all duration-200 border border-transparent hover:rounded-md hover:border-neutral-300/70 hover:bg-white/40 hover:backdrop-blur-[3px] hover:ring-1 hover:ring-[#422303]/10 group cursor-grab active:cursor-grabbing`}
                 >
                   <div
                     className={`absolute left-0 top-0 h-full w-[3px] transition-opacity duration-150 group-hover:opacity-0 ${
                       block.type === 'text'
-                        ? 'bg-[#d1d5db]'
-                        : 'bg-[repeating-linear-gradient(to_bottom,_#d1d5db_0_6px,_transparent_6px_12px)]'
+                        ? 'bg-[#e5e7eb]'
+                        : 'bg-[repeating-linear-gradient(to_bottom,_#e5e7eb_0_6px,_transparent_6px_12px)]'
                     }`}
                   />
                   <button
@@ -99,7 +99,7 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
                   >
                     <GripVertical className="h-4 w-4" />
                   </button>
-                  <div className="py-4 px-5 font-serif text-[15px] text-gray-800 group-hover:text-gray-900 leading-relaxed">
+                  <div className="py-4 px-5">
                     {block.type === 'text' ? (
                       block.content || <span className="text-gray-400 italic">开始写作...</span>
                     ) : (
@@ -111,7 +111,7 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
             </section>
 
             {/* 后置信息 */}
-            <section className="text-sm text-gray-500 leading-relaxed mt-6">
+            <section className="text-sm text-neutral-600 mt-6">
               请用中文回答。如果用户的问题比较复杂，请提供详细的解释。如果用户要求提供代码示例，请确保代码正确、可运行。
             </section>
 
