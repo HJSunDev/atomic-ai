@@ -46,7 +46,7 @@ export function ModuleCardWrapper({
   const style = {
     // 拖动时不应用 transform，让元素留在原地作为占位符
     transform: isDragging ? undefined : CSS.Translate.toString(transform),
-    boxShadow: isOver && !isDragging && !isDraggingOwnChild ? '0 0 0 3px #3b82f6' : undefined,
+    boxShadow: isOver && !isDragging && !isDraggingOwnChild ? '0 0 0 3px rgb(212 212 212 / 0.5)' : undefined,
     zIndex: isDragging ? 50 : undefined,
     // 拖动时显示为半透明占位符
     opacity: isDragging ? 0.4 : 1,
@@ -65,7 +65,7 @@ export function ModuleCardWrapper({
       style={style}
       {...listeners}
       {...attributes}
-      className={`bg-[#422303]/3 p-3 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative group ${isOver && !isDragging && !isDraggingOwnChild ? 'ring-2 ring-blue-400' : ''}`}
+      className={`bg-[#422303]/3 p-3 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative group ${isOver && !isDragging && !isDraggingOwnChild ? 'ring-2 ring-neutral-300/50' : ''}`}
       onClick={(e) => {
         // 如果点击的是按钮，不触发卡片点击事件
         if ((e.target as HTMLElement).closest('button')) {
@@ -78,7 +78,7 @@ export function ModuleCardWrapper({
       
       {/* 拖拽经过时的提示遮罩，仅在悬停时显示，且排除正在拖动的项目本身和自己的子模块 */}
       {isOver && !isDragging && !isDraggingOwnChild && (
-        <div className="absolute inset-0 bg-blue-100/40 flex items-center justify-center text-blue-600 text-sm font-bold pointer-events-none rounded-lg z-10">
+        <div className="absolute inset-0 bg-neutral-50/80 backdrop-blur-sm flex items-center justify-center text-neutral-700 text-sm font-medium pointer-events-none rounded-lg z-10">
           松开以添加为子模块
         </div>
       )}

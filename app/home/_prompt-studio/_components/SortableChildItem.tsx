@@ -45,23 +45,16 @@ export function SortableChildItem({ child, parentId, index }: { child: GridItem,
       {...listeners}
       {...attributes}
       style={style}
-      className={`relative flex items-center justify-between bg-white border border-gray-200 rounded pl-4 pr-2 py-2 shadow-sm text-sm cursor-grab hover:shadow-md transition ${isOver && !isDragging ? 'ring-2 ring-blue-400' : ''}`}
+      className={`group relative flex items-center justify-between bg-white border border-neutral-200 rounded-lg px-2 py-1.5 shadow-sm text-sm cursor-grab hover:shadow-md transition-colors ${isOver && !isDragging ? 'ring-2 ring-neutral-300/50' : ''}`}
     >
-      {/* 拖拽悬停时的指示器 */}
-      {isOver && !isDragging && (
-        <div className="absolute inset-x-0 -top-3 h-1.5 bg-blue-500 rounded-full z-10"></div>
-      )}
-      {/* 左侧竖线，突出层级关系 */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-blue-200 rounded-l" style={{height: '100%'}}></div>
-      <div>
-        <span className="font-medium text-gray-700">{child.title}</span>
-        <span className="ml-2 text-gray-400">{child.content}</span>
+      <div className="flex-1">
+        <div className="font-medium text-neutral-800">{child.title}</div>
       </div>
       {/* 右侧操作按钮区域 */}
       <div className="ml-2 flex items-center">
         {/* 提升为顶层模块按钮 */}
         <button
-          className="h-6 w-6 flex items-center justify-center text-gray-500 hover:text-blue-500 hover:bg-blue-50 rounded transition-colors"
+          className="h-6 w-6 flex items-center justify-center text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
             // 将该事件暴露到 NewBlock 组件
