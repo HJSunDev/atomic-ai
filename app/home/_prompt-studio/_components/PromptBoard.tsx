@@ -476,7 +476,7 @@ export function PromptBoard() {
       // 监听拖拽经过事件
       onDragOver={handleDragOver}
     >
-      <main className={`h-auto rounded-lg max-w-[70rem] w-full mx-auto`}>
+      <main className={`h-auto rounded-lg w-full mx-auto`}>
         
         
         {/* 操作区显示控制 */}
@@ -488,9 +488,9 @@ export function PromptBoard() {
             onSave={handleSaveToGrid}
           />
         )}
-        
+
         {/* 使用网格布局显示卡片列表 */}
-        <main className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <article className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-[43rem] w-full mx-auto">
           {items.map(item => (
             <ModuleCardWrapper
               key={item.id}
@@ -504,7 +504,7 @@ export function PromptBoard() {
               />
             </ModuleCardWrapper>
           ))}
-        </main>
+        </article>
 
         {/* 使用PromptPreviewPanel组件 */}
         {showPreviewPanel && previewItem && (

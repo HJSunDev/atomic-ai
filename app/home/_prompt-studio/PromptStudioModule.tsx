@@ -79,8 +79,8 @@ export const PromptStudioModule = () => {
       </section>
 
       {/* 卡片列表区 */}
-      <section className="w-full max-w-[43rem] mx-auto mt-4 ">
-        <header className="flex items-center justify-between text-sm text-muted-foreground/90 pl-2 ">
+      <section className="mt-4">
+        <header className="flex items-center justify-between text-sm text-muted-foreground/90 pl-2 w-full max-w-[43rem] mx-auto">
             <div className="flex items-center">
               <span>Card List</span>
               <TooltipProvider>
@@ -112,7 +112,7 @@ export const PromptStudioModule = () => {
         </header>
         {/* 提示词管理区 */}
         <PromptBoard />
-        <footer className="flex justify-end">
+        <footer className="flex justify-end w-full max-w-[43rem] mx-auto">
             <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/70 cursor-pointer">
               <MoreHorizontal className="h-4 w-4" />
             </Button>

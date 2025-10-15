@@ -64,13 +64,13 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
         )}
       </div>
 
-      {/* 卡片主体内容 */}
-      <h3 className="text-lg font-bold mb-2">{item.title}</h3>
-      <p className="text-sm">{item.content}</p>
+      {/* 卡片主体内容 - 分层级视觉设计 */}
+      <h3 className="text-[18px] font-semibold text-foreground mb-2 leading-tight">{item.title}</h3>
+      <p className="text-[14px] text-muted-foreground/80 leading-relaxed truncate" title={item.content}>{item.content}</p>
       {/* 子模块区域 */}
       <div
         ref={setChildAreaRef}
-        className={`mt-4 flex flex-col items-stretch justify-start min-h-[48px] border border-neutral-200 ${isChildAreaOver ? 'bg-neutral-50' : 'bg-white'} rounded-lg px-1 py-1 transition-colors`}
+        className={`mt-1 flex flex-col items-stretch justify-start min-h-[48px] border border-neutral-200 ${isChildAreaOver ? 'bg-neutral-50' : 'bg-white'} rounded-lg px-[3px] py-[3px] transition-colors`}
       >
         {/* 操作区下的子模块渲染为可拖拽，否则保持原样 */}
         {item.children && item.children.length > 0 ? (
@@ -84,8 +84,8 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
                     className="group flex items-center justify-between bg-white border border-neutral-200 rounded-lg px-3 py-2.5 shadow-sm text-sm hover:shadow-md transition-colors"
                   >
                     <div className="flex-1">
-                      <div className="font-medium text-neutral-800">{child.title}</div>
-                      <div className="text-[13px] text-neutral-500 mt-0.5">{child.content}</div>
+                      <div className="font-medium text-sm text-foreground/90 leading-tight">{child.title}</div>
+                      <div className="text-xs text-muted-foreground/70 mt-0.5 leading-relaxed truncate" title={child.content}>{child.content}</div>
                     </div>
                     {/* 右上角预留操作按钮空间 */}
                     <div className="ml-2 h-6 w-6 flex items-center justify-center text-neutral-400 group-hover:text-neutral-600">
@@ -96,7 +96,9 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
             ))}
           </div>
         ) : (
-          <div className="flex items-center justify-center h-10 text-[13px] text-neutral-400">拖拽子模块到此处</div>
+          <div className="flex flex-col items-center justify-center h-12 text-neutral-400">
+            <span className="text-xs text-neutral-400">暂无子模块</span>
+          </div>
         )}
       </div>
     </>
