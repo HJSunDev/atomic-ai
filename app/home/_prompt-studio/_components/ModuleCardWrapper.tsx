@@ -83,7 +83,7 @@ export function ModuleCardWrapper({
       style={style}
       {...listeners}
       {...attributes}
-      className={`bg-[#422303]/3 p-3 rounded-lg shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative group ${isOverSelfOrDescendant && !isDragging ? 'ring-2 ring-neutral-300/50' : ''}`}
+      className={`bg-[#422303]/3 p-3 rounded-[14px] shadow cursor-pointer transition-shadow hover:shadow-lg flex flex-col relative group ${isOverSelfOrDescendant && !isDragging ? 'ring-2 ring-neutral-300/50' : ''}`}
       onClick={(e) => {
         // 如果点击的是按钮，不触发卡片点击事件
         if ((e.target as HTMLElement).closest('button')) {
@@ -96,7 +96,7 @@ export function ModuleCardWrapper({
       
       {/*  */}
       {isOverSelfOrDescendant && !isDragging && (
-        <div className="absolute inset-0 bg-neutral-50/80 backdrop-blur-sm flex items-center justify-center text-neutral-700 text-sm font-medium pointer-events-none rounded-lg z-10">
+        <div className="absolute inset-0 bg-neutral-50/80 backdrop-blur-sm flex items-center justify-center text-neutral-700 text-sm font-medium pointer-events-none rounded-lg z-30">
           松开以添加为子模块
         </div>
       )}

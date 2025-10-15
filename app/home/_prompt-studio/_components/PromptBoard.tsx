@@ -489,8 +489,11 @@ export function PromptBoard() {
           />
         )}
 
-        {/* 使用网格布局显示卡片列表 */}
-        <article className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 max-w-[43rem] w-full mx-auto">
+        {/* 使用网格布局显示卡片列表，限制最多4行高度并内部滚动 */}
+        <article
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-2 max-w-[44.3rem] w-full mx-auto max-h-[14rem] overflow-y-auto p-3"
+          style={{ gridAutoRows: 'min-content' }}
+        >
           {items.map(item => (
             <ModuleCardWrapper
               key={item.id}

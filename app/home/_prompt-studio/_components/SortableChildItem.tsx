@@ -47,8 +47,8 @@ export function SortableChildItem({ child, parentId, index }: { child: GridItem,
       style={style}
       className={`group relative flex items-center justify-between bg-white border border-neutral-200 rounded-lg px-2 py-1.5 shadow-sm text-sm cursor-grab hover:shadow-md transition-colors ${isOver && !isDragging ? 'ring-2 ring-neutral-300/50' : ''}`}
     >
-      <div className="flex-1">
-        <div className="font-medium text-sm text-foreground/90 leading-tight">{child.title}</div>
+      <div className="flex-1 min-w-0">
+        <div className="font-medium text-[13px] text-foreground/90 leading-tight truncate">{child.title}</div>
       </div>
       {/* 右侧操作按钮区域 */}
       <div className="ml-2 flex items-center">
