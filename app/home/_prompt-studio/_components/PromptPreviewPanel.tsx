@@ -1,7 +1,20 @@
 "use client";
 
+import { useState } from 'react';
 import { X, MoreHorizontal, GripVertical } from 'lucide-react';
 import type { GridItem } from './types';
+import {
+  DndContext,
+  closestCenter,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  verticalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 
 interface PromptPreviewPanelProps {
   item: GridItem;
@@ -17,10 +30,58 @@ interface Block {
   order: number;
 }
 
+// 可排序的块组件
+function SortableBlockItem({ block }: { block: Block }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: block.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition: isDragging ? 'none' : transition,
+    zIndex: isDragging ? 100 : 'auto',
+  } as React.CSSProperties;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`relative border border-transparent hover:rounded-md hover:border-neutral-300/70 hover:bg-white/40 hover:backdrop-blur-[3px] hover:ring-1 hover:ring-[#422303]/10 group ${
+        isDragging ? 'cursor-grabbing opacity-70 shadow-2xl' : 'cursor-grab'
+      }`}
+    >
+      <div
+        className={`absolute left-0 top-0 h-full w-[3px] transition-opacity duration-150 group-hover:opacity-0 ${
+          block.type === 'text'
+            ? 'bg-[#e5e7eb]'
+            : 'bg-[repeating-linear-gradient(to_bottom,_#e5e7eb_0_6px,_transparent_6px_12px)]'
+        }`}
+      />
+      <div className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-gray-400 p-1 rounded transition-opacity pointer-events-none">
+        <GripVertical className="h-4 w-4" />
+      </div>
+      <div className="py-4 px-5">
+        {block.type === 'text' ? (
+          block.content || <span className="text-gray-400 italic">暂无内容...</span>
+        ) : (
+          block.referenceContent
+        )}
+      </div>
+    </div>
+  );
+}
+
 export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
   // 将旧的模块结构转换为新的块结构（过渡方案）
   // 主模块的 content 作为第一个文本块，子模块作为引用块
-  const blocks: Block[] = [
+  const initialBlocks: Block[] = [
     {
       id: 'main-block',
       type: 'text',
@@ -35,6 +96,26 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
       order: index + 1
     }))
   ];
+
+  // 使用状态管理块列表，以便支持排序
+  const [blocks, setBlocks] = useState<Block[]>(initialBlocks);
+
+  // 处理拖拽结束事件
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    // 仅当拖拽到有效目标且位置发生变化时才执行
+    if (over && active.id !== over.id) {
+      setBlocks((items) => {
+        // 查找拖拽项和目标项的索引
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+
+        // 返回重新排序后的数组
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center p-8">
@@ -78,37 +159,22 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
             </section>
 
             {/* 内容块列表 */}
-            <section className="space-y-1">
-              {blocks.map((block, index) => (
-                <div
-                  key={block.id}
-                  className={`relative transition-all duration-200 border border-transparent hover:rounded-md hover:border-neutral-300/70 hover:bg-white/40 hover:backdrop-blur-[3px] hover:ring-1 hover:ring-[#422303]/10 group cursor-grab active:cursor-grabbing`}
-                >
-                  <div
-                    className={`absolute left-0 top-0 h-full w-[3px] transition-opacity duration-150 group-hover:opacity-0 ${
-                      block.type === 'text'
-                        ? 'bg-[#e5e7eb]'
-                        : 'bg-[repeating-linear-gradient(to_bottom,_#e5e7eb_0_6px,_transparent_6px_12px)]'
-                    }`}
-                  />
-                  <button
-                    className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-gray-400 hover:text-gray-600 p-1 rounded cursor-grab active:cursor-grabbing transition-colors"
-                    aria-label="拖拽排序"
-                    title="拖拽排序"
-                    type="button"
-                  >
-                    <GripVertical className="h-4 w-4" />
-                  </button>
-                  <div className="py-4 px-5">
-                    {block.type === 'text' ? (
-                      block.content || <span className="text-gray-400 italic">开始写作...</span>
-                    ) : (
-                      block.referenceContent
-                    )}
-                  </div>
-                </div>
-              ))}
-            </section>
+            <DndContext
+              collisionDetection={closestCenter}
+              onDragEnd={handleDragEnd}
+            >
+              <SortableContext
+                items={blocks.map((block) => block.id)}
+                // 使用垂直列表排序策略
+                strategy={verticalListSortingStrategy}
+              >
+                <section className="space-y-1">
+                  {blocks.map((block) => (
+                    <SortableBlockItem key={block.id} block={block} />
+                  ))}
+                </section>
+              </SortableContext>
+            </DndContext>
 
             {/* 后置信息 */}
             <section className="text-sm text-neutral-600 mt-6">
@@ -119,7 +185,7 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
             {blocks.length === 0 && (
               <section className="py-20">
                 <div className="text-center text-gray-400">
-                  <p className="text-base font-serif">开始写作...</p>
+                  <p className="text-base font-serif">暂无内容</p>
                 </div>
               </section>
             )}
