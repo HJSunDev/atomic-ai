@@ -1,6 +1,5 @@
 "use client";
 
-import { useDroppable } from '@dnd-kit/core';
 import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { GridItem } from './types';
 import { SortableChildItem } from './SortableChildItem';
@@ -17,17 +16,6 @@ interface OperationCardContentProps {
  * 职责：渲染操作区域中卡片的完整UI内容
  */
 export function OperationCardContent({ item, onDelete, onSave }: OperationCardContentProps) {
-  
-  const { setNodeRef: setChildAreaRef, isOver: isChildAreaOver } = 
-  useDroppable({
-    id: `child-area-${item.id}`,
-    data: {
-      type: 'child-area',
-      parentId: item.id
-    }
-  });
-  const isOperationAreaItem = true;
-
   return (
     <>
       {/* 头部：标题与操作按钮同行，按钮靠右 */}
@@ -71,8 +59,7 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
       <p className="text-[13px] text-muted-foreground/80 leading-relaxed truncate" title={item.content}>{item.content}</p>
       {/* 子模块区域 */}
       <div
-        ref={setChildAreaRef}
-        className={`mt-1 flex flex-col items-stretch min-h-[48px] border border-neutral-200 ${isChildAreaOver ? 'bg-neutral-50' : 'bg-white'} rounded-lg px-[3px] py-[3px] transition-colors`}
+        className="mt-1 flex flex-col items-stretch min-h-[48px] border border-neutral-200 bg-white rounded-lg px-[3px] py-[3px] transition-colors"
       >
         {/* 操作区下的子模块渲染为可拖拽，否则保持原样 */}
         {item.children && item.children.length > 0 ? (
