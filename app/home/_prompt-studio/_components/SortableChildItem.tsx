@@ -1,47 +1,29 @@
 "use client";
 
 import { CSS } from '@dnd-kit/utilities';
-import { useDraggable, useDroppable } from '@dnd-kit/core';
+import { useSortable } from '@dnd-kit/sortable';
 import type { GridItem } from './types';
 
-// 可拖拽的子模块组件（仅用于操作区）
+// 可拖拽的子模块组件，使用 useSortable 以获得兄弟项位移和占位
 export function SortableChildItem({ child, parentId, index }: { child: GridItem, parentId: string, index: number }) {
-  // 生成唯一id，格式为 child-父id-子id
-  const dragId = `child-${parentId}-${child.id}`;
-  // 使子模块可拖拽
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
-    id: dragId,
-    data: { type: 'child', parentId, child, index },
-  });
-
-  // 创建可放置区域，用于子模块间排序
-  const { setNodeRef: setDropRef, isOver } = useDroppable({
-    id: `child-drop-${parentId}-${child.id}`,
-    data: {
-      type: 'child-drop',
-      parentId,
-      childId: child.id,
-      index
-    }
+  
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } = useSortable({
+    id: child.id,
+    data: { type: 'child', parentId, index, child },
   });
 
   // 拖拽样式
   const style = {
-    transform: CSS.Translate.toString(transform),
-    opacity: isDragging ? 0.5 : 1,
-    zIndex: isDragging ? 50 : undefined,
-    transition: isDragging ? 'none' : 'transform 0.2s',
+    // 使用覆盖层时，让原元素保持占位，不再跟随鼠标
+    transform: isDragging ? undefined : CSS.Transform.toString(transform),
+    transition: isDragging ? 'none' : transition,
+    opacity: isDragging ? 0 : 1,
+    zIndex: isDragging ? 0 : undefined,
   } as React.CSSProperties;
-
-  // 组合 ref
-  const composedRef = (node: any) => {
-    setNodeRef(node);
-    setDropRef(node);
-  };
 
   return (
     <div
-      ref={composedRef}
+      ref={setNodeRef}
       {...listeners}
       {...attributes}
       style={style}

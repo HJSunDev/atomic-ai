@@ -24,14 +24,17 @@ export function ModuleCardWrapper({
   children
 }: ModuleCardWrapperProps) {
   
+  // 无论是 网格区卡片 还是 操作区卡片，都需要 可拖拽
   const { attributes, listeners, setNodeRef: setDragNodeRef, transform, isDragging } = useDraggable({
     id: item.id,
   });
 
   let setDropNodeRef: ((node: HTMLElement | null) => void) | undefined = undefined;
+  // 是否悬停在操作区卡片上
   let isOver = false;
   let activeDragInfo: any = undefined;
   
+  // 如果是操作区卡片，则需要 可放置
   if (isOperationAreaItem) {
     const drop = useDroppable({ id: `operation-item-${item.id}` });
     setDropNodeRef = drop.setNodeRef;
@@ -47,15 +50,15 @@ export function ModuleCardWrapper({
   // 使用全局 DnD 上下文，识别是否正悬停在该卡片的子区域（child-area 或 child-drop）
   const { over } = useDndContext();
   const isOverDescendant = Boolean(
-    over &&
-    (over as any).data &&
-    (over as any).data.current &&
-    (
-      // 子模块区域空白处（用于接收新子模块）
-      ((over as any).data.current.type === 'child-area' && (over as any).data.current.parentId === item.id) ||
-      // 子模块之间的排序占位（用于重排）
-      ((over as any).data.current.type === 'child-drop' && (over as any).data.current.parentId === item.id)
-    )
+  	over &&
+  	(over as any).data &&
+  	(over as any).data.current &&
+  	(
+  	  // 子模块区域空白处（用于接收新子模块）
+  	  ((over as any).data.current.type === 'child-area' && (over as any).data.current.parentId === item.id) ||
+  	  // 子模块列表内的子项（用于重排，使用 useSortable 的 data.type = 'child'）
+  	  ((over as any).data.current.type === 'child' && (over as any).data.current.parentId === item.id)
+  	)
   );
 
   // 统一判定：当悬停在自身或任一子区域时，视为覆盖态（但排除自身子模块拖拽时的排序场景）

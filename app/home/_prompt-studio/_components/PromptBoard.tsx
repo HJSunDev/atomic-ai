@@ -49,6 +49,7 @@ import { ModuleCardWrapper } from './ModuleCardWrapper';
 import { GridCardContent } from './GridCardContent';
 import { OperationArea } from './OperationArea';
 import { ModuleCardDragOverlay } from './ModuleCardDragOverlay';
+import { ModuleChildDragOverlay } from './ModuleChildDragOverlay';
 
 
 export function PromptBoard() {
@@ -155,6 +156,8 @@ export function PromptBoard() {
 
   // 当前正在拖拽的模块 ID
   const [draggingItemId, setDraggingItemId] = useState<string | null>(null);
+  // 当前正在拖拽的子模块（用于覆盖层）
+  const [draggingChild, setDraggingChild] = useState<{ parentId: string; child: GridItem } | null>(null);
   
   // 正在正在拖动的 模块 （操作区或网格区）
   // 由于操作区和网格区 id 可能不同，需分别查找
@@ -307,6 +310,12 @@ export function PromptBoard() {
     if (isGridItem) {
       setGridDraggingId(event.active.id as string);
     }
+
+    // 如果是子模块排序，记录子模块用于 DragOverlay
+    const data = event.active.data?.current as any;
+    if (data?.type === 'child' && data?.child && data?.parentId) {
+      setDraggingChild({ parentId: data.parentId, child: data.child as GridItem });
+    }
   };
   
   // 拖拽结束/取消时重置
@@ -318,16 +327,34 @@ export function PromptBoard() {
     // active 表示当前被拖拽的元素信息（即拖拽源）
     const { over, active } = event;
     
-    // 处理子模块排序
-    if (active.id.toString().startsWith('child-') && over && over.id.toString().startsWith('child-drop-')) {
-      const activeData = active.data.current as { type: string; parentId: string; child: GridItem; index: number };
-      const overData = over.data.current as { type: string; parentId: string; childId: string; index: number };
-      
-      // 确保是同一个父模块内的排序
-      if (activeData.parentId === overData.parentId && activeData.child.id !== overData.childId) {
-        setOperationItems(prevItems => 
-          reorderChildModules(prevItems, overData.parentId, activeData.child.id, overData.index)
-        );
+    // 处理子模块排序（useSortable 模式）
+    if (active.data.current?.type === 'child' && over && over.id) {
+      // 获取子模块数据
+      const activeData = active.data.current as { type: string; parentId: string; index: number };
+      // 获取目标模块数据
+      const overData = (over.data.current as { type?: string; parentId?: string; index?: number }) || {};
+      // 检查是否为同一个父模块
+      const sameParent = overData.parentId ? overData.parentId === activeData.parentId : true;
+
+      if (sameParent && active.id !== over.id) {
+        // 获取父模块
+        const parent = operationItems.find(i => i.id === activeData.parentId);
+        // 如果父模块存在，则重新排序
+        if (parent) {
+          // 获取旧索引
+          const oldIndex = parent.children.findIndex(c => c.id === active.id);
+          // 获取新索引
+          const newIndex = parent.children.findIndex(c => c.id === over.id);
+          // 如果旧索引和新索引不同，则重新排序
+          if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
+            setOperationItems(prev => reorderChildModules(prev, activeData.parentId, String(active.id), newIndex));
+          }
+        }else{
+          // 如果父模块不存在，则不进行排序
+          toast.error('父模块不存在', {
+            position: 'top-center',
+          });
+        }
       }
     }
     // 如果拖拽释放目标为操作区的模块，则将模块插入到目标模块的children中
@@ -375,6 +402,7 @@ export function PromptBoard() {
     // 清除当前被拖拽项
     setDraggingItemId(null);
     resetGridDragging();
+    setDraggingChild(null);
   };
 
   // 处理拖拽经过事件
@@ -520,7 +548,11 @@ export function PromptBoard() {
 
       {/* 拖拽时显示的覆盖层元素 */}
       <DragOverlay>
-        {draggingItem ? <ModuleCardDragOverlay item={draggingItem} /> : null}
+        {draggingChild ? (
+          <ModuleChildDragOverlay child={draggingChild.child} />
+        ) : draggingItem ? (
+          <ModuleCardDragOverlay item={draggingItem} />
+        ) : null}
       </DragOverlay>
       
       {/* 新手指引覆盖层 */}

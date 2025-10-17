@@ -1,6 +1,7 @@
 "use client";
 
 import { useDroppable } from '@dnd-kit/core';
+import { SortableContext, verticalListSortingStrategy } from '@dnd-kit/sortable';
 import type { GridItem } from './types';
 import { SortableChildItem } from './SortableChildItem';
 
@@ -17,8 +18,8 @@ interface OperationCardContentProps {
  */
 export function OperationCardContent({ item, onDelete, onSave }: OperationCardContentProps) {
   
-  // 来自 ModuleCardContent 的逻辑 (isOperationAreaItem = true)
-  const { setNodeRef: setChildAreaRef, isOver: isChildAreaOver } = useDroppable({
+  const { setNodeRef: setChildAreaRef, isOver: isChildAreaOver } = 
+  useDroppable({
     id: `child-area-${item.id}`,
     data: {
       type: 'child-area',
@@ -75,11 +76,16 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
       >
         {/* 操作区下的子模块渲染为可拖拽，否则保持原样 */}
         {item.children && item.children.length > 0 ? (
-          <div className="flex flex-col gap-[4px]">
-            {item.children.map((child, index) => (
-               <SortableChildItem key={child.id} child={child} parentId={item.id} index={index} />
-            ))}
-          </div>
+          <SortableContext
+            items={item.children.map(c => c.id)}
+            strategy={verticalListSortingStrategy}
+          >
+            <div className="flex flex-col gap-[4px]">
+              {item.children.map((child, index) => (
+                <SortableChildItem key={child.id} child={child} parentId={item.id} index={index} />
+              ))}
+            </div>
+          </SortableContext>
         ) : (
           <div className="flex-1 flex flex-col items-center justify-center text-neutral-400 text-center">
             <span className="text-xs text-neutral-400">暂无子模块</span>
