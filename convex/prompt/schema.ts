@@ -59,6 +59,8 @@ export const promptSchema = {
     promptSuffix: v.optional(v.string()), 
     // 软删除标记，默认为 false
     isArchived: v.boolean(),
+    // 该文档包含的引用块数量（冗余存储用于提升查询性能，避免每次聚合查询）
+    referenceCount: v.number(),
   })
     // 按用户ID索引，用于查询用户的所有文档
     .index("by_userId", ["userId"])

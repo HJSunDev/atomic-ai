@@ -31,6 +31,7 @@ export const createDocument = mutation({
       promptPrefix: args.promptPrefix,
       promptSuffix: args.promptSuffix,
       isArchived: false,
+      referenceCount: 0,
     });
 
     await ctx.db.insert("blocks", {
