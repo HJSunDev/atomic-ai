@@ -3,7 +3,7 @@
 import type { GridItem } from './types';
 
 /**
- * 拖拽时的模块预览，显示卡片标题和内容
+ * 拖拽时的模块预览，显示卡片标题和描述
  */
 export function ModuleCardDragOverlay({ item }: { item: GridItem | null }) {
   if (!item) return null;
@@ -13,7 +13,9 @@ export function ModuleCardDragOverlay({ item }: { item: GridItem | null }) {
       style={{ minHeight: '80px', maxHeight: '112px', opacity: 0.98 }}
    >
       <div className="text-[15px] leading-snug tracking-tight font-semibold text-neutral-900 mb-1.5 truncate w-full" title={item.title}>{item.title}</div>
-      <div className="text-[13px] leading-snug text-neutral-600 truncate w-full" title={item.content}>{item.content}</div>
+      {item.description && (
+        <div className="text-[13px] leading-snug text-neutral-600 truncate w-full" title={item.description}>{item.description}</div>
+      )}
     </div>
   );
 }

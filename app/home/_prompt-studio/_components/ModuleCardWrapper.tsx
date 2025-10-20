@@ -25,11 +25,12 @@ export function ModuleCardWrapper({
 }: ModuleCardWrapperProps) {
   
   // 无论是 网格区卡片 还是 操作区卡片，都需要 可拖拽
+  // 使用虚拟 ID 作为拖拽标识
   const { attributes, listeners, setNodeRef: setDragNodeRef, transform, 
     // 是否正在被拖拽
     isDragging 
   } = useDraggable({
-    id: item.id,
+    id: item.virtualId,
   });
 
   let setDropNodeRef: ((node: HTMLElement | null) => void) | undefined = undefined;
@@ -39,8 +40,9 @@ export function ModuleCardWrapper({
   let draggingItemInfo: any = undefined;
   
   // 如果是操作区卡片，则需要 可放置
+  // 使用虚拟 ID 作为 droppable 标识
   if (isOperationAreaItem) {
-    const drop = useDroppable({ id: `operation-item-${item.id}` });
+    const drop = useDroppable({ id: `operation-item-${item.virtualId}` });
     setDropNodeRef = drop.setNodeRef;
     // 是否有元素悬停在当前卡片上
     isOver = drop.isOver;
@@ -51,7 +53,7 @@ export function ModuleCardWrapper({
   // 判断是否正在拖拽自己的子模块（用于排除子模块排序时的覆盖层显示）
   const isDraggingOwnChild = draggingItemInfo && 
     draggingItemInfo.type === 'child' && 
-    draggingItemInfo.parentId === item.id;
+    draggingItemInfo.parentId === item.virtualId;
 
   // 全局 over 对象：当前鼠标悬停的 droppable 区域信息，放置区对象的信息
   const { over } = useDndContext();
@@ -63,7 +65,7 @@ export function ModuleCardWrapper({
   	(over as any).data &&
   	(over as any).data.current &&
   	(over as any).data.current.type === 'child' && 
-  	(over as any).data.current.parentId === item.id
+  	(over as any).data.current.parentId === item.virtualId
   );
 
   // 是否显示"松开以添加为子模块"的覆盖层提示

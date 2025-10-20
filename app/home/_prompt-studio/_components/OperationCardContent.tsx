@@ -6,7 +6,8 @@ import { SortableChildItem } from './SortableChildItem';
 
 interface OperationCardContentProps {
   item: GridItem;
-  onDelete?: (id: string) => void;
+  // 删除和保存使用虚拟 ID
+  onDelete?: (virtualId: string) => void;
   onSave?: (item: GridItem) => void;
 }
 
@@ -44,7 +45,7 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
               title="删除此模块"
               onClick={e => {
                 e.stopPropagation();
-                onDelete(item.id);
+                onDelete(item.virtualId);
               }}
             >
               <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -56,7 +57,13 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
         </div>
       </header>
 
-      <p className="text-[13px] text-muted-foreground/80 leading-relaxed truncate" title={item.content}>{item.content}</p>
+      {/* 显示描述信息（如果有） */}
+      {item.description && (
+        <p className="text-[13px] text-muted-foreground/80 leading-relaxed truncate mb-1" title={item.description}>
+          {item.description}
+        </p>
+      )}
+      
       {/* 子模块区域 */}
       <div
         className="mt-1 flex flex-col items-stretch min-h-[48px] border border-neutral-200 bg-white rounded-lg px-[3px] py-[3px] transition-colors"
@@ -64,12 +71,12 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
         {/* 操作区下的子模块渲染为可拖拽，否则保持原样 */}
         {item.children && item.children.length > 0 ? (
           <SortableContext
-            items={item.children.map(c => c.id)}
+            items={item.children.map(c => c.virtualId)}
             strategy={verticalListSortingStrategy}
           >
             <div className="flex flex-col gap-[4px]">
               {item.children.map((child, index) => (
-                <SortableChildItem key={child.id} child={child} parentId={item.id} index={index} />
+                <SortableChildItem key={child.virtualId} child={child} parentVirtualId={item.virtualId} index={index} />
               ))}
             </div>
           </SortableContext>

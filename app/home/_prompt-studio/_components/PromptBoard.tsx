@@ -38,6 +38,10 @@ import { toast } from 'sonner';
 import { TutorialOverlay } from './TutorialOverlay';
 import { useDocumentStore } from '@/store/home/documentStore';
 import { useRouter } from 'next/navigation';
+// 导入 Convex 查询接口
+import { useQuery } from 'convex/react';
+import { api } from '@/convex/_generated/api';
+import type { Doc } from '@/convex/_generated/dataModel';
 
 
 
@@ -50,106 +54,46 @@ import { GridCardContent } from './GridCardContent';
 import { OperationArea } from './OperationArea';
 import { ModuleCardDragOverlay } from './ModuleCardDragOverlay';
 import { ModuleChildDragOverlay } from './ModuleChildDragOverlay';
+import { EmptyGridState } from './EmptyGridState';
+
+
+/**
+ * 将后端文档数据转换为前端 GridItem 格式
+ * 
+ * 转换规则：
+ * - 网格区卡片的 virtualId === documentId（无需生成新 ID）
+ * - 卡片仅展示缩略信息（标题、描述等），不包含块内容
+ * - 网格区卡片无子模块
+ */
+function convertDocumentToGridItem(doc: Doc<"documents">): GridItem {
+  return {
+    // 网格区：虚拟 ID 等于真实 ID
+    virtualId: doc._id,
+    documentId: doc._id,
+    
+    // 基础字段
+    title: doc.title,
+    
+    // 元数据
+    description: doc.description,
+    promptPrefix: doc.promptPrefix,
+    promptSuffix: doc.promptSuffix,
+    
+    // 网格区卡片无子模块
+    children: [],
+  };
+}
 
 
 export function PromptBoard() {
   // 添加客户端渲染状态
   const [isMounted, setIsMounted] = useState(false);
   
-  // 模拟数据 - 网格项列表，支持两级结构
-  const [items, setItems] = useState<GridItem[]>([
-    {
-      id: '1',
-      title: '文本生成',
-      content: '生成各种类型的创意文本',
-      children: [
-        {
-          id: '1-1',
-          title: '短文本生成',
-          content: '快速生成短句',
-          children: [], 
-        },
-        {
-          id: '1-2',
-          title: '长文本生成',
-          content: '生成长篇文章',
-          children: [],
-        },
-      ],
-    },
-    {
-      id: '2',
-      title: '图像描述',
-      content: '从图像中提取文本描述',
-      children: [],
-    },
-    {
-      id: '3',
-      title: '代码助手',
-      content: '帮助编写和调试代码',
-      children: [], 
-    },
-    {
-      id: '4',
-      title: '翻译工具',
-      content: '在不同语言之间进行翻译',
-      children: [],
-    },
-    {
-      id: '5',
-      title: '摘要生成',
-      content: '从长文本中提取关键信息',
-      children: [],
-    },
-    {
-      id: '6',
-      title: '问答系统',
-      content: '基于知识库回答用户问题',
-      children: [],
-    },
-    {
-      id: '7',
-      title: '情感分析',
-      content: '分析文本中的情感倾向',
-      children: [],
-    },
-    {
-      id: '8',
-      title: '关键词提取',
-      content: '从文本中提取重要关键词',
-      children: [],
-    },
-    {
-      id: '9',
-      title: '文本分类',
-      content: '将文本自动分类到预定义类别',
-      children: [],
-    },
-    {
-      id: '10',
-      title: '拼写检查',
-      content: '检测并纠正文本中的拼写错误',
-      children: [],
-    },
-    {
-      id: '11',
-      title: '语法检查',
-      content: '分析文本的语法正确性',
-      children: [],
-    },
-    {
-      id: '12',
-      title: '内容推荐',
-      content: '根据用户偏好推荐相关内容',
-      children: [],
-    },
-    {
-      id: '13',
-      title: '语音转文字',
-      content: '将语音内容转换为文本格式',
-      children: [],
-    },
-  ]);
+  // 从后端查询文档列表
+  const documentsData = useQuery(api.prompt.queries.listDocuments);
+  
+  // 网格区项目列表（从后端数据转换而来）
+  const [items, setItems] = useState<GridItem[]>([]);
 
   // 存储操作区中的项目
   const [operationItems, setOperationItems] = useState<GridItem[]>([]);
@@ -160,9 +104,9 @@ export function PromptBoard() {
   const [draggingChild, setDraggingChild] = useState<{ parentId: string; child: GridItem } | null>(null);
   
   // 正在正在拖动的 模块 （操作区或网格区）
-  // 由于操作区和网格区 id 可能不同，需分别查找
+  // 使用虚拟 ID 查找正在拖动的模块
   const draggingItem = draggingItemId
-    ? items.find(item => item.id === draggingItemId) || operationItems.find(item => item.id === draggingItemId) || null
+    ? items.find(item => item.virtualId === draggingItemId) || operationItems.find(item => item.virtualId === draggingItemId) || null
     : null;
   
   // 跟踪鼠标是否真正进入了操作区
@@ -195,6 +139,14 @@ export function PromptBoard() {
   useEffect(() => {
     setIsMounted(true);
   }, []);
+
+  // 当后端数据加载完成后，转换并设置到 items 状态
+  useEffect(() => {
+    if (documentsData) {
+      const gridItems = documentsData.map(convertDocumentToGridItem);
+      setItems(gridItems);
+    }
+  }, [documentsData]);
 
   // 新手指引初始化逻辑
   useEffect(() => {
@@ -241,19 +193,19 @@ export function PromptBoard() {
     
     // 使用函数式更新，确保总是基于最新的状态
     setOperationItems(prevItems => {
-      // 查找要提升的子模块和其父模块
-      const parentModule = prevItems.find(item => item.id === parentId);
+      // 查找要提升的子模块和其父模块（使用虚拟 ID）
+      const parentModule = prevItems.find(item => item.virtualId === parentId);
       if (!parentModule) return prevItems; // 未找到则返回原状态
       
-      const childModule = parentModule.children.find(child => child.id === childId);
+      const childModule = parentModule.children.find(child => child.virtualId === childId);
       if (!childModule) return prevItems; // 未找到则返回原状态
       
       // 从父模块中移除子模块
       const updatedItems = prevItems.map(item => {
-        if (item.id === parentId) {
+        if (item.virtualId === parentId) {
           return {
             ...item,
-            children: item.children.filter(child => child.id !== childId)
+            children: item.children.filter(child => child.virtualId !== childId)
           };
         }
         return item;
@@ -262,7 +214,8 @@ export function PromptBoard() {
       // 为子模块创建一个新的顶层模块
       const newTopModule: GridItem = {
         ...childModule,
-        id: uuidv4() // 生成新ID避免冲突
+        virtualId: uuidv4(), // 生成新的虚拟 ID
+        documentId: childModule.documentId, // 保留真实 ID
       };
       
       // 将新的顶层模块添加到操作区
@@ -300,13 +253,13 @@ export function PromptBoard() {
   
   // 处理拖拽开始事件
   const handleDragStart = (event: DragStartEvent) => {
-    // 设置当前被拖拽项的ID
+    // 设置当前被拖拽项的虚拟 ID
     setDraggingItemId(event.active.id as string);
     // 重置操作区进入状态
     setEnteredOperationArea(false);
 
-    // 判断是否为网格区模块
-    const isGridItem = items.some(item => item.id === event.active.id);
+    // 判断是否为网格区模块（使用虚拟 ID）
+    const isGridItem = items.some(item => item.virtualId === event.active.id);
     if (isGridItem) {
       setGridDraggingId(event.active.id as string);
     }
@@ -337,14 +290,13 @@ export function PromptBoard() {
       const sameParent = overData.parentId ? overData.parentId === activeData.parentId : true;
 
       if (sameParent && active.id !== over.id) {
-        // 获取父模块
-        const parent = operationItems.find(i => i.id === activeData.parentId);
+        // 获取父模块（使用虚拟 ID）
+        const parent = operationItems.find(i => i.virtualId === activeData.parentId);
         // 如果父模块存在，则重新排序
         if (parent) {
-          // 获取旧索引
-          const oldIndex = parent.children.findIndex(c => c.id === active.id);
-          // 获取新索引
-          const newIndex = parent.children.findIndex(c => c.id === over.id);
+          // 获取旧索引和新索引（使用虚拟 ID）
+          const oldIndex = parent.children.findIndex(c => c.virtualId === active.id);
+          const newIndex = parent.children.findIndex(c => c.virtualId === over.id);
           // 如果旧索引和新索引不同，则重新排序
           if (oldIndex !== -1 && newIndex !== -1 && oldIndex !== newIndex) {
             setOperationItems(prev => reorderChildModules(prev, activeData.parentId, String(active.id), newIndex));
@@ -359,12 +311,12 @@ export function PromptBoard() {
     }
     // 如果拖拽释放目标为操作区的模块，则将模块插入到目标模块的children中
     else if (over && typeof over.id === 'string' && over.id.startsWith('operation-item-')) {
-      // 获取目标模块id
-      const targetId = over.id.replace('operation-item-', '');
+      // 获取目标模块的虚拟 ID
+      const targetVirtualId = over.id.replace('operation-item-', '');
       
-      // 判断拖拽源是网格区还是操作区
-      const draggedFromGrid = items.find(item => item.id === active.id);
-      const draggedFromOperation = operationItems.find(item => item.id === active.id);
+      // 判断拖拽源是网格区还是操作区（使用虚拟 ID）
+      const draggedFromGrid = items.find(item => item.virtualId === active.id);
+      const draggedFromOperation = operationItems.find(item => item.virtualId === active.id);
       
       // 检查层级限制：只检查被拖拽模块是否有子模块，如果有则不能作为子模块
       if (draggedFromGrid && draggedFromGrid.children && draggedFromGrid.children.length > 0) {
@@ -378,23 +330,32 @@ export function PromptBoard() {
         });
       }
       else if (draggedFromGrid) {
-        // 拖拽源来自网格区：生成副本，id用uuid，插入到目标模块children
-        const copy = { ...draggedFromGrid, id: uuidv4() };
-        setOperationItems(prevItems => insertChildModule(prevItems, targetId, copy));
-      } else if (draggedFromOperation && draggedFromOperation.id !== targetId) {
+        // 拖拽源来自网格区：生成副本，virtualId 用 uuid，保留 documentId
+        const copy: GridItem = { 
+          ...draggedFromGrid, 
+          virtualId: uuidv4(),
+          documentId: draggedFromGrid.documentId,
+          children: [],
+        };
+        setOperationItems(prevItems => insertChildModule(prevItems, targetVirtualId, copy));
+      } else if (draggedFromOperation && draggedFromOperation.virtualId !== targetVirtualId) {
         // 拖拽源来自操作区，且不是自己拖到自己：先移除，再插入
-        let newItems = operationItems.filter(item => item.id !== draggedFromOperation.id);
-        newItems = insertChildModule(newItems, targetId, draggedFromOperation);
+        let newItems = operationItems.filter(item => item.virtualId !== draggedFromOperation.virtualId);
+        newItems = insertChildModule(newItems, targetVirtualId, draggedFromOperation);
         setOperationItems(newItems);
       }
     // 如果拖拽释放目标为操作区，则将模块插入到操作区
     } else if (enteredOperationArea) {
-      // 原有逻辑：从网格区拖拽副本到操作区
-      const draggedItem = items.find(item => item.id === active.id);
+      // 从网格区拖拽副本到操作区
+      const draggedItem = items.find(item => item.virtualId === active.id);
       // 如果找到被拖拽的项目
       if (draggedItem) {
-        // 生成副本，id 用 uuid 保证唯一
-        const copy = { ...draggedItem, id: uuidv4() };
+        // 生成副本，virtualId 用 uuid，保留 documentId
+        const copy: GridItem = { 
+          ...draggedItem, 
+          virtualId: uuidv4(),
+          documentId: draggedItem.documentId,
+        };
         // 将副本添加到操作区
         setOperationItems(prevItems => [...prevItems, copy]);
       }
@@ -418,22 +379,29 @@ export function PromptBoard() {
     }
   };
 
-  // 删除操作区顶层模块
-  const handleDeleteOperationItem = useCallback((id: string) => {
-    setOperationItems(prev => prev.filter(item => item.id !== id));
+  // 删除操作区顶层模块（使用虚拟 ID）
+  const handleDeleteOperationItem = useCallback((virtualId: string) => {
+    setOperationItems(prev => prev.filter(item => item.virtualId !== virtualId));
   }, []);
 
   // 修改handleSaveToGrid函数，保存后同时从操作区移除
+  // TODO: 后续需要调用后端接口保存，目前仅作临时展示
   const handleSaveToGrid = useCallback((item: GridItem) => {
-    // 保存到网格列表
-    setItems((prevItems: GridItem[]) => [...prevItems, { ...item, id: uuidv4() }]);
+    // 临时保存到网格列表（后续需要调用 createDocument 和 createReferenceBlock）
+    const newGridItem: GridItem = { 
+      ...item, 
+      virtualId: uuidv4(),
+      documentId: uuidv4(), // 临时 ID，后续应使用后端返回的真实 ID
+    };
+    setItems((prevItems: GridItem[]) => [...prevItems, newGridItem]);
     // 从操作区移除
-    setOperationItems(prevItems => prevItems.filter(i => i.id !== item.id));
+    setOperationItems(prevItems => prevItems.filter(i => i.virtualId !== item.virtualId));
   }, []);
 
-  // 新增handleDeleteGridItem函数，从网格列表中删除模块
-  const handleDeleteGridItem = useCallback((id: string) => {
-    setItems(prevItems => prevItems.filter(item => item.id !== id));
+  // 删除网格区模块（使用虚拟 ID，实际等于 documentId）
+  const handleDeleteGridItem = useCallback((virtualId: string) => {
+    // TODO: 后续需要调用后端 deleteDocument 接口
+    setItems(prevItems => prevItems.filter(item => item.virtualId !== virtualId));
   }, []);
 
   // 处理模块点击事件：打开全局文档查看器
@@ -441,8 +409,8 @@ export function PromptBoard() {
     openDocument({
       initialData: {
         title: item.title,
-        description: '',
-        content: item.content,
+        description: item.description || '',
+        content: '', // 内容需要通过 getDocumentWithBlocks 查询获取
       },
       onNavigateToFullscreen: () => router.push('/home/prompt-document'),
     });
@@ -522,19 +490,23 @@ export function PromptBoard() {
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-4 gap-y-2 max-w-[44.3rem] w-full mx-auto max-h-[14rem] overflow-y-auto p-3"
           style={{ gridAutoRows: 'min-content' }}
         >
-          {items.map(item => (
-            <ModuleCardWrapper
-              key={item.id}
-              item={item}
-              onClick={() => handleItemClick(item)}
-            >
-              <GridCardContent 
+          {items.length === 0 ? (
+            <EmptyGridState />
+          ) : (
+            items.map(item => (
+              <ModuleCardWrapper
+                key={item.virtualId}
                 item={item}
-                onDelete={handleDeleteGridItem}
-                onPreview={() => handlePreviewClick(item)}
-              />
-            </ModuleCardWrapper>
-          ))}
+                onClick={() => handleItemClick(item)}
+              >
+                <GridCardContent 
+                  item={item}
+                  onDelete={handleDeleteGridItem}
+                  onPreview={() => handlePreviewClick(item)}
+                />
+              </ModuleCardWrapper>
+            ))
+          )}
         </article>
 
         {/* 使用PromptPreviewPanel组件 */}

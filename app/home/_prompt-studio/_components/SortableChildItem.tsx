@@ -4,12 +4,16 @@ import { CSS } from '@dnd-kit/utilities';
 import { useSortable } from '@dnd-kit/sortable';
 import type { GridItem } from './types';
 
-// 可拖拽的子模块组件，使用 useSortable 以获得兄弟项位移和占位
-export function SortableChildItem({ child, parentId, index }: { child: GridItem, parentId: string, index: number }) {
+/**
+ * 可拖拽的子模块组件，使用 useSortable 以获得兄弟项位移和占位
+ * 
+ * 使用虚拟 ID 进行拖拽识别
+ */
+export function SortableChildItem({ child, parentVirtualId, index }: { child: GridItem, parentVirtualId: string, index: number }) {
   
   const { attributes, listeners, setNodeRef, transform, transition, isDragging, isOver } = useSortable({
-    id: child.id,
-    data: { type: 'child', parentId, index, child },
+    id: child.virtualId,
+    data: { type: 'child', parentId: parentVirtualId, index, child },
   });
 
   // 拖拽样式
@@ -39,9 +43,9 @@ export function SortableChildItem({ child, parentId, index }: { child: GridItem,
           className="h-6 w-6 flex items-center justify-center text-neutral-500 hover:text-neutral-700 hover:bg-neutral-100 rounded transition-colors cursor-pointer"
           onClick={(e) => {
             e.stopPropagation();
-            // 将该事件暴露到 NewBlock 组件
+            // 将该事件暴露到 PromptBoard 组件（使用虚拟 ID）
             window.dispatchEvent(new CustomEvent('promote-to-top', { 
-              detail: { parentId, childId: child.id }
+              detail: { parentId: parentVirtualId, childId: child.virtualId }
             }));
           }}
           title="提升为顶层模块"

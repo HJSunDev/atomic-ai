@@ -79,20 +79,22 @@ function SortableBlockItem({ block }: { block: Block }) {
 }
 
 export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
-  // 将旧的模块结构转换为新的块结构（过渡方案）
-  // 主模块的 content 作为第一个文本块，子模块作为引用块
+  // 将模块结构转换为块结构（临时方案）
+  // TODO: 后续需要调用 getDocumentWithBlocks 查询获取真实的块内容
   const initialBlocks: Block[] = [
     {
       id: 'main-block',
       type: 'text',
-      content: item.content,
+      // 临时使用 description 作为预览内容
+      content: item.description || '暂无描述信息',
       order: 0
     },
     ...item.children.map((child, index) => ({
-      id: `ref-${child.id}`,
+      id: `ref-${child.virtualId}`,
       type: 'reference' as const,
       referenceTitle: child.title,
-      referenceContent: child.content,
+      // 临时使用 description 作为预览内容
+      referenceContent: child.description || '暂无描述信息',
       order: index + 1
     }))
   ];

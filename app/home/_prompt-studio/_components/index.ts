@@ -5,6 +5,7 @@ export { OperationCardContent } from './OperationCardContent';
 
 // 导出其他相关组件
 export { OperationArea } from './OperationArea';
+export { EmptyGridState } from './EmptyGridState';
 
 // 导出类型
 export type { GridItem } from './types';

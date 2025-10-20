@@ -8,7 +8,8 @@ import { File } from 'lucide-react';
 
 interface GridCardContentProps {
   item: GridItem;
-  onDelete?: (id: string) => void;
+  // 删除使用虚拟 ID（网格区中虚拟 ID 等于真实 ID）
+  onDelete?: (virtualId: string) => void;
   onPreview?: () => void;
 }
 
@@ -38,7 +39,7 @@ export function GridCardContent({ item, onDelete, onPreview }: GridCardContentPr
             title="删除此模块"
             onClick={e => {
               e.stopPropagation();
-              onDelete(item.id);
+              onDelete(item.virtualId);
             }}
           >
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
