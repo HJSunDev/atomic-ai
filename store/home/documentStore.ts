@@ -15,9 +15,9 @@ import { create } from 'zustand';
 
 // 文档内容草稿类型
 export interface PromptDocumentDraft {
-  title: string;
-  description: string;
-  content: string;
+  title?: string;
+  description?: string;
+  content?: string;
 }
 
 // 显示模式：右侧抽屉 / 居中模态 / 全屏

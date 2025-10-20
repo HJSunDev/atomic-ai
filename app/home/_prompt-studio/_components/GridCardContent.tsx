@@ -84,7 +84,7 @@ export function GridCardContent({ item, onDelete, onPreview }: GridCardContentPr
       {/* 卡片主体内容 */}
       <div className="flex flex-col flex-grow text-[#807d78] text-[12px] whitespace-nowrap ">
         <File className="w-4 h-4 text-muted-foreground/90 flex-shrink-0" />
-        <span className="truncate mt-[6px]">{item.title}</span>
+        <span className="truncate mt-[6px]">{item.title || "无标题"}</span>
       </div>
 
       {/* 摘要徽章 */}

@@ -49,8 +49,8 @@ export const promptSchema = {
   documents: defineTable({
     // 创建该文档的Clerk User ID
     userId: v.string(),
-    // 文档的标题，必填
-    title: v.string(),
+    // 文档的标题，可选
+    title: v.optional(v.string()),
     // 文档的描述信息，可选
     description: v.optional(v.string()),
     // 提示词的前置信息（例如，提示词的背景信息、角色扮演指令等），可选

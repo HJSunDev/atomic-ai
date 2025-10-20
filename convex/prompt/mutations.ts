@@ -3,18 +3,66 @@ import { v } from "convex/values";
 
 
 /**
- * 创建新文档
+ * 创建新文档（极简版）
  * 
- * 文档创建时会自动生成一个初始的文本块（order = 0），因为：
- * 1. 文档必须至少包含一个内容块才能进行编辑
- * 2. 初始文本块为用户提供了即时可用的编辑入口点
- * 3. 确保文档数据结构的完整性和一致性
+ * 用于常规的空文档创建场景，创建后通过实时编辑填充内容。
+ * 
+ * 设计特性：
+ * - 零参数，最简洁的创建接口
+ * - 自动创建初始空文本块，确保文档结构完整
+ * - 所有字段使用默认值，后续通过 updateDocument 和 updateDocumentContent 更新
+ * 
+ * 使用场景：
+ * - 用户点击"新建文档"按钮
+ * - 快速创建空白文档，然后立即打开编辑
  * 
  * @returns 新创建文档的ID
  */
 export const createDocument = mutation({
+  args: {},
+  handler: async (ctx) => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    const documentId = await ctx.db.insert("documents", {
+      userId,
+      isArchived: false,
+      referenceCount: 0,
+    });
+
+    await ctx.db.insert("blocks", {
+      documentId,
+      type: "text",
+      content: "",
+      order: 0,
+    });
+
+    return { documentId } as const;
+  },
+});
+
+
+/**
+ * 创建文档（预填充版）
+ * 
+ * 用于需要预填充初始内容的场景，如模板创建、导入外部内容、复制已有文档等。
+ * 
+ * 设计特性：
+ * - 支持一次性设置所有文档字段和初始内容
+ * - 适用于批量导入、模板实例化等场景
+ * - 所有参数可选，未提供的字段使用默认值
+ * 
+ * 使用场景：
+ * - 从模板创建文档
+ * - 导入外部内容（如 Markdown 文件）
+ * - 复制现有文档
+ * - API 批量创建
+ * 
+ * @returns 新创建文档的ID
+ */
+export const createDocumentWithData = mutation({
   args: {
-    title: v.string(),
+    title: v.optional(v.string()),
     description: v.optional(v.string()),
     promptPrefix: v.optional(v.string()),
     promptSuffix: v.optional(v.string()),

@@ -21,7 +21,7 @@ export function OperationCardContent({ item, onDelete, onSave }: OperationCardCo
     <>
       {/* 头部：标题与操作按钮同行，按钮靠右 */}
       <header className="mb-2 flex items-center justify-between">
-        <h3 className="text-[16px] font-semibold text-foreground leading-tight flex-1 truncate pr-2">{item.title}</h3>
+        <h3 className="text-[16px] font-semibold text-foreground leading-tight flex-1 truncate pr-2">{item.title || "无标题"}</h3>
         <div className="flex gap-[1px] opacity-60 group-hover:opacity-100 transition-opacity" style={{ transform: 'translateX(6px)' }}>
           {onSave && (
             <button

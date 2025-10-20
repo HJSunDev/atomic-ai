@@ -36,7 +36,7 @@ export const DocumentForm = ({}: DocumentFormProps) => {
         <input
           className="w-full text-4xl font-bold outline-none placeholder:text-gray-300 leading-tight"
           placeholder="无标题"
-          value={draft.title}
+          value={draft.title || ""}
           onChange={handleTitleChange}
           autoFocus
         />
@@ -48,7 +48,7 @@ export const DocumentForm = ({}: DocumentFormProps) => {
           className="w-full resize-none outline-none text-gray-600 placeholder:text-gray-300 leading-relaxed"
           rows={2}
           placeholder="添加描述..."
-          value={draft.description}
+          value={draft.description || ""}
           onChange={handleDescriptionChange}
         />
       </section>
@@ -56,7 +56,7 @@ export const DocumentForm = ({}: DocumentFormProps) => {
       {/* 富文本编辑器：Notion风格的富文本编辑 */}
       <section>
         <TiptapEditor
-          content={draft.content}
+          content={draft.content || ""}
           onContentChange={handleContentChange}
           placeholder="开始写作..."
         />

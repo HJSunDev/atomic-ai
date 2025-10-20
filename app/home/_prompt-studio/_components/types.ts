@@ -13,7 +13,7 @@ export interface GridItem {
   documentId: string;
   
   // === 业务字段 ===
-  title: string;
+  title?: string;
   
   // === 元数据 ===
   description?: string;
