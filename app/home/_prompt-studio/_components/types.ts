@@ -19,6 +19,7 @@ export interface GridItem {
   description?: string;
   promptPrefix?: string;
   promptSuffix?: string;
+  referenceCount?: number;
   
   // === 层级结构 ===
   // 子模块列表（仅操作区顶层卡片可有子模块）

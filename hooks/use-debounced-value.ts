@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 /**
  * 防抖 Hook - 延迟更新值直到指定时间内没有新的更改
  * 
+ * 值防抖：将一个快速变化的响应式数据（state），转换成一个延迟更新的、新的响应式数据（另一个 state）
+ * 
  * @param value 需要防抖的值
  * @param delay 延迟时间（毫秒）
  * @returns 防抖后的值

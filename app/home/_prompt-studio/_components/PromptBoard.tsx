@@ -78,6 +78,7 @@ function convertDocumentToGridItem(doc: Doc<"documents">): GridItem {
     description: doc.description,
     promptPrefix: doc.promptPrefix,
     promptSuffix: doc.promptSuffix,
+    referenceCount: doc.referenceCount,
     
     // 网格区卡片无子模块
     children: [],

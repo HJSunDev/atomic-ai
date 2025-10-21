@@ -10,8 +10,8 @@ import { File } from 'lucide-react';
  * 仅在模块包含子模块时渲染
  */
 export function SummaryBadge({ item }: { item: GridItem }) {
-  // 当没有子模块时，不渲染任何内容
-  if (!item.children || item.children.length === 0) {
+  // 列表态仅显示引用块数量；无引用块时不渲染
+  if (!item.referenceCount || item.referenceCount <= 0) {
     return null;
   }
 
@@ -21,7 +21,7 @@ export function SummaryBadge({ item }: { item: GridItem }) {
       <div className="flex items-center gap-[4px] bg-white rounded-[6px] px-1 py-[2px] border border-border/50 shadow-sm">
         <File className="w-[10px] h-[10px] text-muted-foreground/70" />
         <span className="text-[12px] text-black leading-none">
-          {item.children.length}
+          {item.referenceCount}
         </span>
       </div>
     </div>

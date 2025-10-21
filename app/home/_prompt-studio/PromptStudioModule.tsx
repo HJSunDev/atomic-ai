@@ -3,7 +3,6 @@
 import { TestBlock } from "./_components/TestBlock";
 import { PromptBoard } from "./_components/PromptBoard";
 
-import { usePromptStore } from "@/store/home/promptStore";
 import { useDocumentStore } from "@/store/home/documentStore";
 import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 import { Card, CardContent } from "@/components/ui/card";
