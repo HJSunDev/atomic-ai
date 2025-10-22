@@ -47,7 +47,7 @@ export function OperationArea({ items, onClear, onDelete, onSave }: { items: Gri
       <article className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-[4px] ">
         {items.map(item => (
           <ModuleCardWrapper
-            key={item.id}
+            key={item.virtualId}
             item={item}
             isOperationAreaItem={true}
           >

@@ -42,6 +42,9 @@ export const useAutoSaveDocument = (documentId: string | null) => {
     content: string;
   } | null>(null);
 
+  // 记录已为哪个文档完成过一次性初始化，避免后续 query 回流覆盖本地编辑
+  const initializedForDocRef = useRef<string | null>(null);
+
   // 从服务器加载文档数据
   const documentData = useQuery(
     api.prompt.queries.getDocumentWithContent,
@@ -58,9 +61,14 @@ export const useAutoSaveDocument = (documentId: string | null) => {
   // 内容防抖
   const debouncedContent = useDebouncedValue(content, 500);
 
-  // 初始化：只在文档切换时用服务器数据覆盖本地状态
+  // 初始化：在文档切换或首次数据到达时，用服务器数据覆盖本地状态
   useEffect(() => {
     if (!documentData) {
+      return;
+    }
+
+    // 已初始化过当前文档则跳过，避免覆盖本地编辑
+    if (initializedForDocRef.current === documentId) {
       return;
     }
 
@@ -81,8 +89,11 @@ export const useAutoSaveDocument = (documentId: string | null) => {
     setDescription(serverDescription);
     setContent(serverContent);
 
-  // 关键：只依赖 documentId，文档切换时才重新加载
-  }, [documentId]);
+    // 标记当前文档已完成初始化
+    initializedForDocRef.current = documentId;
+
+  // 依赖 documentId 与 documentData，确保数据到达后能完成一次初始化
+  }, [documentId, documentData]);
 
   // 当 query 数据更新时，同步更新 ref（但不覆盖本地状态）
   useEffect(() => {
