@@ -78,14 +78,13 @@ const getInitialDisplayMode = (): DocumentDisplayMode => {
 };
 
 export const useDocumentStore = create<DocumentState>((set, get) => ({
-  // ===========================================
+
   // 初始状态
   // ===========================================
   isOpen: false,
   displayMode: getInitialDisplayMode(),
   documentId: null,
 
-  // ===========================================
   // 公共 API 方法（供外部组件调用）
   // ===========================================
 
@@ -136,8 +135,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
       documentId: null,
     });
   },
-
-  // ===========================================
+  
   // 内部工具方法（主要供内部其他方法调用）
   // ===========================================
 

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Check, X, MoreHorizontal } from "lucide-react";
 import { LocalCatalyst } from "@/components/ai-assistant/LocalCatalyst";
+import { SidebarDisplayIcon, ModalDisplayIcon, FullscreenDisplayIcon } from "@/components/icons";
 
 // 文档内容容器：统一的头部+主体布局，便于在不同容器中复用
 interface DocumentContentProps {
@@ -31,6 +32,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
   // 优先使用 prop documentId（全屏模式），否则从 Store 读取（drawer/modal）
   const finalDocumentId = propDocumentId ?? storeDocumentId;
 
+  // 处理显示模式切换
   const handleDisplayModeChange = (mode: 'drawer' | 'modal' | 'fullscreen') => {
     switchDisplayMode(mode, {
       onNavigateToHome: () => {
@@ -53,27 +55,6 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
     fullscreen: '',
   };
 
-  // 自定义SVG图标组件
-  const SideIcon = () => (
-    <svg aria-hidden="true" role="graphics-symbol" viewBox="0 0 20 20" className="w-5 h-5" style={{ fill: '#737270' }}>
-      <path d="M10.392 6.125a.5.5 0 0 0-.5.5v6.75a.5.5 0 0 0 .5.5h4.683a.5.5 0 0 0 .5-.5v-6.75a.5.5 0 0 0-.5-.5z"></path>
-      <path d="M4.5 4.125A2.125 2.125 0 0 0 2.375 6.25v7.5c0 1.174.951 2.125 2.125 2.125h11a2.125 2.125 0 0 0 2.125-2.125v-7.5A2.125 2.125 0 0 0 15.5 4.125zM3.625 6.25c0-.483.392-.875.875-.875h11c.483 0 .875.392.875.875v7.5a.875.875 0 0 1-.875.875h-11a.875.875 0 0 1-.875-.875z"></path>
-    </svg>
-  );
-
-  const CenterIcon = () => (
-    <svg aria-hidden="true" role="graphics-symbol" viewBox="0 0 20 20" className="w-5 h-5" style={{ fill: '#737270' }}>
-      <path d="M5.93 7.125a.5.5 0 0 0-.5.5v4.75a.5.5 0 0 0 .5.5h8.145a.5.5 0 0 0 .5-.5v-4.75a.5.5 0 0 0-.5-.5z"></path>
-      <path d="M4.5 4.125A2.125 2.125 0 0 0 2.375 6.25v7.5c0 1.174.951 2.125 2.125 2.125h11a2.125 2.125 0 0 0 2.125-2.125v-7.5A2.125 2.125 0 0 0 15.5 4.125zM3.625 6.25c0-.483.392-.875.875-.875h11c.483 0 .875.392.875.875v7.5a.875.875 0 0 1-.875.875h-11a.875.875 0 0 1-.875-.875z"></path>
-    </svg>
-  );
-
-  const FullIcon = () => (
-    <svg aria-hidden="true" role="graphics-symbol" viewBox="0 0 20 20" className="w-5 h-5" style={{ fill: '#737270' }}>
-      <path d="M4.93 6.125a.5.5 0 0 0-.5.5v6.75a.5.5 0 0 0 .5.5h10.145a.5.5 0 0 0 .5-.5v-6.75a.5.5 0 0 0-.5-.5z"></path>
-      <path d="M4.5 4.125A2.125 2.125 0 0 0 2.375 6.25v7.5c0 1.174.951 2.125 2.125 2.125h11a2.125 2.125 0 0 0 2.125-2.125v-7.5A2.125 2.125 0 0 0 15.5 4.125zM3.625 6.25c0-.483.392-.875.875-.875h11c.483 0 .875.392.875.875v7.5a.875.875 0 0 1-.875.875h-11a.875.875 0 0 1-.875-.875z"></path>
-    </svg>
-  );
 
   const DisplayModeSelector = () => (
     <DropdownMenu>
@@ -83,9 +64,9 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
           title="选择显示模式"
           className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none focus:bg-gray-100"
         >
-          {displayMode === 'drawer' && <SideIcon />}
-          {displayMode === 'modal' && <CenterIcon />}
-          {displayMode === 'fullscreen' && <FullIcon />}
+          {displayMode === 'drawer' && <SidebarDisplayIcon size={20} color="#737270" />}
+          {displayMode === 'modal' && <ModalDisplayIcon size={20} color="#737270" />}
+          {displayMode === 'fullscreen' && <FullscreenDisplayIcon size={20} color="#737270" />}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48 p-1" sideOffset={8}>
@@ -94,7 +75,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
           className="flex items-center gap-3 px-3 py-2.5 text-sm cursor-pointer rounded-sm hover:bg-gray-50 focus:bg-gray-50"
         >
           <div className="flex items-center justify-center w-5 h-5">
-            <SideIcon />
+            <SidebarDisplayIcon size={20} color="#737270" />
           </div>
           <span className="flex-1">侧边预览</span>
           {displayMode === 'drawer' && (
@@ -106,7 +87,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
           className="flex items-center gap-3 px-3 py-2.5 text-sm cursor-pointer rounded-sm hover:bg-gray-50 focus:bg-gray-50"
         >
           <div className="flex items-center justify-center w-5 h-5">
-            <CenterIcon />
+            <ModalDisplayIcon size={20} color="#737270" />
           </div>
           <span className="flex-1">居中预览</span>
           {displayMode === 'modal' && (
@@ -118,7 +99,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
           className="flex items-center gap-3 px-3 py-2.5 text-sm cursor-pointer rounded-sm hover:bg-gray-50 focus:bg-gray-50"
         >
           <div className="flex items-center justify-center w-5 h-5">
-            <FullIcon />
+            <FullscreenDisplayIcon size={20} color="#737270" />
           </div>
           <span className="flex-1">内容区全屏</span>
           {displayMode === 'fullscreen' && (
