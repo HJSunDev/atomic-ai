@@ -3,10 +3,7 @@
 import { useDocumentStore } from "@/store/home/documentStore";
 import { TiptapEditor } from "./TiptapEditor";
 import type React from "react";
-import { useEffect, useState } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import { useAutoSaveDocument } from "@/hooks/useAutoSaveDocument";
 
 // 文档表单属性
 interface DocumentFormProps {
@@ -14,7 +11,7 @@ interface DocumentFormProps {
   documentId?: string;
 }
 
-// 文档表单：默认可编辑，像 Notion 一样可视即编辑；不包含保存逻辑
+// 文档表单：Notion 风格的可视化编辑器，支持自动保存
 export const DocumentForm = ({ documentId: propDocumentId }: DocumentFormProps) => {
   
   const storeDocumentId = useDocumentStore((s) => s.documentId);
@@ -22,31 +19,17 @@ export const DocumentForm = ({ documentId: propDocumentId }: DocumentFormProps) 
   // 优先使用 prop documentId（全屏模式），否则从 Store 读取（drawer/modal）
   const documentId = propDocumentId ?? storeDocumentId;
 
-  // 使用轻量级 query 获取文档数据（文档元信息 + 内容块）
-  const documentData = useQuery(
-    api.prompt.queries.getDocumentWithContent,
-    documentId ? { documentId: documentId as Id<"documents"> } : "skip"
-  );
-
-  // 本地文档状态，仅在组件内维护，不与全局Store同步
-  const [title, setTitle] = useState<string>("");
-  const [description, setDescription] = useState<string>("");
-  const [content, setContent] = useState<string>("");
-
-  // 当文档数据加载完成后，更新本地状态
-  useEffect(() => {
-    if (!documentData) {
-      setTitle("");
-      setDescription("");
-      setContent("");
-      return;
-    }
-
-    const { document, contentBlock } = documentData;
-    setTitle(document.title || "");
-    setDescription(document.description || "");
-    setContent(contentBlock.content || "");
-  }, [documentData]);
+  // 使用自动保存 Hook，处理数据加载、本地状态管理和防抖保存
+  const {
+    title,
+    setTitle,
+    description,
+    setDescription,
+    content,
+    setContent,
+    isLoading,
+    isSaving,
+  } = useAutoSaveDocument(documentId ?? null);
 
   // 标题变更
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -67,6 +50,14 @@ export const DocumentForm = ({ documentId: propDocumentId }: DocumentFormProps) 
 
   return (
     <article className="max-w-[42rem] mx-auto pt-4 bg-blue-100">
+      {/* 保存状态指示器：Notion 风格的简洁提示 */}
+      {isSaving && (
+        <div className="flex items-center gap-2 text-xs text-gray-400 mb-2">
+          <div className="w-1.5 h-1.5 bg-gray-400 rounded-full animate-pulse" />
+          <span>保存中...</span>
+        </div>
+      )}
+
       {/* 标题输入：Notion风格的大标题 */}
       <section className="">
         <input
