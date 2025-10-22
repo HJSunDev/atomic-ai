@@ -11,6 +11,7 @@ export const WelcomePanel = () => {
   const openCreateModule = () => {
     // 使用统一的文档打开方法，通过依赖注入方式处理路由跳转
     useDocumentStore.getState().openDocument({
+      documentId: 'placeholder-new',
       onNavigateToFullscreen: () => router.push('/home/prompt-document')
     });
   };

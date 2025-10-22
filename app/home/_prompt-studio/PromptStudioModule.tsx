@@ -33,7 +33,8 @@ export const PromptStudioModule = () => {
   // 打开文档创建对话框
   const openCreateDocumentDialog = () => {
     useDocumentStore.getState().switchDisplayMode('modal');
-    useDocumentStore.getState().openDocument();
+    // 使用占位ID打开空白文档，后续由组件内按ID加载内容
+    useDocumentStore.getState().openDocument({ documentId: 'placeholder-new' });
   };
 
   return (

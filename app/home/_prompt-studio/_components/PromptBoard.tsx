@@ -405,11 +405,7 @@ export function PromptBoard() {
   // 处理模块点击事件：打开全局文档查看器
   const handleItemClick = useCallback((item: GridItem) => {
     openDocument({
-      initialData: {
-        title: item.title,
-        description: item.description || '',
-        content: '', // 内容需要通过 getDocumentWithBlocks 查询获取
-      },
+      documentId: item.documentId,
       onNavigateToFullscreen: () => router.push('/home/prompt-document'),
     });
   }, [openDocument, router]);
