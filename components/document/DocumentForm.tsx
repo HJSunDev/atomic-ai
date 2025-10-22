@@ -6,13 +6,19 @@ import type React from "react";
 import { useEffect, useState } from "react";
 import { fetchDocumentById } from "@/lib/document-api";
 
-// 文档表单属性：目前无需外部关闭回调
-interface DocumentFormProps {}
+// 文档表单属性
+interface DocumentFormProps {
+  // 文档ID：全屏模式通过 prop 传入，drawer/modal 从 Store 读取
+  documentId?: string;
+}
 
 // 文档表单：默认可编辑，像 Notion 一样可视即编辑；不包含保存逻辑
-export const DocumentForm = ({}: DocumentFormProps) => {
+export const DocumentForm = ({ documentId: propDocumentId }: DocumentFormProps) => {
   
-  const documentId = useDocumentStore((s) => s.documentId);
+  const storeDocumentId = useDocumentStore((s) => s.documentId);
+  
+  // 优先使用 prop documentId（全屏模式），否则从 Store 读取（drawer/modal）
+  const documentId = propDocumentId ?? storeDocumentId;
 
   // 本地文档状态，仅在组件内维护，不与全局Store同步
   const [title, setTitle] = useState<string>("");

@@ -404,10 +404,17 @@ export function PromptBoard() {
 
   // 处理模块点击事件：打开全局文档查看器
   const handleItemClick = useCallback((item: GridItem) => {
-    openDocument({
-      documentId: item.documentId,
-      onNavigateToFullscreen: () => router.push('/home/prompt-document'),
-    });
+    const currentMode = useDocumentStore.getState().displayMode;
+    
+    if (currentMode === 'fullscreen') {
+      // 全屏模式：直接路由跳转到动态路由
+      router.push(`/home/prompt-document/${item.documentId}`);
+    } else {
+      // drawer/modal 模式：通过 Store 打开
+      openDocument({
+        documentId: item.documentId,
+      });
+    }
   }, [openDocument, router]);
 
   // 处理预览按钮点击事件

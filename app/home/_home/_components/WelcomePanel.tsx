@@ -9,11 +9,17 @@ export const WelcomePanel = () => {
   
   // 点击"新建模块"时打开文档查看器（创建模式）
   const openCreateModule = () => {
-    // 使用统一的文档打开方法，通过依赖注入方式处理路由跳转
-    useDocumentStore.getState().openDocument({
-      documentId: 'placeholder-new',
-      onNavigateToFullscreen: () => router.push('/home/prompt-document')
-    });
+    const currentMode = useDocumentStore.getState().displayMode;
+    
+    if (currentMode === 'fullscreen') {
+      // 全屏模式：直接路由跳转
+      router.push('/home/prompt-document/placeholder-new');
+    } else {
+      // drawer/modal 模式：通过 Store 打开
+      useDocumentStore.getState().openDocument({
+        documentId: 'placeholder-new',
+      });
+    }
   };
 
   return (

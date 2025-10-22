@@ -32,9 +32,17 @@ export const PromptStudioModule = () => {
 
   // 打开文档创建对话框
   const openCreateDocumentDialog = () => {
-    useDocumentStore.getState().switchDisplayMode('modal');
-    // 使用占位ID打开空白文档，后续由组件内按ID加载内容
-    useDocumentStore.getState().openDocument({ documentId: 'placeholder-new' });
+    const currentMode = useDocumentStore.getState().displayMode;
+    
+    if (currentMode === 'fullscreen') {
+      // 全屏模式：直接路由跳转
+      useDocumentStore.getState()._setDisplayMode('modal');
+      useDocumentStore.getState().openDocument({ documentId: 'placeholder-new' });
+    } else {
+      // drawer/modal 模式：先切换模式再打开
+      useDocumentStore.getState().switchDisplayMode('modal');
+      useDocumentStore.getState().openDocument({ documentId: 'placeholder-new' });
+    }
   };
 
   return (

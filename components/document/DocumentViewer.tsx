@@ -46,8 +46,8 @@ export const DocumentViewer = () => {
         // 注入自定义点击行为：切换到全屏并打开AI面板
         onCatalystClick: () => {
           switchDisplayMode('fullscreen', {
-            onNavigateToFullscreen: () => {
-              router.push('/home/prompt-document?openAi=true');
+            onNavigateToFullscreen: (documentId: string) => {
+              router.push(`/home/prompt-document/${documentId}?openAi=true`);
             },
           });
         }

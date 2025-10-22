@@ -17,22 +17,30 @@ interface DocumentContentProps {
   onRequestClose?: () => void;
   // 由父容器（如 DocumentViewer）传入的上下文ID，用于在局部渲染唤醒器
   contextId?: string;
+  // 文档ID：全屏模式通过 prop 传入，drawer/modal 从 Store 读取
+  documentId?: string;
 }
 
-export const DocumentContent = ({ onRequestClose, contextId }: DocumentContentProps) => {
+export const DocumentContent = ({ onRequestClose, contextId, documentId: propDocumentId }: DocumentContentProps) => {
   const router = useRouter();
   const displayMode = useDocumentStore((s) => s.displayMode);
+  const storeDocumentId = useDocumentStore((s) => s.documentId);
   const close = useDocumentStore((s) => s.close);
   const switchDisplayMode = useDocumentStore((s) => s.switchDisplayMode);
+  
+  // 优先使用 prop documentId（全屏模式），否则从 Store 读取（drawer/modal）
+  const finalDocumentId = propDocumentId ?? storeDocumentId;
 
   const handleDisplayModeChange = (mode: 'drawer' | 'modal' | 'fullscreen') => {
     switchDisplayMode(mode, {
       onNavigateToHome: () => {
         router.push('/home');
       },
-      onNavigateToFullscreen: () => {
-        router.push('/home/prompt-document');
-      }
+      onNavigateToFullscreen: (documentId: string) => {
+        router.push(`/home/prompt-document/${documentId}`);
+      },
+      // 从全屏切到其他模式时，传递当前文档ID
+      documentIdToOpen: finalDocumentId ?? undefined,
     });
   };
 
@@ -154,7 +162,7 @@ export const DocumentContent = ({ onRequestClose, contextId }: DocumentContentPr
       </header>
       
       <main className={`flex-1 overflow-auto ${contentPaddingByMode[displayMode]}`}>
-        <DocumentForm />
+        <DocumentForm documentId={finalDocumentId ?? undefined} />
       </main>
     </section>
   );

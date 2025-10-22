@@ -1,28 +1,30 @@
 "use client";
 
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { DocumentContent } from "@/components/document/DocumentContent";
-import { useDocumentStore } from "@/store/home/documentStore";
 import { useManageAiContext } from "@/hooks/use-manage-ai-context";
 import { AiContext } from "@/store/home/use-ai-context-store";
 import { useAiPanelStore } from "@/store";
 
-// 全屏文档页面
-export default function DocumentPage() {
+// 全屏文档页面（动态路由）
+export default function DocumentDynamicPage() {
   
   const router = useRouter();
   const searchParams = useSearchParams();
-  const { isOpen } = useDocumentStore();
+  const params = useParams();
   const { setAiPanelVisibility } = useAiPanelStore();
+  
+  // 从路由参数获取文档ID（URL即状态）
+  const documentId = params.id as string;
 
-  // 为全屏文档页面定义并管理AI上下文
+  // 为全屏文档页面定义并管理AI上下文（每个文档独立上下文）
   const documentPageContext = useMemo<AiContext>(() => ({
-    id: "document-fullscreen-module",
+    id: `document-fullscreen-${documentId}`,
     type: "document",
-    showCatalyst: true, // 在文档页面，显示全局唤醒器
-    catalystPlacement: 'global', // 全屏模式下，使用全局唤醒器
-  }), []);
+    showCatalyst: true,
+    catalystPlacement: 'global',
+  }), [documentId]);
 
   useManageAiContext(documentPageContext);
 
@@ -37,7 +39,7 @@ export default function DocumentPage() {
       
       // 清理URL参数
       const cleanupTimer = setTimeout(() => {
-        router.replace('/home/prompt-document', { scroll: false });
+        router.replace(`/home/prompt-document/${documentId}`, { scroll: false });
       }, 150);
 
       return () => {
@@ -45,23 +47,18 @@ export default function DocumentPage() {
         clearTimeout(cleanupTimer);
       };
     }
-  }, [searchParams, router, setAiPanelVisibility]);
-
-
-  // 检查访问合法性：全屏页面只能在文档已打开时访问
-  useEffect(() => {
-    if (!isOpen) {
-      // 异常访问场景（直接访问URL、刷新等）：重定向到主页
-      console.warn('全屏文档未打开，重定向到主页');
-      router.replace('/home');
-    }
-  }, [isOpen, router]);
+  }, [searchParams, router, setAiPanelVisibility, documentId]);
 
   return (
     <div className="h-screen flex flex-col bg-green-100">
-      <DocumentContent onRequestClose={() => {
-        useDocumentStore.getState().close();
-      }} />
+      <DocumentContent 
+        documentId={documentId}
+        onRequestClose={() => {
+          // 关闭全屏模式：返回首页
+          router.push('/home');
+        }} 
+      />
     </div>
   );
 }
+
