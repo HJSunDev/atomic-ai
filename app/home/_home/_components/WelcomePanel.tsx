@@ -1,25 +1,16 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useDocumentStore } from "@/store/home/documentStore";
+import { useCreateDocument } from "@/hooks/useCreateDocument";
 
 // 欢迎面板：顶部欢迎与功能概览占位模块
 export const WelcomePanel = () => {
   const router = useRouter();
+  const { createAndOpen, isCreating } = useCreateDocument();
   
-  // 点击"新建模块"时打开文档查看器（创建模式）
-  const openCreateModule = () => {
-    const currentMode = useDocumentStore.getState().displayMode;
-    
-    if (currentMode === 'fullscreen') {
-      // 全屏模式：直接路由跳转
-      router.push('/home/prompt-document/placeholder-new');
-    } else {
-      // drawer/modal 模式：通过 Store 打开
-      useDocumentStore.getState().openDocument({
-        documentId: 'placeholder-new',
-      });
-    }
+  // 点击"新建模块"时创建文档并打开
+  const openCreateModule = async () => {
+    await createAndOpen();
   };
 
   return (
@@ -39,8 +30,12 @@ export const WelcomePanel = () => {
           </div>
           {/* 功能按钮占位 */}
           <div className="grid grid-cols-3 gap-3">
-            <button onClick={openCreateModule} className="h-16 rounded-lg border bg-gray-50 flex items-center justify-center text-xs text-gray-400 cursor-pointer">
-              新建模块
+            <button 
+              onClick={openCreateModule}
+              disabled={isCreating}
+              className="h-16 rounded-lg border bg-gray-50 flex items-center justify-center text-xs text-gray-400 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {isCreating ? '创建中...' : '新建模块'}
             </button>
             <div className="h-16 rounded-lg border bg-gray-50 flex items-center justify-center text-xs text-gray-400">
               占位

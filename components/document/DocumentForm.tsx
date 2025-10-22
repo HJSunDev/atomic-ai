@@ -4,7 +4,9 @@ import { useDocumentStore } from "@/store/home/documentStore";
 import { TiptapEditor } from "./TiptapEditor";
 import type React from "react";
 import { useEffect, useState } from "react";
-import { fetchDocumentById } from "@/lib/document-api";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 
 // 文档表单属性
 interface DocumentFormProps {
@@ -20,30 +22,31 @@ export const DocumentForm = ({ documentId: propDocumentId }: DocumentFormProps) 
   // 优先使用 prop documentId（全屏模式），否则从 Store 读取（drawer/modal）
   const documentId = propDocumentId ?? storeDocumentId;
 
+  // 使用轻量级 query 获取文档数据（文档元信息 + 内容块）
+  const documentData = useQuery(
+    api.prompt.queries.getDocumentWithContent,
+    documentId ? { documentId: documentId as Id<"documents"> } : "skip"
+  );
+
   // 本地文档状态，仅在组件内维护，不与全局Store同步
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
   const [content, setContent] = useState<string>("");
 
-  // 当 documentId 变化时，按需获取占位数据
+  // 当文档数据加载完成后，更新本地状态
   useEffect(() => {
-    let cancelled = false;
-    const load = async () => {
-      if (!documentId) {
-        setTitle("");
-        setDescription("");
-        setContent("");
-        return;
-      }
-      const doc = await fetchDocumentById(documentId);
-      if (cancelled) return;
-      setTitle(doc.title || "");
-      setDescription(doc.description || "");
-      setContent(doc.content || "");
-    };
-    load();
-    return () => { cancelled = true; };
-  }, [documentId]);
+    if (!documentData) {
+      setTitle("");
+      setDescription("");
+      setContent("");
+      return;
+    }
+
+    const { document, contentBlock } = documentData;
+    setTitle(document.title || "");
+    setDescription(document.description || "");
+    setContent(contentBlock.content || "");
+  }, [documentData]);
 
   // 标题变更
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {

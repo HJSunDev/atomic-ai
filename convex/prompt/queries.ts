@@ -31,6 +31,59 @@ export const listDocuments = query({
 
 
 /**
+ * 获取文档及其内容块
+ * 
+ * 用于获取单个文档的详细信息，包括文档元数据和关联的内容块
+ * 适用于文档查看、编辑等多种场景
+ * 
+ * @param documentId - 文档ID
+ * @returns 包含文档和内容块的对象，如果文档不存在或无权限则返回null
+ * 
+ * 返回结构：
+ * {
+ *   document: {
+ *     _id, _creationTime, userId, title, description, 
+ *     promptPrefix, promptSuffix, isArchived, referenceCount
+ *   },
+ *   contentBlock: {
+ *     _id, _creationTime, documentId, type: "text", 
+ *     content, order
+ *   }
+ * }
+ */
+export const getDocumentWithContent = query({
+  args: {
+    documentId: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    const document = await ctx.db.get(args.documentId);
+    if (!document) return null;
+    if (document.userId !== userId) return null;
+    if (document.isArchived) return null;
+
+    const contentBlock = await ctx.db
+      .query("blocks")
+      .withIndex("by_documentId_type", (q) => 
+        q.eq("documentId", args.documentId).eq("type", "text")
+      )
+      .first();
+
+    if (!contentBlock) {
+      throw new Error("文档内容块不存在");
+    }
+
+    return {
+      document,
+      contentBlock,
+    };
+  },
+});
+
+
+/**
  * 块数据结构（含递归引用文档）
  */
 type EnrichedBlock = Doc<"blocks"> & {

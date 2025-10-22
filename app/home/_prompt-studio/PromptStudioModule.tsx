@@ -3,7 +3,7 @@
 import { TestBlock } from "./_components/TestBlock";
 import { PromptBoard } from "./_components/PromptBoard";
 
-import { useDocumentStore } from "@/store/home/documentStore";
+import { useCreateDocument } from "@/hooks/useCreateDocument";
 import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 import { Card, CardContent } from "@/components/ui/card";
 import { ModelSelector } from "@/components/ai-chat/ModelSelector";
@@ -30,11 +30,10 @@ import {
 
 export const PromptStudioModule = () => {
 
-  // 打开文档创建对话框
-  const openCreateDocumentDialog = () => {
-    // 新建文档统一使用 modal 模式，先切换模式再打开
-    useDocumentStore.getState()._setDisplayMode('modal');
-    useDocumentStore.getState().openDocument({ documentId: 'placeholder-new' });
+  const { createAndOpen, isCreating } = useCreateDocument();
+
+  const handleCreateNewDocument = async () => {
+    await createAndOpen();
   };
 
   return (
@@ -89,7 +88,8 @@ export const PromptStudioModule = () => {
                         variant="ghost"
                         size="icon"
                         className="h-6 w-6 text-muted-foreground/70 hover:text-foreground ml-1 cursor-pointer"
-                        onClick={openCreateDocumentDialog}
+                        onClick={handleCreateNewDocument}
+                        disabled={isCreating}
                       >
                         <Plus className="h-4 w-4" />
                         <span className="sr-only">Add new document</span>
