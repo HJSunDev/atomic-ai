@@ -48,20 +48,21 @@ export const createDocument = mutation({
  * 用于将操作区的临时组合一次性持久化为网格列表的新文档。
  * 
  * 设计特性：
- * - 原子操作：一次性创建文档、内容块和所有引用块
- * - 顺序保证：引用块严格按照传入顺序排列（order=1..n）
- * - 计数准确：referenceCount 在文档创建时直接写入，无需后续更新
- * - 允许重复引用：同一文档可被引用多次，给予用户更多使用空间
+ * - 原子操作：一次性创建文档及其所有块（内容块和引用块）
+ * - 顺序保证：按照前端传入的子模块顺序创建块（order=0..n-1）
+ * - 内容获取：内容块从源文档内容块获取
+ * - 类型明确：通过 type 字段区分内容块和引用块，统一处理流程
  * 
  * 块结构：
- * - order=0: 内容块（type="text"），存储文档自身内容
- * - order=1..n: 引用块（type="reference"），按传入顺序指向子文档
+ * - 按传入顺序创建：每个子模块对应一个块，order 从 0 开始递增
+ * - type="content": 通过 documentId 查询源文档的内容块，复制其内容
+ * - type="reference": 直接创建引用块，指向 documentId
  * 
  * 使用场景：
  * - 操作区卡片保存到网格列表
  * - 将多个模块组合成新的复合文档
  * 
- * @returns 新创建文档的ID和引用块数量
+ * @returns 新创建文档的ID、内容块数量和引用块数量
  */
 export const createComposedDocument = mutation({
   args: {
@@ -69,35 +70,37 @@ export const createComposedDocument = mutation({
     description: v.optional(v.string()),
     promptPrefix: v.optional(v.string()),
     promptSuffix: v.optional(v.string()),
-    initialContent: v.optional(v.string()),
-    referenceIds: v.array(v.id("documents")),
+    children: v.array(v.object({
+      type: v.union(v.literal("content"), v.literal("reference")),
+      documentId: v.id("documents"),
+    })),
   },
   handler: async (ctx, args) => {
     // 用户权限校验
     const userId = (await ctx.auth.getUserIdentity())?.subject;
     if (!userId) throw new Error("未授权访问");
 
-    const referenceCount = args.referenceIds.length;
-    // 如果存在引用块，校验引用块的文档是否存在且属于当前用户
-    if (referenceCount > 0) {
-      const referenceChecks = await Promise.all(
-        args.referenceIds.map(async (refId) => {
-          const doc = await ctx.db.get(refId);
-          return { refId, doc };
-        })
-      );
+    const referenceCount = args.children.filter(c => c.type === "reference").length;
+    const contentCount = args.children.filter(c => c.type === "content").length;
 
-      for (const { refId, doc } of referenceChecks) {
-        if (!doc) {
-          throw new Error(`引用的文档不存在: ${refId}`);
-        }
-        if (doc.userId !== userId) {
-          throw new Error(`无权引用该文档: ${refId}`);
-        }
+    // 批量校验所有引用的文档是否存在且属于当前用户
+    const documentChecks = await Promise.all(
+      args.children.map(async (child) => {
+        const doc = await ctx.db.get(child.documentId);
+        return { child, doc };
+      })
+    );
+
+    for (const { child, doc } of documentChecks) {
+      if (!doc) {
+        throw new Error(`文档不存在: ${child.documentId}`);
+      }
+      if (doc.userId !== userId) {
+        throw new Error(`无权访问该文档: ${child.documentId}`);
       }
     }
 
-    // 创建文档
+    // 创建新文档
     const documentId = await ctx.db.insert("documents", {
       userId,
       title: args.title,
@@ -108,29 +111,43 @@ export const createComposedDocument = mutation({
       referenceCount,
     });
 
-    // 创建内容块
-    await ctx.db.insert("blocks", {
-      documentId,
-      type: "text",
-      content: args.initialContent ?? "",
-      order: 0,
-    });
-    // 创建引用块
-    if (referenceCount > 0) {
-      await Promise.all(
-        args.referenceIds.map((refId, index) =>
-          ctx.db.insert("blocks", {
+    // 按顺序创建所有块
+    await Promise.all(
+      args.children.map(async (child, index) => {
+        if (child.type === "content") {
+          // 获取源文档的内容块
+          const sourceContentBlock = await ctx.db
+            .query("blocks")
+            .withIndex("by_documentId_type", (q) => 
+              q.eq("documentId", child.documentId).eq("type", "text")
+            )
+            .first();
+
+          if (!sourceContentBlock) {
+            throw new Error(`源文档的内容块不存在: ${child.documentId}`);
+          }
+
+          await ctx.db.insert("blocks", {
+            documentId,
+            type: "text",
+            content: sourceContentBlock.content ?? "",
+            order: index,
+          });
+        } else {
+          // 创建引用块
+          await ctx.db.insert("blocks", {
             documentId,
             type: "reference",
-            referenceId: refId,
-            order: index + 1,
-          })
-        )
-      );
-    }
+            referenceId: child.documentId,
+            order: index,
+          });
+        }
+      })
+    );
 
     return { 
       documentId,
+      contentCount,
       referenceCount,
     } as const;
   },

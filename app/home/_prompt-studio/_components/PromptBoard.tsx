@@ -460,22 +460,24 @@ export function PromptBoard() {
   // 保存操作区模块到网格区
   const handleSaveToGrid = useCallback(async (item: GridItem) => {
     try {
-      const referenceIds = item.children
-        .filter(child => child.blockType === 'reference')
-        .map(child => child.documentId as Id<"documents">);
+      // 将子模块转换为接口所需的格式，保留原有顺序
+      const children = item.children.map(child => ({
+        type: child.blockType as "content" | "reference",
+        documentId: child.documentId as Id<"documents">,
+      }));
       
       const result = await createComposedDocument({
         title: item.title,
         description: item.description,
         promptPrefix: item.promptPrefix,
         promptSuffix: item.promptSuffix,
-        initialContent: "",
-        referenceIds,
+        children,
       });
 
-      toast.success(`保存成功！包含 ${result.referenceCount} 个引用块`, {
-        position: 'top-center',
-      });
+      toast.success(
+        `保存成功！包含 ${result.contentCount} 个内容块、${result.referenceCount} 个引用块`, 
+        { position: 'top-center' }
+      );
 
       // 从操作区移除模块
       setOperationItems(prevItems => prevItems.filter(i => i.virtualId !== item.virtualId));
