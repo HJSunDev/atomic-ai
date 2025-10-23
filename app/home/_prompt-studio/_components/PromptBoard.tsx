@@ -42,6 +42,7 @@ import { useRouter } from 'next/navigation';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Doc, Id } from '@/convex/_generated/dataModel';
+import { useConvex } from 'convex/react';
 
 
 
@@ -89,6 +90,9 @@ function convertDocumentToGridItem(doc: Doc<"documents">): GridItem {
 export function PromptBoard() {
   // 添加客户端渲染状态
   const [isMounted, setIsMounted] = useState(false);
+  
+  // Convex 客户端实例
+  const convex = useConvex();
   
   // 从后端查询文档列表
   const documentsData = useQuery(api.prompt.queries.listDocuments);
@@ -142,6 +146,68 @@ export function PromptBoard() {
   // 教程动画时强制显示操作区
   const [tutorialForceShowOperation, setTutorialForceShowOperation] = useState(false);
 
+  /**
+   * 加载文档块结构并转换为子模块
+   * 
+   * 功能说明：
+   * - 获取文档的内容块占位 + 所有引用块的元信息
+   * - 转换为可拖拽排序的子模块列表
+   * - 每次拖入都重新加载，确保数据最新
+   * 
+   * 使用方式：
+   * - 使用 convex.query() 命令式调用，而非 useQuery Hook
+   * - 原因：需要在拖拽完成后按需获取数据，避免 Hook 规则冲突
+   * - 返回 Promise，适合在事件回调中使用
+   * 
+   * @param operationItemVirtualId 操作区卡片的虚拟ID（用于定位更新目标）
+   * @param documentId 文档的真实ID（用于查询后端数据）
+   */
+  const loadDocumentBlocks = useCallback(async (operationItemVirtualId: string, documentId: Id<"documents">) => {
+    try {
+      // 使用 convex.query() 命令式调用，避免 useQuery Hook 规则限制
+      const documentStructure = await convex.query(api.prompt.queries.getDocumentOutline, { documentId });
+      
+      if (!documentStructure) {
+        toast.error('无法加载文档结构', { position: 'top-center' });
+        return;
+      }
+
+      const children: GridItem[] = documentStructure.items.map(item => {
+        if (item.kind === 'content') {
+          return {
+            virtualId: uuidv4(),
+            documentId: documentId,
+            title: '文档内容',
+            blockType: 'content' as const,
+            children: [],
+          };
+        } else {
+          return {
+            virtualId: uuidv4(),
+            documentId: item.referencedDocument._id,
+            title: item.referencedDocument.title,
+            description: item.referencedDocument.description,
+            promptPrefix: item.referencedDocument.promptPrefix,
+            promptSuffix: item.referencedDocument.promptSuffix,
+            referenceCount: item.referencedDocument.referenceCount,
+            blockType: 'reference' as const,
+            children: [],
+          };
+        }
+      });
+
+      setOperationItems(prevItems =>
+        prevItems.map(item =>
+          item.virtualId === operationItemVirtualId
+            ? { ...item, children }
+            : item
+        )
+      );
+    } catch (error) {
+      console.error('加载文档块结构失败:', error);
+      toast.error('加载文档结构失败', { position: 'top-center' });
+    }
+  }, [convex]);
 
 
   // 在客户端加载后再渲染组件
@@ -358,9 +424,13 @@ export function PromptBoard() {
           ...draggedItem, 
           virtualId: uuidv4(),
           documentId: draggedItem.documentId,
+          children: [],
         };
         // 将副本添加到操作区
         setOperationItems(prevItems => [...prevItems, copy]);
+        
+        // 异步加载文档块结构并转换为子模块
+        loadDocumentBlocks(copy.virtualId, draggedItem.documentId as Id<"documents">);
       }
     }
     // 清除当前被拖拽项
@@ -390,7 +460,9 @@ export function PromptBoard() {
   // 保存操作区模块到网格区
   const handleSaveToGrid = useCallback(async (item: GridItem) => {
     try {
-      const referenceIds = item.children.map(child => child.documentId as Id<"documents">);
+      const referenceIds = item.children
+        .filter(child => child.blockType === 'reference')
+        .map(child => child.documentId as Id<"documents">);
       
       const result = await createComposedDocument({
         title: item.title,

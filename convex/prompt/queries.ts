@@ -84,6 +84,118 @@ export const getDocumentWithContent = query({
 
 
 /**
+ * 文档大纲项类型定义
+ */
+type OutlineItem = 
+  | { kind: 'content'; order: number }
+  | { 
+      kind: 'reference'; 
+      order: number; 
+      referencedDocument: {
+        _id: Id<"documents">;
+        title?: string;
+        description?: string;
+        promptPrefix?: string;
+        promptSuffix?: string;
+        referenceCount: number;
+      };
+    };
+
+/**
+ * 文档大纲类型定义
+ */
+type DocumentOutline = {
+  documentId: Id<"documents">;
+  items: OutlineItem[];
+};
+
+/**
+ * 获取文档的大纲结构（内容块占位 + 引用块元信息）
+ * 
+ * 设计特性：
+ * - 轻量级：只返回块级大纲，不返回内容块正文，不递归引用文档的块
+ * - 扁平化：items 按 order 排序，包含自身内容块占位和所有引用块的元信息
+ * - 权限隔离：自动过滤不属于当前用户或已归档的引用目标
+ * - 允许重复引用：同一文档可被引用多次，每次都是独立的引用块
+ * 
+ * 使用场景：
+ * - 操作区需要展示文档的可排序子模块列表（内容块 + 引用块）
+ * - 组合文档时需要了解文档结构但不需要完整内容
+ * 
+ * 返回结构示例：
+ * {
+ *   documentId: "doc-a",
+ *   items: [
+ *     { kind: 'content', order: 0 },
+ *     { kind: 'reference', order: 1, referencedDocument: {...} },
+ *     { kind: 'reference', order: 2, referencedDocument: {...} }
+ *   ]
+ * }
+ */
+export const getDocumentOutline = query({
+  args: {
+    documentId: v.id("documents"),
+  },
+  handler: async (ctx, args): Promise<DocumentOutline | null> => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    const document = await ctx.db.get(args.documentId);
+    if (!document) return null;
+    if (document.userId !== userId) return null;
+    if (document.isArchived) return null;
+
+    const blocks = await ctx.db
+      .query("blocks")
+      .withIndex("by_documentId_order", (q) => q.eq("documentId", args.documentId))
+      .collect();
+
+    const items: (OutlineItem | null)[] = await Promise.all(
+      blocks.map(async (block): Promise<OutlineItem | null> => {
+        if (block.type === "text") {
+          return {
+            kind: 'content',
+            order: block.order,
+          };
+        }
+
+        if (block.type === "reference" && block.referenceId) {
+          const referencedDoc = await ctx.db.get(block.referenceId);
+          
+          if (!referencedDoc) return null;
+          if (referencedDoc.userId !== userId) return null;
+          if (referencedDoc.isArchived) return null;
+
+          return {
+            kind: 'reference',
+            order: block.order,
+            referencedDocument: {
+              _id: referencedDoc._id,
+              title: referencedDoc.title,
+              description: referencedDoc.description,
+              promptPrefix: referencedDoc.promptPrefix,
+              promptSuffix: referencedDoc.promptSuffix,
+              referenceCount: referencedDoc.referenceCount,
+            },
+          };
+        }
+
+        return null;
+      })
+    );
+
+    const validItems = items.filter((item): item is OutlineItem => item !== null);
+
+    return {
+      documentId: args.documentId,
+      items: validItems,
+    };
+  },
+});
+
+
+
+/**
  * 块数据结构（含递归引用文档）
  */
 type EnrichedBlock = Doc<"blocks"> & {

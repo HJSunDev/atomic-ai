@@ -43,58 +43,6 @@ export const createDocument = mutation({
 
 
 /**
- * 创建文档（预填充版）
- * 
- * 用于需要预填充初始内容的场景，如模板创建、导入外部内容、复制已有文档等。
- * 
- * 设计特性：
- * - 支持一次性设置所有文档字段和初始内容
- * - 适用于批量导入、模板实例化等场景
- * - 所有参数可选，未提供的字段使用默认值
- * 
- * 使用场景：
- * - 从模板创建文档
- * - 导入外部内容（如 Markdown 文件）
- * - 复制现有文档
- * - API 批量创建
- * 
- * @returns 新创建文档的ID
- */
-export const createDocumentWithData = mutation({
-  args: {
-    title: v.optional(v.string()),
-    description: v.optional(v.string()),
-    promptPrefix: v.optional(v.string()),
-    promptSuffix: v.optional(v.string()),
-    initialContent: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const userId = (await ctx.auth.getUserIdentity())?.subject;
-    if (!userId) throw new Error("未授权访问");
-
-    const documentId = await ctx.db.insert("documents", {
-      userId,
-      title: args.title,
-      description: args.description,
-      promptPrefix: args.promptPrefix,
-      promptSuffix: args.promptSuffix,
-      isArchived: false,
-      referenceCount: 0,
-    });
-
-    await ctx.db.insert("blocks", {
-      documentId,
-      type: "text",
-      content: args.initialContent ?? "",
-      order: 0,
-    });
-
-    return { documentId } as const;
-  },
-});
-
-
-/**
  * 创建组合文档
  * 
  * 用于将操作区的临时组合一次性持久化为网格列表的新文档。

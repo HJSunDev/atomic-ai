@@ -1,4 +1,11 @@
 /**
+ * 块类型标识
+ * - content: 自身内容块（文档必有且仅有一个）
+ * - reference: 引用块（指向其他文档）
+ */
+export type BlockType = 'content' | 'reference';
+
+/**
  * 卡片数据结构（支持真实 ID + 虚拟 ID ）
  */
 export interface GridItem {
@@ -20,6 +27,11 @@ export interface GridItem {
   promptPrefix?: string;
   promptSuffix?: string;
   referenceCount?: number;
+  
+  // === 块类型标识 ===
+  // 仅用于操作区的子模块，标识该模块是内容块还是引用块
+  // 网格区和操作区顶层卡片不使用此字段
+  blockType?: BlockType;
   
   // === 层级结构 ===
   // 子模块列表（仅操作区顶层卡片可有子模块）
