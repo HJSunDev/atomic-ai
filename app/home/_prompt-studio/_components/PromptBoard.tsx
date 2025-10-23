@@ -39,9 +39,9 @@ import { TutorialOverlay } from './TutorialOverlay';
 import { useDocumentStore } from '@/store/home/documentStore';
 import { useRouter } from 'next/navigation';
 // 导入 Convex 查询接口
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
-import type { Doc } from '@/convex/_generated/dataModel';
+import type { Doc, Id } from '@/convex/_generated/dataModel';
 
 
 
@@ -92,6 +92,9 @@ export function PromptBoard() {
   
   // 从后端查询文档列表
   const documentsData = useQuery(api.prompt.queries.listDocuments);
+  
+  // 创建组合文档的 mutation
+  const createComposedDocument = useMutation(api.prompt.mutations.createComposedDocument);
   
   // 网格区显示的文档列表（从后端数据转换而来）
   const gridDocuments = useMemo(() => {
@@ -343,7 +346,9 @@ export function PromptBoard() {
         setOperationItems(newItems);
       }
     // 如果拖拽释放目标为操作区，则将模块插入到操作区
-    } else if (enteredOperationArea) {
+    } 
+    // 如果拖拽释放目标为操作区，则将模块插入到操作区
+    else if (enteredOperationArea) {
       // 从网格区拖拽副本到操作区
       const draggedItem = gridDocuments.find(item => item.virtualId === active.id);
       // 如果找到被拖拽的项目
@@ -383,15 +388,32 @@ export function PromptBoard() {
   }, []);
 
   // 保存操作区模块到网格区
-  // TODO: 需要调用后端 createDocument 和 createReferenceBlock 接口
-  const handleSaveToGrid = useCallback((item: GridItem) => {
-    // 后端保存成功后，Convex 会自动刷新 gridDocuments 数据
-    toast.error('保存功能待实现：需要调用后端接口', {
-      position: 'top-center',
-    });
-    // 从操作区移除
-    setOperationItems(prevItems => prevItems.filter(i => i.virtualId !== item.virtualId));
-  }, []);
+  const handleSaveToGrid = useCallback(async (item: GridItem) => {
+    try {
+      const referenceIds = item.children.map(child => child.documentId as Id<"documents">);
+      
+      const result = await createComposedDocument({
+        title: item.title,
+        description: item.description,
+        promptPrefix: item.promptPrefix,
+        promptSuffix: item.promptSuffix,
+        initialContent: "",
+        referenceIds,
+      });
+
+      toast.success(`保存成功！包含 ${result.referenceCount} 个引用块`, {
+        position: 'top-center',
+      });
+
+      // 从操作区移除模块
+      setOperationItems(prevItems => prevItems.filter(i => i.virtualId !== item.virtualId));
+    } catch (error) {
+
+      toast.error(error instanceof Error ? error.message : '保存失败，请重试', {
+        position: 'top-center',
+      });
+    }
+  }, [createComposedDocument]);
 
   // 删除网格区模块（使用虚拟 ID，实际等于 documentId）
   const handleDeleteGridItem = useCallback((virtualId: string) => {

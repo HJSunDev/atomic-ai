@@ -108,7 +108,7 @@ export function ModuleCardWrapper({
       {/* 显示"松开以添加为子模块"的覆盖层提示 */}
       {shouldShowDropOverlay && !isDragging && (
         <div className="absolute inset-0 bg-neutral-50/80 backdrop-blur-sm flex items-center justify-center text-neutral-700 text-sm font-medium pointer-events-none rounded-lg z-30">
-          松开以添加为子模块
+          释放添加为子模块
         </div>
       )}
     </div>

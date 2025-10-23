@@ -95,6 +95,103 @@ export const createDocumentWithData = mutation({
 
 
 /**
+ * 创建组合文档
+ * 
+ * 用于将操作区的临时组合一次性持久化为网格列表的新文档。
+ * 
+ * 设计特性：
+ * - 原子操作：一次性创建文档、内容块和所有引用块
+ * - 顺序保证：引用块严格按照传入顺序排列（order=1..n）
+ * - 计数准确：referenceCount 在文档创建时直接写入，无需后续更新
+ * - 允许重复引用：同一文档可被引用多次，给予用户更多使用空间
+ * 
+ * 块结构：
+ * - order=0: 内容块（type="text"），存储文档自身内容
+ * - order=1..n: 引用块（type="reference"），按传入顺序指向子文档
+ * 
+ * 使用场景：
+ * - 操作区卡片保存到网格列表
+ * - 将多个模块组合成新的复合文档
+ * 
+ * @returns 新创建文档的ID和引用块数量
+ */
+export const createComposedDocument = mutation({
+  args: {
+    title: v.optional(v.string()),
+    description: v.optional(v.string()),
+    promptPrefix: v.optional(v.string()),
+    promptSuffix: v.optional(v.string()),
+    initialContent: v.optional(v.string()),
+    referenceIds: v.array(v.id("documents")),
+  },
+  handler: async (ctx, args) => {
+    // 用户权限校验
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    const referenceCount = args.referenceIds.length;
+    // 如果存在引用块，校验引用块的文档是否存在且属于当前用户
+    if (referenceCount > 0) {
+      const referenceChecks = await Promise.all(
+        args.referenceIds.map(async (refId) => {
+          const doc = await ctx.db.get(refId);
+          return { refId, doc };
+        })
+      );
+
+      for (const { refId, doc } of referenceChecks) {
+        if (!doc) {
+          throw new Error(`引用的文档不存在: ${refId}`);
+        }
+        if (doc.userId !== userId) {
+          throw new Error(`无权引用该文档: ${refId}`);
+        }
+      }
+    }
+
+    // 创建文档
+    const documentId = await ctx.db.insert("documents", {
+      userId,
+      title: args.title,
+      description: args.description,
+      promptPrefix: args.promptPrefix,
+      promptSuffix: args.promptSuffix,
+      isArchived: false,
+      referenceCount,
+    });
+
+    // 创建内容块
+    await ctx.db.insert("blocks", {
+      documentId,
+      type: "text",
+      content: args.initialContent ?? "",
+      order: 0,
+    });
+    // 创建引用块
+    if (referenceCount > 0) {
+      await Promise.all(
+        args.referenceIds.map((refId, index) =>
+          ctx.db.insert("blocks", {
+            documentId,
+            type: "reference",
+            referenceId: refId,
+            order: index + 1,
+          })
+        )
+      );
+    }
+
+    return { 
+      documentId,
+      referenceCount,
+    } as const;
+  },
+});
+
+
+
+
+/**
  * 更新文档元信息
  * 
  * 此接口专注于文档级别的元数据更新，不涉及块内容，因为：
