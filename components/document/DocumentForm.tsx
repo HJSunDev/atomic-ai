@@ -1,53 +1,38 @@
 "use client";
 
-import { useDocumentStore } from "@/store/home/documentStore";
 import { TiptapEditor } from "./TiptapEditor";
 import type React from "react";
-import { useEffect, useState } from "react";
-import { useAutoSaveDocument } from "@/hooks/useAutoSaveDocument";
+import { useState } from "react";
 import { Plus } from "lucide-react";
 
-// 文档表单属性
+// 文档表单属性（现在是受控组件）
 interface DocumentFormProps {
-  // 文档ID：全屏模式通过 prop 传入，drawer/modal 从 Store 读取
-  documentId?: string;
-  // 保存状态回调：用于通知父级保存状态信息
-  onSavingChange?: (isSaving: boolean) => void;
+  title: string;
+  setTitle: (title: string) => void;
+  description: string;
+  setDescription: (description: string) => void;
+  promptPrefix: string;
+  setPromptPrefix: (prefix: string) => void;
+  content: string;
+  setContent: (content: string) => void;
 }
 
-// 文档表单：Notion 风格的可视化编辑器，支持自动保存
-export const DocumentForm = ({ documentId: propDocumentId, onSavingChange }: DocumentFormProps) => {
-  
-  const storeDocumentId = useDocumentStore((s) => s.documentId);
-  
-  // 优先使用 prop documentId（全屏模式），否则从 Store 读取（drawer/modal）
-  const documentId = propDocumentId ?? storeDocumentId;
-
-  // 使用自动保存 Hook，处理数据加载、本地状态管理和防抖保存
-  const {
-    title,
-    setTitle,
-    description,
-    setDescription,
-    promptPrefix,
-    setPromptPrefix,
-    content,
-    setContent,
-    isLoading,
-    isSaving,
-  } = useAutoSaveDocument(documentId ?? null);
-
+// 文档表单：Notion 风格的可视化编辑器，现在作为受控组件
+export const DocumentForm = ({
+  title,
+  setTitle,
+  description,
+  setDescription,
+  promptPrefix,
+  setPromptPrefix,
+  content,
+  setContent,
+}: DocumentFormProps) => {
   // 记录用户是否手动点击了展开按钮（前置信息）
   const [isPrefixManuallyExpanded, setIsPrefixManuallyExpanded] = useState(false);
 
   // 派生状态：有内容时自动展开，或者用户手动点击了展开
   const shouldShowPrefixInput = promptPrefix.length > 0 || isPrefixManuallyExpanded;
-
-
-  // 通知父级保存状态变化
-  useEffect(() => {
-    onSavingChange?.(isSaving);
-  }, [isSaving, onSavingChange]);
 
   // 标题变更
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -133,4 +118,4 @@ export const DocumentForm = ({ documentId: propDocumentId, onSavingChange }: Doc
       </section>
     </article>
   );
-}
+};
