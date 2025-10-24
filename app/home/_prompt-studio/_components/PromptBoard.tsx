@@ -370,7 +370,7 @@ export function PromptBoard() {
   const resetGridDragging = () => setGridDraggingId(null);
 
   // 处理拖拽结束事件
-  const handleDragEnd = (event: DragEndEvent) => {
+  const handleDragEnd = async (event: DragEndEvent) => {
     // over 表示拖拽释放时鼠标悬停的目标区域信息（可能为 null，表示未悬停在任何 droppable 区域）
     // active 表示当前被拖拽的元素信息（即拖拽源）
     const { over, active } = event;
@@ -413,33 +413,68 @@ export function PromptBoard() {
       const draggedFromGrid = gridDocuments.find(item => item.virtualId === active.id);
       const draggedFromOperation = operationItems.find(item => item.virtualId === active.id);
       
-      // 检查层级限制：只检查被拖拽模块是否有子模块，如果有则不能作为子模块
-      if (draggedFromGrid && draggedFromGrid.children && draggedFromGrid.children.length > 0) {
-        toast.error('暂不支持多级嵌套', {
-          position: 'top-center',
-        });
+      // 【场景1】操作区卡片 → 操作区卡片
+      if (draggedFromOperation && draggedFromOperation.virtualId !== targetVirtualId) {
+        // 检查是否有引用块（只检查引用块，内容块不影响嵌套限制）
+        const hasReferences = draggedFromOperation.children.some(
+          child => child.blockType === 'reference'
+        );
+        
+        if (hasReferences) {
+          toast.error('暂不支持多级嵌套', {
+            position: 'top-center',
+          });
+        } else {
+          // 允许拖入：先移除，再转换为引用块子模块并插入
+          let newItems = operationItems.filter(item => item.virtualId !== draggedFromOperation.virtualId);
+          // 将操作区顶层卡片转换为引用块子模块
+          const referenceChild: GridItem = {
+            ...draggedFromOperation,
+            blockType: 'reference',  // 作为子模块时标记为引用块
+            children: [],  // 作为子模块时清空其子模块列表（避免多级嵌套）
+          };
+          newItems = insertChildModule(newItems, targetVirtualId, referenceChild);
+          setOperationItems(newItems);
+        }
       }
-      else if (draggedFromOperation && draggedFromOperation.children && draggedFromOperation.children.length > 0) {
-        toast.error('暂不支持多级嵌套', {
-          position: 'top-center',
-        });
-      }
+      // 【场景2】列表区卡片 → 操作区卡片
       else if (draggedFromGrid) {
-        // 拖拽源来自网格区：生成副本，virtualId 用 uuid，保留 documentId
-        const copy: GridItem = { 
-          ...draggedFromGrid, 
-          virtualId: uuidv4(),
-          documentId: draggedFromGrid.documentId,
-          children: [],
-        };
-        setOperationItems(prevItems => insertChildModule(prevItems, targetVirtualId, copy));
-      } else if (draggedFromOperation && draggedFromOperation.virtualId !== targetVirtualId) {
-        // 拖拽源来自操作区，且不是自己拖到自己：先移除，再插入
-        let newItems = operationItems.filter(item => item.virtualId !== draggedFromOperation.virtualId);
-        newItems = insertChildModule(newItems, targetVirtualId, draggedFromOperation);
-        setOperationItems(newItems);
+        // 异步检查文档是否有引用块
+        try {
+          // 获取文档的大纲结构（内容块占位 + 引用块元信息）
+          const outline = await convex.query(
+            api.prompt.queries.getDocumentOutline, 
+            { documentId: draggedFromGrid.documentId as Id<"documents"> }
+          );
+          
+          if (!outline) {
+            toast.error('无法加载文档结构', { position: 'top-center' });
+            return;
+          }
+          
+          // 检查是否有引用块
+          const hasReferences = outline.items.some(item => item.kind === 'reference');
+          
+          if (hasReferences) {
+            toast.error('暂不支持多级嵌套', { position: 'top-center' });
+            return; // 阻止拖入
+          }
+          
+          // 允许拖入：创建引用块子模块并插入
+          const referenceChild: GridItem = { 
+            ...draggedFromGrid, 
+            virtualId: uuidv4(),
+            documentId: draggedFromGrid.documentId,
+            blockType: 'reference',  // 作为子模块时标记为引用块
+            children: [],  // 作为子模块不需要子模块列表
+          };
+          setOperationItems(prevItems => insertChildModule(prevItems, targetVirtualId, referenceChild));
+          
+        } catch (error) {
+          console.error('检查文档结构失败:', error);
+          toast.error('检查文档结构失败，请重试', { position: 'top-center' });
+        }
       }
-    // 如果拖拽释放目标为操作区，则将模块插入到操作区
     } 
     // 如果拖拽释放目标为操作区，则将模块插入到操作区
     else if (enteredOperationArea) {
