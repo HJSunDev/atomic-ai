@@ -9,11 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Check, X, MoreHorizontal } from "lucide-react";
+import { Check, X, MoreHorizontal, Plus } from "lucide-react";
 import { LocalCatalyst } from "@/components/ai-assistant/LocalCatalyst";
 import { SidebarDisplayIcon, ModalDisplayIcon, FullscreenDisplayIcon } from "@/components/icons";
 import { useAutoSaveDocument } from "@/hooks/useAutoSaveDocument";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 
 // 提取为独立组件，避免因父组件重渲染而导致自身被重新创建
 interface DisplayModeSelectorProps {
@@ -110,6 +110,12 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
     setPromptSuffix,
   } = useAutoSaveDocument(finalDocumentId ?? null);
 
+  // 后置指令输入框展开状态
+  const [isSuffixManuallyExpanded, setIsSuffixManuallyExpanded] = useState(false);
+
+  // 派生状态：当有内容或用户手动点击时，显示后置指令输入框
+  const shouldShowSuffixInput = promptSuffix.length > 0 || isSuffixManuallyExpanded;
+
   // 处理显示模式切换
   const handleDisplayModeChange = useCallback((mode: 'drawer' | 'modal' | 'fullscreen') => {
     switchDisplayMode(mode, {
@@ -191,6 +197,29 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
           setContent={setContent}
         />
       </main>
+
+      {/* 页脚：固定在底部，用于放置后置指令等不参与滚动的内容 */}
+      <footer className={`px-12 py-2 border-t border-gray-100 ${contentPaddingByMode[displayMode]}`}>
+        {!shouldShowSuffixInput ? (
+          <button
+            onClick={() => setIsSuffixManuallyExpanded(true)}
+            className="flex items-center gap-1 py-1 px-[4px] text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-150 outline-none cursor-pointer"
+          >
+            <Plus className="h-4 w-4" />
+            <span>添加后置指令</span>
+          </button>
+        ) : (
+          <div>
+            <textarea
+              className="w-full resize-none outline-none text-gray-600 placeholder:text-gray-300 leading-relaxed text-sm"
+              rows={3}
+              placeholder="添加后置指令（例如：输出格式要求、结束语等）..."
+              value={promptSuffix}
+              onChange={(e) => setPromptSuffix(e.target.value)}
+            />
+          </div>
+        )}
+      </footer>
     </section>
   );
 };

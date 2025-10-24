@@ -90,7 +90,7 @@ export const DocumentForm = ({
         {!shouldShowPrefixInput ? (
           <button
             onClick={handleExpandPrefix}
-            className="flex items-center gap-1.5 py-1 px-0 text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-150 outline-none"
+            className="flex items-center gap-1 py-1 px-[4px] text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-150 outline-none cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             <span>添加前置信息</span>

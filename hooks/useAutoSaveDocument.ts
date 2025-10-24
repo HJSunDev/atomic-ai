@@ -60,10 +60,10 @@ export const useAutoSaveDocument = (documentId: string | null) => {
   const updateContentMutation = useMutation(api.prompt.mutations.updateDocumentContent);
 
   // 元信息防抖
-  const debouncedMetadata = useDebouncedValue({ title, description, promptPrefix, promptSuffix }, 1200);
+  const debouncedMetadata = useDebouncedValue({ title, description, promptPrefix, promptSuffix }, 800);
 
   // 内容防抖
-  const debouncedContent = useDebouncedValue(content, 1000);
+  const debouncedContent = useDebouncedValue(content, 700);
 
   // 初始化：在文档切换或首次数据到达时，用服务器数据覆盖本地状态
   useEffect(() => {
