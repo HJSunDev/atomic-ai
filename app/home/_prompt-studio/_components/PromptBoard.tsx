@@ -43,6 +43,16 @@ import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Doc, Id } from '@/convex/_generated/dataModel';
 import { useConvex } from 'convex/react';
+// 导入 Dialog 组件
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
 
 
 
@@ -100,6 +110,9 @@ export function PromptBoard() {
   // 创建组合文档的 mutation
   const createComposedDocument = useMutation(api.prompt.mutations.createComposedDocument);
   
+  // 删除文档的 mutation
+  const deleteDocument = useMutation(api.prompt.mutations.deleteDocument);
+  
   // 网格区显示的文档列表（从后端数据转换而来）
   const gridDocuments = useMemo(() => {
     if (!documentsData) {
@@ -145,6 +158,21 @@ export function PromptBoard() {
   const [showTutorial, setShowTutorial] = useState(false);
   // 教程动画时强制显示操作区
   const [tutorialForceShowOperation, setTutorialForceShowOperation] = useState(false);
+  
+  // 删除冲突对话框状态
+  const [deleteConflictDialog, setDeleteConflictDialog] = useState<{
+    open: boolean;
+    documentTitle: string;
+    references: Array<{
+      blockId: string;
+      documentId: string;
+      documentTitle: string;
+    }>;
+  }>({
+    open: false,
+    documentTitle: '',
+    references: [],
+  });
 
   /**
    * 加载文档块结构并转换为子模块
@@ -490,13 +518,36 @@ export function PromptBoard() {
   }, [createComposedDocument]);
 
   // 删除网格区模块（使用虚拟 ID，实际等于 documentId）
-  const handleDeleteGridItem = useCallback((virtualId: string) => {
-    // TODO: 需要调用后端 deleteDocument 接口
-    // 后端删除成功后，Convex 会自动刷新 gridDocuments 数据
-    toast.error('删除功能待实现：需要调用后端接口', {
-      position: 'top-center',
-    });
-  }, []);
+  const handleDeleteGridItem = useCallback(async (virtualId: string) => {
+    try {
+      // 在网格区，virtualId 等于 documentId
+      const documentId = virtualId as Id<"documents">;
+      
+      // 获取要删除的文档信息（用于显示标题）
+      const document = gridDocuments.find(item => item.virtualId === virtualId);
+      const documentTitle = document?.title || '未知文档';
+      
+      // 调用删除 mutation
+      const result = await deleteDocument({ id: documentId });
+      
+      if (result.success && result.deleted) {
+        toast.success('文档删除成功', {
+          position: 'top-center',
+        });
+      } else if (!result.success && result.reason === 'has_references') {
+        // 显示引用冲突对话框
+        setDeleteConflictDialog({
+          open: true,
+          documentTitle,
+          references: result.references,
+        });
+      }
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : '删除失败，请重试', {
+        position: 'top-center',
+      });
+    }
+  }, [deleteDocument, gridDocuments]);
 
   // 处理模块点击事件：打开全局文档查看器
   const handleItemClick = useCallback((item: GridItem) => {
@@ -630,6 +681,65 @@ export function PromptBoard() {
         onClose={handleCloseTutorial}
         onShowOperationArea={handleTutorialOperationArea}
       />
+      
+      {/* 删除冲突对话框 */}
+      <Dialog
+        open={deleteConflictDialog.open}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteConflictDialog({
+              open: false,
+              documentTitle: '',
+              references: [],
+            });
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle className="text-xl">无法删除文档</DialogTitle>
+            <DialogDescription className="text-base pt-2">
+              文档 <span className="font-semibold text-foreground">"{deleteConflictDialog.documentTitle}"</span> 正被以下 {deleteConflictDialog.references.length} 个文档引用，请先解除引用关系。
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="my-4">
+            <div className="text-sm font-medium text-muted-foreground mb-3">引用此文档的文档列表：</div>
+            <div className="space-y-2 max-h-[300px] overflow-y-auto">
+              {deleteConflictDialog.references.map((ref, index) => (
+                <div
+                  key={ref.blockId}
+                  className="flex items-center gap-1 p-3 rounded-md bg-muted/50 hover:bg-muted transition-colors"
+                >
+                  <div className="flex-shrink-0 w-4 h-4  text-primary flex items-center justify-center text-[13px] font-semibold">
+                    {index + 1 + "."}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="font-medium text-sm text-foreground truncate">
+                      {ref.documentTitle}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button
+              variant="default"
+              onClick={() => {
+                setDeleteConflictDialog({
+                  open: false,
+                  documentTitle: '',
+                  references: [],
+                });
+              }}
+            >
+              我知道了
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </DndContext>
   );
 }

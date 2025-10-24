@@ -341,6 +341,8 @@ export const deleteDocument = mutation({
     if (!document) throw new Error("目标文档不存在");
     if (document.userId !== userId) throw new Error("无权删除此文档");
 
+
+    // 获取 引用了该文档的 引用块
     const referencingBlocks = await ctx.db
       .query("blocks")
       .withIndex("by_referenceId", (q) => q.eq("referenceId", args.id))
