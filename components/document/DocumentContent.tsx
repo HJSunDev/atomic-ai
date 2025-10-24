@@ -12,6 +12,7 @@ import {
 import { Check, X, MoreHorizontal } from "lucide-react";
 import { LocalCatalyst } from "@/components/ai-assistant/LocalCatalyst";
 import { SidebarDisplayIcon, ModalDisplayIcon, FullscreenDisplayIcon } from "@/components/icons";
+import { useState } from "react";
 
 // 文档内容容器：统一的头部+主体布局，便于在不同容器中复用
 interface DocumentContentProps {
@@ -28,6 +29,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
   const storeDocumentId = useDocumentStore((s) => s.documentId);
   const close = useDocumentStore((s) => s.close);
   const switchDisplayMode = useDocumentStore((s) => s.switchDisplayMode);
+  const [isSaving, setIsSaving] = useState(false);
   
   // 优先使用 prop documentId（全屏模式），否则从 Store 读取（drawer/modal）
   const finalDocumentId = propDocumentId ?? storeDocumentId;
@@ -111,7 +113,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
   );
 
   return (
-    <section className="flex flex-col h-full bg-yellow-100">
+    <section className="flex flex-col h-full">
       {/* Notion风格的简洁头部，需要相对定位以容纳局部唤醒器 */}
       <header className="relative flex items-center justify-between px-3 py-2 min-h-[48px]">
         <div className="flex items-center gap-2">
@@ -122,6 +124,16 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
         {contextId && <LocalCatalyst ownerContextId={contextId} />}
 
         <div className="flex items-center gap-1">
+          {/* 保存中状态指示：绿色小圆点，仅在保存中显示 */}
+          {isSaving && (
+            <span
+              className="relative inline-flex h-3 w-3 items-center justify-center"
+              aria-label="保存中"
+              title="保存中"
+            >
+              <span className="inline-flex h-[5px] w-[5px] rounded-full bg-emerald-400" />
+            </span>
+          )}
           {/* 更多操作按钮 */}
           <button
             className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none focus:bg-gray-100"
@@ -143,7 +155,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
       </header>
       
       <main className={`flex-1 overflow-auto ${contentPaddingByMode[displayMode]}`}>
-        <DocumentForm documentId={finalDocumentId ?? undefined} />
+        <DocumentForm documentId={finalDocumentId ?? undefined} onSavingChange={setIsSaving} />
       </main>
     </section>
   );

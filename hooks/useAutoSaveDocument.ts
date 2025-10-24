@@ -29,6 +29,8 @@ export const useAutoSaveDocument = (documentId: string | null) => {
   // 本地编辑状态
   const [title, setTitle] = useState<string>("");
   const [description, setDescription] = useState<string>("");
+  const [promptPrefix, setPromptPrefix] = useState<string>("");
+  const [promptSuffix, setPromptSuffix] = useState<string>("");
   const [content, setContent] = useState<string>("");
 
   // 保存状态
@@ -39,6 +41,8 @@ export const useAutoSaveDocument = (documentId: string | null) => {
   const serverDataRef = useRef<{
     title: string;
     description: string;
+    promptPrefix: string;
+    promptSuffix: string;
     content: string;
   } | null>(null);
 
@@ -56,7 +60,7 @@ export const useAutoSaveDocument = (documentId: string | null) => {
   const updateContentMutation = useMutation(api.prompt.mutations.updateDocumentContent);
 
   // 元信息防抖
-  const debouncedMetadata = useDebouncedValue({ title, description }, 1200);
+  const debouncedMetadata = useDebouncedValue({ title, description, promptPrefix, promptSuffix }, 1200);
 
   // 内容防抖
   const debouncedContent = useDebouncedValue(content, 1000);
@@ -75,18 +79,24 @@ export const useAutoSaveDocument = (documentId: string | null) => {
     const { document, contentBlock } = documentData;
     const serverTitle = document.title || "";
     const serverDescription = document.description || "";
+    const serverPromptPrefix = document.promptPrefix || "";
+    const serverPromptSuffix = document.promptSuffix || "";
     const serverContent = contentBlock.content || "";
 
     // 将服务器数据存入 ref
     serverDataRef.current = {
       title: serverTitle,
       description: serverDescription,
+      promptPrefix: serverPromptPrefix,
+      promptSuffix: serverPromptSuffix,
       content: serverContent,
     };
 
     // 用服务器数据初始化本地状态
     setTitle(serverTitle);
     setDescription(serverDescription);
+    setPromptPrefix(serverPromptPrefix);
+    setPromptSuffix(serverPromptSuffix);
     setContent(serverContent);
 
     // 标记当前文档已完成初始化
@@ -102,6 +112,8 @@ export const useAutoSaveDocument = (documentId: string | null) => {
       serverDataRef.current = {
         title: document.title || "",
         description: document.description || "",
+        promptPrefix: document.promptPrefix || "",
+        promptSuffix: document.promptSuffix || "",
         content: contentBlock.content || "",
       };
     }
@@ -114,12 +126,19 @@ export const useAutoSaveDocument = (documentId: string | null) => {
       return;
     }
 
-    const { title: serverTitle, description: serverDescription } = serverDataRef.current;
+    const { 
+      title: serverTitle, 
+      description: serverDescription, 
+      promptPrefix: serverPromptPrefix,
+      promptSuffix: serverPromptSuffix
+    } = serverDataRef.current;
 
     const titleChanged = debouncedMetadata.title !== serverTitle;
     const descriptionChanged = debouncedMetadata.description !== serverDescription;
+    const promptPrefixChanged = debouncedMetadata.promptPrefix !== serverPromptPrefix;
+    const promptSuffixChanged = debouncedMetadata.promptSuffix !== serverPromptSuffix;
 
-    if (!titleChanged && !descriptionChanged) {
+    if (!titleChanged && !descriptionChanged && !promptPrefixChanged && !promptSuffixChanged) {
       return;
     }
 
@@ -130,11 +149,15 @@ export const useAutoSaveDocument = (documentId: string | null) => {
           id: documentId as Id<"documents">,
           title: debouncedMetadata.title,
           description: debouncedMetadata.description,
+          promptPrefix: debouncedMetadata.promptPrefix,
+          promptSuffix: debouncedMetadata.promptSuffix,
         });
         // 保存成功后立即更新 ref，避免在 useQuery 回流前重复保存
         if (serverDataRef.current) {
           serverDataRef.current.title = debouncedMetadata.title;
           serverDataRef.current.description = debouncedMetadata.description;
+          serverDataRef.current.promptPrefix = debouncedMetadata.promptPrefix;
+          serverDataRef.current.promptSuffix = debouncedMetadata.promptSuffix;
         }
       } catch (error) {
         console.error("保存文档元信息失败:", error);
@@ -188,6 +211,10 @@ export const useAutoSaveDocument = (documentId: string | null) => {
     setTitle,
     description,
     setDescription,
+    promptPrefix,
+    setPromptPrefix,
+    promptSuffix,
+    setPromptSuffix,
     content,
     setContent,
 
