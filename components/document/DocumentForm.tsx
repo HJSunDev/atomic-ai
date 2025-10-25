@@ -29,11 +29,30 @@ export const DocumentForm = ({
   content,
   setContent,
 }: DocumentFormProps) => {
-  // 记录用户是否手动点击了展开按钮（前置信息）
-  const [isPrefixManuallyExpanded, setIsPrefixManuallyExpanded] = useState(false);
+  // 追踪用户是否正在编辑前置信息，用于显示/隐藏和动态调整高度
+  const [isEditingPrefix, setIsEditingPrefix] = useState(false);
 
-  // 派生状态：有内容时自动展开，或者用户手动点击了展开
-  const shouldShowPrefixInput = promptPrefix.length > 0 || isPrefixManuallyExpanded;
+  // 派生状态：有内容或正在编辑时，显示输入框
+  const shouldShowPrefixInput = promptPrefix.length > 0 || isEditingPrefix;
+
+  // 根据是否正在编辑以及内容行数，动态计算输入框的高度 class
+  // - 编辑时，或内容超过1行时，最小高度为2行
+  // - 非编辑状态且内容为1行时，最小高度为1行
+  const hasSingleLine = !promptPrefix.includes('\n');
+  const prefixHeightClass = (isEditingPrefix || !hasSingleLine)
+    ? 'min-h-[2.8rem]'
+    : 'min-h-[1.2rem]';
+
+  // 编辑状态下的视觉样式：增加一个轻微的背景和内边距，使其与周围区分开
+  const prefixEditingClass = isEditingPrefix ? 'bg-gray-50 rounded-md p-2' : 'px-0';
+
+  // 追踪用户是否正在编辑描述，用于显示/隐藏和动态调整高度
+  const [isEditingDescription, setIsEditingDescription] = useState(false);
+
+  // 派生状态：根据描述内容的行数和编辑状态，动态计算其样式
+  const descriptionHasLessThanTwoLines = description.length === 0 || !description.includes('\n');
+  const descriptionHeightClass = (isEditingDescription || !descriptionHasLessThanTwoLines) ? 'min-h-[2.8rem]' : 'min-h-[1.2rem]';
+  const descriptionEditingClass = isEditingDescription ? 'bg-gray-50 rounded-md p-2' : 'px-0';
 
   // 标题变更
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,11 +76,6 @@ export const DocumentForm = ({
     setPromptPrefix(e.target.value);
   };
 
-  // 用户点击 新增前置信息 按钮
-  const handleExpandPrefix = () => {
-    setIsPrefixManuallyExpanded(true);
-  };
-
   return (
     <article className="max-w-[42rem] mx-auto pt-4 ">
       {/* 标题输入：Notion风格的大标题 */}
@@ -78,18 +92,20 @@ export const DocumentForm = ({
       {/* 描述输入：更加简洁的描述区域 */}
       <section className="mb-[8px]">
         <Textarea
-          className="w-full resize-none border-0 shadow-none focus-visible:ring-0 px-0 py-0 !text-[12px] text-gray-400 placeholder:text-gray-300 leading-relaxed min-h-[2.8rem] max-h-[8.9rem] overflow-y-auto"
+          className={`w-full resize-none border-0 shadow-none focus-visible:ring-0 py-0 !text-[12px] text-gray-400 placeholder:text-gray-300 leading-relaxed max-h-[8.9rem] overflow-y-auto ${descriptionHeightClass} ${descriptionEditingClass}`}
           placeholder="添加描述..."
           value={description}
           onChange={handleDescriptionChange}
+          onFocus={() => setIsEditingDescription(true)}
+          onBlur={() => setIsEditingDescription(false)}
         />
       </section>
 
       {/* 前置信息：可折叠的输入区域 */}
-      <section className="mb-[28px]">
+      <section className="mb-[16px]">
         {!shouldShowPrefixInput ? (
           <button
-            onClick={handleExpandPrefix}
+            onClick={() => setIsEditingPrefix(true)}
             className="flex items-center gap-1 py-1 px-2 text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-150 outline-none cursor-pointer"
           >
             <Plus className="h-4 w-4" />
@@ -98,10 +114,13 @@ export const DocumentForm = ({
         ) : (
           <div>
             <Textarea
-              className="w-full resize-none border-0 shadow-none focus-visible:ring-0 px-0 py-0 !text-[14px] text-gray-600 placeholder:text-gray-300 !leading-[1.4] min-h-[2.8rem] max-h-[8.9rem] overflow-y-auto"
+              className={`w-full resize-none border-0 shadow-none focus-visible:ring-0 py-0 !text-[14px] text-gray-600 placeholder:text-gray-300 !leading-[1.4] max-h-[8.9rem] overflow-y-auto ${prefixHeightClass} ${prefixEditingClass}`}
               placeholder="前置信息..."
               value={promptPrefix}
               onChange={handlePromptPrefixChange}
+              onFocus={() => setIsEditingPrefix(true)}
+              onBlur={() => setIsEditingPrefix(false)}
+              autoFocus={isEditingPrefix}
             />
           </div>
         )}

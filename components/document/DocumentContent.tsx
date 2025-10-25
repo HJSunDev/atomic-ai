@@ -13,7 +13,7 @@ import { Check, X, MoreHorizontal, Plus, ChevronDown, ChevronUp } from "lucide-r
 import { LocalCatalyst } from "@/components/ai-assistant/LocalCatalyst";
 import { SidebarDisplayIcon, ModalDisplayIcon, FullscreenDisplayIcon } from "@/components/icons";
 import { useAutoSaveDocument } from "@/hooks/useAutoSaveDocument";
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 
 // 提取为独立组件，避免因父组件重渲染而导致自身被重新创建
@@ -111,14 +111,40 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
     setPromptSuffix,
   } = useAutoSaveDocument(finalDocumentId ?? null);
 
-  // 后置指令输入框展开状态
-  const [isSuffixManuallyExpanded, setIsSuffixManuallyExpanded] = useState(false);
+  // 追踪用户是否正在编辑后置指令。
+  // 当用户点击“添加”后，此状态为 true，输入框出现并自动聚焦。
+  // 如果输入框失去焦点且内容为空，此状态将重置为 false，输入框消失。
+  const [isEditingSuffix, setIsEditingSuffix] = useState(false);
   
-  // 后置指令内容展开/收起状态
+  // 控制后置指令的内容是展开（显示Textarea）还是收起（显示摘要）。
   const [isSuffixContentExpanded, setIsSuffixContentExpanded] = useState(true);
+  
+  // 用于确保“默认折叠”逻辑只在文档初次加载时执行一次的状态。
+  const [isInitialSuffixLoaded, setIsInitialSuffixLoaded] = useState(false);
 
-  // 派生状态：当有内容或用户手动点击时，显示后置指令输入框
-  const shouldShowSuffixInput = promptSuffix.length > 0 || isSuffixManuallyExpanded;
+  // 这确保了新打开的文档总是从一个干净的状态开始。
+  useEffect(() => {
+    // 重置 后置指令加载状态
+    setIsInitialSuffixLoaded(false); 
+    // 默认展开
+    setIsSuffixContentExpanded(true); 
+  }, [finalDocumentId]);
+
+  // 当后置指令内容首次加载时，如果内容不为空，则折叠它。
+  useEffect(() => {
+    if (!isInitialSuffixLoaded && promptSuffix.length > 0) {
+      // 如果有内容，则收起后置指令，显示胶囊
+      setIsSuffixContentExpanded(false); 
+      // 更新 后置指令加载状态,标记为已加载
+      setIsInitialSuffixLoaded(true);    
+    }
+  }, [promptSuffix, isInitialSuffixLoaded]);
+
+  // 派生状态：当后置指令有内容，或用户正在编辑时，显示后置指令区域。
+  const shouldShowSuffixArea = promptSuffix.length > 0 || isEditingSuffix;
+
+  // 编辑状态下的视觉样式
+  const suffixEditingClass = isEditingSuffix ? 'bg-gray-50 rounded-md p-2' : 'px-0';
 
   // 处理显示模式切换
   const handleDisplayModeChange = useCallback((mode: 'drawer' | 'modal' | 'fullscreen') => {
@@ -205,9 +231,9 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
       {/* 页脚：固定在底部，用于放置后置指令等不参与滚动的内容 */}
       <footer className={`py-2 border-t  ${contentPaddingByMode[displayMode]}`}>
         <div className="max-w-[42rem] mx-auto">
-          {!shouldShowSuffixInput ? (
+          {!shouldShowSuffixArea ? (
             <button
-              onClick={() => setIsSuffixManuallyExpanded(true)}
+              onClick={() => setIsEditingSuffix(true)}
               className="flex items-center gap-1 py-1 px-[4px] text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-150 outline-none cursor-pointer"
             >
               <Plus className="h-4 w-4" />
@@ -221,7 +247,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
                 {promptSuffix.length > 0 && (
                   <button
                     onClick={() => setIsSuffixContentExpanded(false)}
-                    className="absolute top-0 right-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-all duration-150 z-10 cursor-pointer"
+                    className={`absolute top-1 right-1 p-1 rounded transition-all duration-150 z-10 cursor-pointer ${isEditingSuffix ? 'text-gray-500 hover:bg-gray-200' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
                     aria-label="收起"
                     title="收起"
                   >
@@ -229,10 +255,13 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
                   </button>
                 )}
                 <Textarea
-                  className="w-full resize-none border-0 shadow-none focus-visible:ring-0 px-0 py-0 pr-8 !text-[14px] text-gray-600 placeholder:text-gray-300 !leading-[1.4] min-h-[2.8rem] max-h-[8.9rem] overflow-y-auto"
+                  className={`w-full resize-none border-0 shadow-none focus-visible:ring-0 pr-8 !text-[14px] text-gray-600 placeholder:text-gray-300 !leading-[1.4] min-h-[2.8rem] max-h-[8.9rem] overflow-y-auto ${suffixEditingClass}`}
                   placeholder="添加后置指令..."
                   value={promptSuffix}
                   onChange={(e) => setPromptSuffix(e.target.value)}
+                  onFocus={() => setIsEditingSuffix(true)}
+                  onBlur={() => setIsEditingSuffix(false)}
+                  autoFocus={isEditingSuffix}
                 />
               </>
             ) : (
