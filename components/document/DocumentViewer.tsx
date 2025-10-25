@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Sheet, SheetContent, SheetTitle } from "@/components/ui/sheet";
 import { useDocumentStore } from "@/store/home/documentStore";
 import { DocumentContent } from "@/components/document/DocumentContent";
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useAiContextStore, AiContext } from "@/store/home/use-ai-context-store";
 import { useRouter } from "next/navigation";
 
@@ -20,6 +20,15 @@ export const DocumentViewer = () => {
   const { pushContext, popContext } = useAiContextStore();
   // 使用 ref 为每一次“打开”会话创建一个稳定的上下文ID
   const contextIdRef = useRef<string | null>(null);
+
+  // 稳定的 catalyst 点击处理函数
+  const handleCatalystClick = useCallback(() => {
+    switchDisplayMode('fullscreen', {
+      onNavigateToFullscreen: (documentId: string) => {
+        router.push(`/home/prompt-document/${documentId}?openAi=true`);
+      },
+    });
+  }, [switchDisplayMode, router]);
 
   // 响应文档打开/关闭/模式切换的副作用
   useEffect(() => {
@@ -43,20 +52,13 @@ export const DocumentViewer = () => {
         showCatalyst: true, // 文档视图始终显示唤醒器
         catalystPlacement: 'local', // 在Dialog或Sheet中，使用局部唤醒器
         metadata: { displayMode }, // 将显示模式作为元数据，未来可能有用
-        // 注入自定义点击行为：切换到全屏并打开AI面板
-        onCatalystClick: () => {
-          switchDisplayMode('fullscreen', {
-            onNavigateToFullscreen: (documentId: string) => {
-              router.push(`/home/prompt-document/${documentId}?openAi=true`);
-            },
-          });
-        }
+        onCatalystClick: handleCatalystClick,
       };
       
       // 将新上下文推入堆栈
       pushContext(context);
     }
-  }, [isOpen, displayMode, pushContext, popContext]);
+  }, [isOpen, displayMode, pushContext, popContext, handleCatalystClick]);
 
 
   return (

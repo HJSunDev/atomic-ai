@@ -4,6 +4,7 @@ import { TiptapEditor } from "./TiptapEditor";
 import type React from "react";
 import { useState } from "react";
 import { Plus } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
 
 // 文档表单属性（现在是受控组件）
 interface DocumentFormProps {
@@ -62,9 +63,9 @@ export const DocumentForm = ({
   };
 
   return (
-    <article className="max-w-[42rem] mx-auto pt-4 bg-blue-100">
+    <article className="max-w-[42rem] mx-auto pt-4 ">
       {/* 标题输入：Notion风格的大标题 */}
-      <section className="bg-green-50">
+      <section className="mb-[4px] ">
         <input
           className="w-full text-4xl font-bold outline-none placeholder:text-gray-300 leading-tight"
           placeholder="无标题"
@@ -75,10 +76,9 @@ export const DocumentForm = ({
       </section>
 
       {/* 描述输入：更加简洁的描述区域 */}
-      <section className="bg-yellow-50">
-        <textarea
-          className="w-full resize-none outline-none text-gray-600 placeholder:text-gray-300 leading-relaxed"
-          rows={2}
+      <section className="mb-[8px]">
+        <Textarea
+          className="w-full resize-none border-0 shadow-none focus-visible:ring-0 px-0 py-0 !text-[12px] text-gray-400 placeholder:text-gray-300 leading-relaxed min-h-[2.8rem] max-h-[8.9rem] overflow-y-auto"
           placeholder="添加描述..."
           value={description}
           onChange={handleDescriptionChange}
@@ -86,21 +86,20 @@ export const DocumentForm = ({
       </section>
 
       {/* 前置信息：可折叠的输入区域 */}
-      <section className="bg-purple-50">
+      <section className="mb-[28px]">
         {!shouldShowPrefixInput ? (
           <button
             onClick={handleExpandPrefix}
-            className="flex items-center gap-1 py-1 px-[4px] text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-150 outline-none cursor-pointer"
+            className="flex items-center gap-1 py-1 px-2 text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-150 outline-none cursor-pointer"
           >
             <Plus className="h-4 w-4" />
             <span>添加前置信息</span>
           </button>
         ) : (
           <div>
-            <textarea
-              className="w-full resize-none outline-none text-gray-600 placeholder:text-gray-300 leading-relaxed text-sm"
-              rows={3}
-              placeholder="添加前置信息（例如：角色设定、背景信息等）..."
+            <Textarea
+              className="w-full resize-none border-0 shadow-none focus-visible:ring-0 px-0 py-0 !text-[14px] text-gray-600 placeholder:text-gray-300 !leading-[1.4] min-h-[2.8rem] max-h-[8.9rem] overflow-y-auto"
+              placeholder="前置信息..."
               value={promptPrefix}
               onChange={handlePromptPrefixChange}
             />

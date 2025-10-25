@@ -50,7 +50,7 @@ export default function DocumentDynamicPage() {
   }, [searchParams, router, setAiPanelVisibility, documentId]);
 
   return (
-    <div className="h-screen flex flex-col bg-green-100">
+    <div className="h-screen flex flex-col">
       <DocumentContent 
         documentId={documentId}
         onRequestClose={() => {

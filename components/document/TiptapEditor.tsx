@@ -69,7 +69,7 @@ export const TiptapEditor = ({
   }
 
   return (
-    <div className="relative bg-red-100">
+    <div className="relative">
       {/* Notion风格的编辑器容器 */}
       <div className="min-h-[400px] w-full">
         <EditorContent 

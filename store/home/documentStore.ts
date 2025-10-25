@@ -100,7 +100,7 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     onNavigateToFullscreen?: (documentId: string) => void;
     documentIdToOpen?: string;
   }) => {
-    const { displayMode, _setDisplayMode, _open, documentId } = get();
+    const { displayMode, _setDisplayMode, _open, close, documentId } = get();
     const { onNavigateToHome, onNavigateToFullscreen, documentIdToOpen } = callbacks || {};
 
     if (targetMode === displayMode) {
@@ -109,10 +109,18 @@ export const useDocumentStore = create<DocumentState>((set, get) => ({
     }
 
     if (targetMode === 'fullscreen') {
-      // 切换到全屏模式：更新模式并通过回调路由跳转（传递当前 documentId）
+      // 切换到全屏模式：先关闭 Dialog/Sheet，等待关闭动画完成后再路由跳转
+      const currentDocumentId = documentId;
+      
+      // 先更新显示模式并关闭 Dialog/Sheet
       _setDisplayMode('fullscreen');
-      if (onNavigateToFullscreen && documentId) {
-        onNavigateToFullscreen(documentId);
+      close();
+      
+      // 延迟路由跳转，确保 Dialog/Sheet 移除
+      if (onNavigateToFullscreen && currentDocumentId) {
+        setTimeout(() => {
+          onNavigateToFullscreen(currentDocumentId);
+        }, 200);
       }
     } else if (displayMode === 'fullscreen') {
       // 从全屏模式切换到其他模式：需要路由跳转 + 使用传入的 documentIdToOpen 打开
