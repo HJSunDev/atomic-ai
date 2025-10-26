@@ -81,7 +81,7 @@ export const DocumentForm = ({
       {/* 标题输入：Notion风格的大标题 */}
       <section className="mb-[4px] ">
         <input
-          className="w-full text-4xl font-bold outline-none placeholder:text-gray-300 leading-tight"
+          className="w-full text-4xl font-bold outline-none placeholder:text-[#E1E1E0] leading-tight"
           placeholder="无标题"
           value={title}
           onChange={handleTitleChange}
@@ -92,7 +92,7 @@ export const DocumentForm = ({
       {/* 描述输入：更加简洁的描述区域 */}
       <section className="mb-[8px]">
         <Textarea
-          className={`w-full resize-none border-0 shadow-none focus-visible:ring-0 py-0 !text-[12px] text-gray-400 placeholder:text-gray-300 leading-relaxed max-h-[8.9rem] overflow-y-auto ${descriptionHeightClass} ${descriptionEditingClass}`}
+          className={`w-full resize-none border-0 shadow-none focus-visible:ring-0 py-0 !text-[13px] text-gray-400 placeholder:text-[#a8a49c] leading-relaxed max-h-[8.9rem] overflow-y-auto ${descriptionHeightClass} ${descriptionEditingClass}`}
           placeholder="添加描述..."
           value={description}
           onChange={handleDescriptionChange}
@@ -102,13 +102,13 @@ export const DocumentForm = ({
       </section>
 
       {/* 前置信息：可折叠的输入区域 */}
-      <section className="mb-[16px]">
+      <section className="mb-[24px]">
         {!shouldShowPrefixInput ? (
           <button
             onClick={() => setIsEditingPrefix(true)}
-            className="flex items-center gap-1 py-1 px-2 text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-150 outline-none cursor-pointer"
+            className="flex items-center py-1 px-[4px] -m-[6px] text-[13px] text-[#a8a49c] hover:text-gray-600 hover:bg-gray-50 rounded transition-colors duration-150 cursor-pointer"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-3 w-3" />
             <span>添加前置信息</span>
           </button>
         ) : (
@@ -131,7 +131,7 @@ export const DocumentForm = ({
         <TiptapEditor
           content={content}
           onContentChange={handleContentChange}
-          placeholder="开始写作..."
+          placeholder="输入文本..."
         />
       </section>
     </article>

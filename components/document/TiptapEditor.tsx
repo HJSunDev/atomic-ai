@@ -15,7 +15,7 @@ interface TiptapEditorProps {
 export const TiptapEditor = ({ 
   content, 
   onContentChange, 
-  placeholder = "开始写作..." 
+  placeholder
 }: TiptapEditorProps) => {
   const editor = useEditor({
     extensions: [

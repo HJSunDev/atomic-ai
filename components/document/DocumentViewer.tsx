@@ -73,7 +73,12 @@ export const DocumentViewer = () => {
       
       {/* 居中模态框模式 */}
       <Dialog open={isOpen && displayMode === 'modal'} onOpenChange={(open) => !open && close()}>
-        <DialogContent className="max-w-none sm:max-w-none w-[54rem] h-[84vh] p-0 overflow-hidden flex flex-col" showCloseButton={false}>
+        <DialogContent 
+          className="max-w-none sm:max-w-none w-[54rem] h-[84vh] p-0 overflow-hidden flex flex-col" 
+          showCloseButton={false}
+          onInteractOutside={(e) => e.preventDefault()}
+          onEscapeKeyDown={(e) => e.preventDefault()}
+        >
           <DialogTitle className="sr-only">文档查看器</DialogTitle>
           <DocumentContent contextId={contextIdRef.current ?? undefined} />
         </DialogContent>

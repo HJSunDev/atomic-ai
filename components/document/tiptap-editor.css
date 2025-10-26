@@ -27,11 +27,17 @@
 
 /* Placeholder扩展的官方样式 */
 .tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
-  color: #9b9a97;
+  color: #a8a49c;
+  font-weight: 300;
   content: attr(data-placeholder);
   float: left;
   height: 0;
   pointer-events: none;
+}
+
+/* 仅在编辑器聚焦时显示占位符：失焦隐藏，聚焦显示 */
+.tiptap-editor .ProseMirror:not(.ProseMirror-focused) p.is-editor-empty:first-child::before {
+  content: none;
 }
 
 /* Headings - Notion style */
