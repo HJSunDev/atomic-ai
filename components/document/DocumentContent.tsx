@@ -9,12 +9,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Check, X, MoreHorizontal, Plus, ChevronDown, ChevronUp } from "lucide-react";
+import { Check, X, MoreHorizontal, Plus, AlignLeft } from "lucide-react";
 import { LocalCatalyst } from "@/components/ai-assistant/LocalCatalyst";
 import { SidebarDisplayIcon, ModalDisplayIcon, FullscreenDisplayIcon } from "@/components/icons";
 import { useAutoSaveDocument } from "@/hooks/useAutoSaveDocument";
 import { useCallback, useState, useEffect, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 // 提取为独立组件，避免因父组件重渲染而导致自身被重新创建
 interface DisplayModeSelectorProps {
@@ -111,40 +112,29 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
     setPromptSuffix,
   } = useAutoSaveDocument(finalDocumentId ?? null);
 
-  // 追踪用户是否正在编辑后置指令。
   // 当用户点击“添加”后，此状态为 true，输入框出现并自动聚焦。
   // 如果输入框失去焦点且内容为空，此状态将重置为 false，输入框消失。
   const [isEditingSuffix, setIsEditingSuffix] = useState(false);
-  
-  // 控制后置指令的内容是展开（显示Textarea）还是收起（显示摘要）。
-  const [isSuffixContentExpanded, setIsSuffixContentExpanded] = useState(true);
-  
-  // 用于确保“默认折叠”逻辑只在文档初次加载时执行一次的状态。
-  const [isInitialSuffixLoaded, setIsInitialSuffixLoaded] = useState(false);
 
-  // 这确保了新打开的文档总是从一个干净的状态开始。
+  // 为了进入编辑模式时可以从文本末尾继续输入，保存 textarea 的引用
+  const suffixTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // 当进入编辑模式时，将光标移动到现有文本的末尾，便于用户继续追加内容
   useEffect(() => {
-    // 重置 后置指令加载状态
-    setIsInitialSuffixLoaded(false); 
-    // 默认展开
-    setIsSuffixContentExpanded(true); 
-  }, [finalDocumentId]);
-
-  // 当后置指令内容首次加载时，如果内容不为空，则折叠它。
-  useEffect(() => {
-    if (!isInitialSuffixLoaded && promptSuffix.length > 0) {
-      // 如果有内容，则收起后置指令，显示胶囊
-      setIsSuffixContentExpanded(false); 
-      // 更新 后置指令加载状态,标记为已加载
-      setIsInitialSuffixLoaded(true);    
-    }
-  }, [promptSuffix, isInitialSuffixLoaded]);
-
-  // 派生状态：当后置指令有内容，或用户正在编辑时，显示后置指令区域。
-  const shouldShowSuffixArea = promptSuffix.length > 0 || isEditingSuffix;
-
-  // 编辑状态下的视觉样式
-  const suffixEditingClass = isEditingSuffix ? 'bg-gray-50 rounded-md p-2' : 'px-0';
+    if (!isEditingSuffix) return;
+    const el = suffixTextareaRef.current;
+    if (!el) return;
+    // 等待浏览器完成 autoFocus 后再设置选择区，避免被覆盖
+    requestAnimationFrame(() => {
+      try {
+        const len = el.value.length;
+        el.setSelectionRange(len, len);
+        el.focus();
+      } catch {
+        // 某些环境下 setSelectionRange 可能抛错（例如元素处于不可编辑态），忽略以不打断输入体验。
+      }
+    });
+  }, [isEditingSuffix]);
 
   // 处理显示模式切换
   const handleDisplayModeChange = useCallback((mode: 'drawer' | 'modal' | 'fullscreen') => {
@@ -171,7 +161,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
 
 
   return (
-    <section className="flex flex-col h-full">
+    <section className="relative flex flex-col h-full">
       {/* Notion风格的简洁头部，需要相对定位以容纳局部唤醒器 */}
       <header className="relative flex items-center justify-between px-3 py-2 min-h-[48px]">
         <div className="flex items-center gap-2">
@@ -228,67 +218,49 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
         />
       </main>
 
-      {/* 页脚：固定在底部，用于放置后置指令等不参与滚动的内容 */}
-      <footer className={`py-2 border-t  ${contentPaddingByMode[displayMode]}`}>
-        <div className="max-w-[42rem] mx-auto">
-          {!shouldShowSuffixArea ? (
-            <button
-              onClick={() => setIsEditingSuffix(true)}
-              className="flex items-center gap-1 py-1 px-[4px] text-sm text-gray-400 hover:text-gray-600 hover:bg-gray-50 rounded transition-all duration-150 outline-none cursor-pointer"
-            >
-              <Plus className="h-4 w-4" />
-              <span>添加后置指令</span>
-            </button>
-        ) : (
-          <div className="relative flex items-start">
-            {isSuffixContentExpanded ? (
-              <>
-                {/* 展开/收起按钮：展开状态 */}
-                {promptSuffix.length > 0 && (
-                  <button
-                    onClick={() => setIsSuffixContentExpanded(false)}
-                    className={`absolute top-1 right-1 p-1 rounded transition-all duration-150 z-10 cursor-pointer ${isEditingSuffix ? 'text-gray-500 hover:bg-gray-200' : 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'}`}
-                    aria-label="收起"
-                    title="收起"
-                  >
-                    <ChevronDown className="h-4 w-4" />
-                  </button>
-                )}
-                <Textarea
-                  className={`w-full resize-none border-0 shadow-none focus-visible:ring-0 pr-8 !text-[14px] text-gray-600 placeholder:text-gray-300 !leading-[1.4] min-h-[2.8rem] max-h-[8.9rem] overflow-y-auto ${suffixEditingClass}`}
-                  placeholder="添加后置指令..."
-                  value={promptSuffix}
-                  onChange={(e) => setPromptSuffix(e.target.value)}
-                  onFocus={() => setIsEditingSuffix(true)}
-                  onBlur={() => setIsEditingSuffix(false)}
-                  autoFocus={isEditingSuffix}
-                />
-              </>
-            ) : (
-              <div className="flex items-center justify-center gap-2 w-full">
-                <div 
-                  className="flex items-center gap-1.5 px-3 py-1.5 bg-gray-50 hover:bg-gray-100 rounded-md text-[13px] text-gray-500 leading-[1.4] cursor-pointer transition-colors duration-150 w-80"
-                  onClick={() => setIsSuffixContentExpanded(true)}
-                  title={promptSuffix}
-                >
-                  <span className="text-gray-400 flex-shrink-0">📝</span>
-                  <span className="truncate flex-1">{promptSuffix || "添加后置指令..."}</span>
-                </div>
-                {/* 展开按钮：收起状态 */}
-                <button
-                  onClick={() => setIsSuffixContentExpanded(true)}
-                  className="flex-shrink-0 p-1 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded transition-all duration-150 cursor-pointer"
-                  aria-label="展开"
-                  title="展开"
-                >
-                  <ChevronUp className="h-4 w-4" />
-                </button>
-              </div>
-            )}
+      {/* 页脚：仅在编辑后置指令时显示 */}
+      {isEditingSuffix && (
+        <footer className={`py-2 border-t ${contentPaddingByMode[displayMode]}`}>
+          <div className="max-w-[42rem] mx-auto">
+            <div className="relative flex items-start">
+              <Textarea
+                className="w-full resize-none border-0 shadow-none focus-visible:ring-0 !text-[14px] text-gray-600 placeholder:text-gray-300 !leading-[1.4] min-h-[2.8rem] max-h-[8.9rem] overflow-y-auto bg-gray-50 rounded-md p-2"
+                placeholder="添加后置指令..."
+                value={promptSuffix}
+                onChange={(e) => setPromptSuffix(e.target.value)}
+                onFocus={() => setIsEditingSuffix(true)}
+                onBlur={() => setIsEditingSuffix(false)}
+                autoFocus
+                ref={suffixTextareaRef}
+              />
+            </div>
           </div>
-        )}
-        </div>
-      </footer>
+        </footer>
+      )}
+
+      {/* 后置指令浮动按钮 - 不在编辑时显示 */}
+      {!isEditingSuffix && (
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setIsEditingSuffix(true)}
+                className={`absolute bottom-4 left-4 h-9 w-9 rounded-full shadow-lg flex items-center justify-center transition-all duration-150 cursor-pointer bg-white text-gray-500 hover:bg-gray-50`}
+                aria-label={promptSuffix.length > 0 ? "编辑后置指令" : "添加后置指令"}
+              >
+                {promptSuffix.length > 0 ? (
+                  <AlignLeft className="h-5 w-5" />
+                ) : (
+                  <Plus className="h-5 w-5" />
+                )}
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" sideOffset={8}>
+              <p>后置指令</p>
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+      )}
     </section>
   );
 };
