@@ -33,8 +33,9 @@ export const useAutoSaveDocument = (documentId: string | null) => {
   const [promptSuffix, setPromptSuffix] = useState<string>("");
   const [content, setContent] = useState<string>("");
 
-  // 保存状态
+  // 文档元信息保存状态，是否在更新中
   const [savingMetadata, setSavingMetadata] = useState(false);
+  // 文档内容保存状态，是否在更新中
   const [savingContent, setSavingContent] = useState(false);
 
   // 使用 ref 存储服务器数据，用于对比（ref 变化不触发重渲染）
@@ -46,8 +47,13 @@ export const useAutoSaveDocument = (documentId: string | null) => {
     content: string;
   } | null>(null);
 
-  // 记录已为哪个文档完成过一次性初始化，避免后续 query 回流覆盖本地编辑
+
+  // 引用-文档初始化状态，值为null，数据初始化后为已初始化文档id
   const initializedForDocRef = useRef<string | null>(null);
+  // 引用-标记初始化是否已完成（防抖值已稳定），防止初始化阶段 执行更新接口
+  const initializationCompleteRef = useRef<boolean>(false);
+
+
 
   // 从服务器加载文档数据
   const documentData = useQuery(
@@ -55,18 +61,21 @@ export const useAutoSaveDocument = (documentId: string | null) => {
     documentId ? { documentId: documentId as Id<"documents"> } : "skip"
   );
 
-  // Convex mutations
+  // 接口：更新文档元信息
   const updateDocumentMutation = useMutation(api.prompt.mutations.updateDocument);
+  // 接口：更新文档内容
   const updateContentMutation = useMutation(api.prompt.mutations.updateDocumentContent);
 
-  // 元信息防抖
+  
+  // 值防抖：文档元信息
   const debouncedMetadata = useDebouncedValue({ title, description, promptPrefix, promptSuffix }, 800);
-
-  // 内容防抖
+  // 值防抖：文档内容
   const debouncedContent = useDebouncedValue(content, 700);
+  
 
-  // 初始化：在文档切换或首次数据到达时，用服务器数据覆盖本地状态
+  // 数据初始化 - 执行一次
   useEffect(() => {
+    // 如果服务端数据还未到达，不需要执行后续数据初始化操作，直接跳过
     if (!documentData) {
       return;
     }
@@ -92,7 +101,7 @@ export const useAutoSaveDocument = (documentId: string | null) => {
       content: serverContent,
     };
 
-    // 用服务器数据初始化本地状态
+    // 用服务器数据初始化本地状态，会触发 值防抖
     setTitle(serverTitle);
     setDescription(serverDescription);
     setPromptPrefix(serverPromptPrefix);
@@ -101,11 +110,14 @@ export const useAutoSaveDocument = (documentId: string | null) => {
 
     // 标记当前文档已完成初始化
     initializedForDocRef.current = documentId;
+    
+    // 更新初始化稳定状态标记，等待防抖值稳定
+    initializationCompleteRef.current = false;
 
   // 依赖 documentId 与 documentData，确保数据到达后能完成一次初始化
   }, [documentId, documentData]);
 
-  // 当 query 数据更新时，同步更新 ref（但不覆盖本地状态）
+  // 当 query 数据更新时，执行 同步更新 ref（但不覆盖本地状态） 的副作用
   useEffect(() => {
     if (documentData) {
       const { document, contentBlock } = documentData;
@@ -119,10 +131,46 @@ export const useAutoSaveDocument = (documentId: string | null) => {
     }
   }, [documentData]);
 
-  // 自动保存元信息
+  // 用于初始化场景，当 文档打开-》查询数据-》初始化本地状态-》防抖值稳定-》初始化完成
+  useEffect(() => {
+    // 如果 初始化场景文档的防抖值已经稳定 或 还未初始化，则跳过
+    if (initializationCompleteRef.current || !serverDataRef.current) {
+      return;
+    }
+
+    const { 
+      title: serverTitle, 
+      description: serverDescription, 
+      promptPrefix: serverPromptPrefix,
+      promptSuffix: serverPromptSuffix,
+      content: serverContent
+    } = serverDataRef.current;
+
+    // 本地文档元信息 是否与 服务端文档元信息 一致（一致说明初始化已完成，防抖已稳定）
+    const metadataStabilized = 
+      debouncedMetadata.title === serverTitle &&
+      debouncedMetadata.description === serverDescription &&
+      debouncedMetadata.promptPrefix === serverPromptPrefix &&
+      debouncedMetadata.promptSuffix === serverPromptSuffix;
+
+    // 本地文档内容 是否与 服务端文档内容 一致（一致说明初始化已完成，防抖已稳定）
+    const contentStabilized = debouncedContent === serverContent;
+
+    // 只有当所有本地文档元信息和文档内容都与服务端数据一致时，才认为初始化完成
+    if (metadataStabilized && contentStabilized) {
+      initializationCompleteRef.current = true;
+    }
+  }, [debouncedMetadata, debouncedContent]);
+
+  // 当 文档元信息防抖值 变化后，执行 文档元信息保存 的副作用
   useEffect(() => {
     // 如果 documentId 不存在，或服务器数据还未加载，则不执行
     if (!documentId || !serverDataRef.current) {
+      return;
+    }
+
+    // 防止初始化阶段的状态变化触发误保存：只有初始化完成后才允许保存
+    if (!initializationCompleteRef.current) {
       return;
     }
 
@@ -170,9 +218,14 @@ export const useAutoSaveDocument = (documentId: string | null) => {
   // 关键：不依赖 documentData，避免闭环
   }, [debouncedMetadata, documentId, updateDocumentMutation]);
 
-  // 自动保存内容
+  // 当 文档内容防抖值 变化后，执行 文档内容保存 的副作用
   useEffect(() => {
     if (!documentId || !serverDataRef.current) {
+      return;
+    }
+
+    // 防止初始化阶段的状态变化触发误保存：只有初始化完成后才允许保存
+    if (!initializationCompleteRef.current) {
       return;
     }
 
