@@ -12,11 +12,37 @@ interface TiptapEditorProps {
   placeholder?: string;
 }
 
+/**
+ * 将 JSON 字符串解析为 Tiptap 编辑器可用的内容格式
+ * 支持向后兼容：处理空字符串、HTML 字符串和 JSON 字符串
+ */
+const parseContentFromJSON = (contentString: string): string | object => {
+  if (!contentString || contentString.trim() === '') {
+    return '';
+  }
+
+  try {
+    const parsed = JSON.parse(contentString);
+    // 验证是否为有效的 Tiptap JSON 结构
+    if (parsed && typeof parsed === 'object' && 'type' in parsed) {
+      return parsed;
+    }
+    // 如果不是有效的 Tiptap JSON，返回空字符串
+    return '';
+  } catch {
+    // JSON 解析失败，可能是旧的 HTML 格式或损坏的数据
+    // Tiptap 可以直接处理 HTML 字符串，所以返回原字符串
+    return contentString;
+  }
+};
+
 export const TiptapEditor = ({ 
   content, 
   onContentChange, 
   placeholder
 }: TiptapEditorProps) => {
+
+  
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -38,7 +64,7 @@ export const TiptapEditor = ({
         placeholder,
       }),
     ],
-    content: content || '',
+    content: parseContentFromJSON(content),
     // 修复SSR水合错误：在Next.js SSR环境中禁用立即渲染，避免服务端和客户端渲染不匹配
     immediatelyRender: false,
     // 确保编辑器是可编辑的
@@ -50,17 +76,22 @@ export const TiptapEditor = ({
       },
     },
     onUpdate: ({ editor }) => {
-      // 获取编辑器内容并传递给父组件
-      const htmlContent = editor.getHTML();
-      onContentChange(htmlContent);
+      const jsonContent = editor.getJSON();
+      const jsonString = JSON.stringify(jsonContent);
+      onContentChange(jsonString);
     },
   });
 
   // 当外部content变化时，更新编辑器内容
   useEffect(() => {
-    if (editor && content !== editor.getHTML()) {
-      // 如果content为空字符串，设置为空以确保placeholder显示
-      editor.commands.setContent(content || '');
+    if (!editor) return;
+
+    const currentContentJSON = JSON.stringify(editor.getJSON());
+    
+    // 比较当前编辑器的 JSON 内容与外部传入的 content
+    if (content !== currentContentJSON) {
+      const parsedContent = parseContentFromJSON(content);
+      editor.commands.setContent(parsedContent);
     }
   }, [content, editor]);
 
