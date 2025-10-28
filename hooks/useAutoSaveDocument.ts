@@ -5,6 +5,7 @@ import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useDebouncedValue } from "./use-debounced-value";
+import { useDebouncedObject } from "./use-debounced-object";
 
 /**
  * 自定义 Hook：文档自动保存
@@ -67,9 +68,9 @@ export const useAutoSaveDocument = (documentId: string | null) => {
   const updateContentMutation = useMutation(api.prompt.mutations.updateDocumentContent);
 
   
-  // 值防抖：文档元信息
-  const debouncedMetadata = useDebouncedValue({ title, description, promptPrefix, promptSuffix }, 800);
-  // 值防抖：文档内容
+  // 对象防抖：文档元信息（使用 useDebouncedObject 处理对象类型，保证引用稳定）
+  const debouncedMetadata = useDebouncedObject({ title, description, promptPrefix, promptSuffix }, 800);
+  // 值防抖：文档内容（字符串类型使用 useDebouncedValue）
   const debouncedContent = useDebouncedValue(content, 700);
   
 
