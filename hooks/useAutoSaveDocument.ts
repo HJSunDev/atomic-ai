@@ -53,7 +53,8 @@ export const useAutoSaveDocument = (documentId: string | null) => {
   const initializedForDocRef = useRef<string | null>(null);
   // 引用-标记初始化是否已完成（防抖值已稳定），防止初始化阶段 执行更新接口
   const initializationCompleteRef = useRef<boolean>(false);
-
+  // 引用-初始化完成计时器
+  const initCompletionTimerRef = useRef<NodeJS.Timeout | null>(null);
 
 
   // 从服务器加载文档数据
@@ -112,8 +113,22 @@ export const useAutoSaveDocument = (documentId: string | null) => {
     // 标记当前文档已完成初始化
     initializedForDocRef.current = documentId;
     
-    // 更新初始化稳定状态标记，等待防抖值稳定
+    // 重置初始化完成状态
     initializationCompleteRef.current = false;
+
+    // 设置一个计时器，在所有防抖延迟（最长800ms）结束后，标记初始化完成
+    initCompletionTimerRef.current = setTimeout(() => {
+      initializationCompleteRef.current = true;
+    }, 900); // 使用900ms，确保安全地超过800ms的防抖
+
+    // 返回一个清理函数。
+    // 在组件卸载，或 documentId/documentData 变化导致 effect 重新执行之前，
+    // 清除上一个 effect 设置的计时器，防止内存泄漏或意外的状态更新。
+    return () => {
+      if (initCompletionTimerRef.current) {
+        clearTimeout(initCompletionTimerRef.current);
+      }
+    };
 
   // 依赖 documentId 与 documentData，确保数据到达后能完成一次初始化
   }, [documentId, documentData]);
@@ -132,44 +147,12 @@ export const useAutoSaveDocument = (documentId: string | null) => {
     }
   }, [documentData]);
 
-  // 用于初始化场景，当 文档打开-》查询数据-》初始化本地状态-》防抖值稳定-》初始化完成
-  useEffect(() => {
-    // 如果 初始化场景文档的防抖值已经稳定 或 还未初始化，则跳过
-    if (initializationCompleteRef.current || !serverDataRef.current) {
-      return;
-    }
-
-    const { 
-      title: serverTitle, 
-      description: serverDescription, 
-      promptPrefix: serverPromptPrefix,
-      promptSuffix: serverPromptSuffix,
-      content: serverContent
-    } = serverDataRef.current;
-
-    // 本地文档元信息 是否与 服务端文档元信息 一致（一致说明初始化已完成，防抖已稳定）
-    const metadataStabilized = 
-      debouncedMetadata.title === serverTitle &&
-      debouncedMetadata.description === serverDescription &&
-      debouncedMetadata.promptPrefix === serverPromptPrefix &&
-      debouncedMetadata.promptSuffix === serverPromptSuffix;
-
-    // 本地文档内容 是否与 服务端文档内容 一致（一致说明初始化已完成，防抖已稳定）
-    const contentStabilized = debouncedContent === serverContent;
-
-    // 只有当所有本地文档元信息和文档内容都与服务端数据一致时，才认为初始化完成
-    if (metadataStabilized && contentStabilized) {
-      initializationCompleteRef.current = true;
-    }
-  }, [debouncedMetadata, debouncedContent]);
-
   // 当 文档元信息防抖值 变化后，执行 文档元信息保存 的副作用
   useEffect(() => {
     // 如果 documentId 不存在，或服务器数据还未加载，则不执行
     if (!documentId || !serverDataRef.current) {
       return;
     }
-
     // 防止初始化阶段的状态变化触发误保存：只有初始化完成后才允许保存
     if (!initializationCompleteRef.current) {
       return;
