@@ -4,7 +4,7 @@ import { useEditor, EditorContent } from '@tiptap/react';
 import { FloatingMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import type { EditorState } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { FloatingMenuBar } from './FloatingMenuBar';
@@ -46,6 +46,9 @@ export const TiptapEditor = ({
   placeholder
 }: TiptapEditorProps) => {
 
+  // 浮动菜单的key,用更新key的方式来强制刷新 菜单的显示,用来处理中文输入 shouldShow 不执行的问题
+  const [floatingMenuKey, setFloatingMenuKey] = useState(0);
+
   
   const editor = useEditor({
     extensions: [
@@ -77,6 +80,15 @@ export const TiptapEditor = ({
       attributes: {
         class: 'tiptap focus:outline-none',
         'spellcheck': 'false',
+      },
+      // 监听 DOM 事件
+      handleDOMEvents: {
+        // 当合成开始时,强制刷新浮动菜单
+        compositionstart: (view, event) => {
+
+          setFloatingMenuKey(prevKey => prevKey + 1);
+          return false;
+        },
       },
     },
     onUpdate: ({ editor }) => {
@@ -117,6 +129,7 @@ export const TiptapEditor = ({
       {editor && (
         <FloatingMenu
           editor={editor}
+          key={floatingMenuKey}
           shouldShow={({ state, view }: { state: EditorState; view: EditorView }) => {
             const { selection } = state;
             const { $from, empty } = selection;
