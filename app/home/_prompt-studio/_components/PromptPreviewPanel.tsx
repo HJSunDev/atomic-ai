@@ -2,6 +2,8 @@
 
 import { useState, useMemo, useEffect } from 'react';
 import { X, MoreHorizontal, GripVertical, Loader2 } from 'lucide-react';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import type { GridItem } from './types';
 import {
   DndContext,
@@ -18,6 +20,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
+import { jsonToMarkdown } from '@/lib/markdown';
 
 interface PromptPreviewPanelProps {
   item: GridItem;
@@ -27,7 +30,10 @@ interface PromptPreviewPanelProps {
 interface Block {
   id: string;
   type: 'text' | 'reference';
+  // Tiptap JSON 内容
   content?: string;
+  // Markdown 内容（从 Tiptap JSON 转换而来）
+  formattedContent?: string;
   order: number;
 }
 
@@ -68,8 +74,14 @@ function SortableBlockItem({ block }: { block: Block }) {
       <div className="absolute -left-6 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-gray-400 p-1 rounded transition-opacity pointer-events-none">
         <GripVertical className="h-4 w-4" />
       </div>
-      <div className="py-4 px-5 whitespace-pre-wrap">
-        {block.content || <span className="text-gray-400 italic">暂无内容...</span>}
+      <div className="py-4 px-5 markdown-content">
+        {block.formattedContent ? (
+          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            {block.formattedContent}
+          </ReactMarkdown>
+        ) : (
+          <span className="text-gray-400 italic">暂无内容...</span>
+        )}
       </div>
     </div>
   );
@@ -101,11 +113,29 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
     function processBlocks(blockList: NonNullable<typeof documentData>['blocks'], isFromReference: boolean = false) {
       for (const block of blockList) {
         if (block.type === 'text') {
+          // 将 Tiptap JSON 格式的内容转换为 Markdown
+          // 容错处理：如果转换失败，使用原始内容（可能是纯文本或其他格式）
+          let formattedContent = '';
+          if (block.content) {
+            try {
+              formattedContent = jsonToMarkdown(block.content);
+              // 如果转换结果为空，可能是无效的 JSON，保留原始内容用于显示
+              if (!formattedContent && block.content.trim()) {
+                formattedContent = block.content;
+              }
+            } catch (error) {
+              // 转换失败时，使用原始内容
+              console.warn('Failed to convert content to Markdown:', error);
+              formattedContent = block.content;
+            }
+          }
+          
           // 内容块：根据是否来自引用文档设置类型
           resultBlocks.push({
             id: `block-${blockIdCounter++}`,
             type: isFromReference ? 'reference' : 'text',
             content: block.content || '',
+            formattedContent,
             order: resultBlocks.length,
           });
         } else if (block.type === 'reference' && block.referencedDocument) {
