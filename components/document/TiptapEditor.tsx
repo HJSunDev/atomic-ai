@@ -1,9 +1,13 @@
 "use client";
 
 import { useEditor, EditorContent } from '@tiptap/react';
+import { FloatingMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useEffect } from 'react';
+import type { EditorState } from '@tiptap/pm/state';
+import type { EditorView } from '@tiptap/pm/view';
+import { FloatingMenuBar } from './FloatingMenuBar';
 import './tiptap-editor.css';
 
 interface TiptapEditorProps {
@@ -109,11 +113,34 @@ export const TiptapEditor = ({
         />
       </div>
 
-      {/* 悬浮工具栏 - Notion风格的简洁工具栏 */}
+      {/* FloatingMenu：仅在空段落时显示，提供快速插入不同类型内容块的选项 */}
       {editor && (
-        <div className="absolute top-0 left-0 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          {/* 这里可以添加格式化工具栏，目前保持简洁 */}
-        </div>
+        <FloatingMenu
+          editor={editor}
+          shouldShow={({ state, view }: { state: EditorState; view: EditorView }) => {
+            const { selection } = state;
+            const { $from, empty } = selection;
+
+            // 仅在空选择且编辑器处于聚焦状态时显示
+            if (!empty) {
+              return false;
+            }
+
+            // 检查是否为空段落
+            const currentDepth = $from.depth;
+            const currentNode = $from.node(currentDepth);
+
+            // 确保当前节点是空段落
+            if (currentNode.type.name === 'paragraph' && currentNode.content.size === 0) {
+              // 检查编辑器是否处于聚焦状态
+              return view.hasFocus();
+            }
+
+            return false;
+          }}
+        >
+          <FloatingMenuBar editor={editor} />
+        </FloatingMenu>
       )}
     </div>
   );
