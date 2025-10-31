@@ -9,6 +9,8 @@ import {
   DndContext,
   closestCenter,
   DragEndEvent,
+  DragOverlay,
+  DragStartEvent,
 } from '@dnd-kit/core';
 import {
   SortableContext,
@@ -17,6 +19,7 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
+import { createPortal } from 'react-dom';
 import { useQuery } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
@@ -37,33 +40,10 @@ interface Block {
   order: number;
 }
 
-// 可排序的块组件
-function SortableBlockItem({ block }: { block: Block }) {
-  const {
-    attributes,
-    listeners,
-    setNodeRef,
-    transform,
-    transition,
-    isDragging,
-  } = useSortable({ id: block.id });
-
-  const style = {
-    transform: CSS.Transform.toString(transform),
-    transition: isDragging ? 'none' : transition,
-    zIndex: isDragging ? 100 : 'auto',
-  } as React.CSSProperties;
-
+// 块内容渲染组件（可复用于列表项和拖拽预览）
+function BlockContent({ block }: { block: Block }) {
   return (
-    <div
-      ref={setNodeRef}
-      style={style}
-      {...attributes}
-      {...listeners}
-      className={`relative border border-transparent hover:rounded-md hover:border-neutral-300/70 hover:bg-white/40 hover:backdrop-blur-[3px] hover:ring-1 hover:ring-[#422303]/10 group ${
-        isDragging ? 'cursor-grabbing opacity-70 shadow-2xl' : 'cursor-grab'
-      }`}
-    >
+    <>
       <div
         className={`absolute left-0 top-0 h-full w-[3px] transition-opacity duration-150 group-hover:opacity-0 ${
           block.type === 'text'
@@ -83,6 +63,81 @@ function SortableBlockItem({ block }: { block: Block }) {
           <span className="text-gray-400 italic">暂无内容...</span>
         )}
       </div>
+    </>
+  );
+}
+
+// 缩略块色块组件 - 极简导航器
+function ThumbnailBlockItem({ block, index }: { block: Block; index: number }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: block.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  } as React.CSSProperties;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`relative flex items-center gap-2 cursor-grab group ${
+        isDragging ? 'opacity-40' : ''
+      }`}
+    >
+
+      {/* 色块 */}
+      <div
+        className={`flex-shrink-0 w-8 h-8 rounded transition-all ${
+          block.type === 'text'
+            ? 'bg-gray-200 hover:bg-gray-300'
+            : 'bg-blue-200 hover:bg-blue-300'
+        }`}
+      />
+      
+      {/* 拖拽提示 */}
+      <div className="absolute -left-3 top-1/2 -translate-y-1/2  ">
+        <GripVertical className="h-3 w-3 text-gray-400" />
+      </div>
+    </div>
+  );
+}
+
+// 可排序的块组件
+function SortableBlockItem({ block }: { block: Block }) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: block.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  } as React.CSSProperties;
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className={`relative border border-transparent hover:rounded-md hover:border-neutral-300/70 hover:bg-white/40 hover:backdrop-blur-[3px] hover:ring-1 hover:ring-[#422303]/10 group cursor-grab ${
+        isDragging ? 'opacity-30' : ''
+      }`}
+    >
+      <BlockContent block={block} />
     </div>
   );
 }
@@ -154,14 +209,25 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
 
   // 使用状态管理块列表，以便支持拖拽排序
   const [blocks, setBlocks] = useState<Block[]>([]);
+  
+  // 跟踪正在拖拽的块 ID（用于缩略导航器）
+  const [activeThumbnailId, setActiveThumbnailId] = useState<string | null>(null);
+  
+  // 跟踪正在拖拽的块 ID（用于主内容区）
+  const [activeContentId, setActiveContentId] = useState<string | null>(null);
 
   // 当初始数据加载完成后，更新blocks状态
   useEffect(() => {
     setBlocks(initialBlocks);
   }, [initialBlocks]);
 
-  // 处理拖拽结束事件
-  const handleDragEnd = (event: DragEndEvent) => {
+  // 处理缩略导航器拖拽开始事件
+  const handleThumbnailDragStart = (event: DragStartEvent) => {
+    setActiveThumbnailId(event.active.id as string);
+  };
+
+  // 处理缩略导航器拖拽结束事件
+  const handleThumbnailDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
 
     // 仅当拖拽到有效目标且位置发生变化时才执行
@@ -170,12 +236,36 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
         // 查找拖拽项和目标项的索引
         const oldIndex = items.findIndex((item) => item.id === active.id);
         const newIndex = items.findIndex((item) => item.id === over.id);
-
-        // 返回重新排序后的数组
         return arrayMove(items, oldIndex, newIndex);
       });
     }
+    
+    setActiveThumbnailId(null);
   };
+
+  // 处理主内容区拖拽开始事件
+  const handleContentDragStart = (event: DragStartEvent) => {
+    setActiveContentId(event.active.id as string);
+  };
+
+  // 处理主内容区拖拽结束事件
+  const handleContentDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      setBlocks((items) => {
+        const oldIndex = items.findIndex((item) => item.id === active.id);
+        const newIndex = items.findIndex((item) => item.id === over.id);
+        return arrayMove(items, oldIndex, newIndex);
+      });
+    }
+    
+    // 重置拖拽状态
+    setActiveContentId(null);
+  };
+
+  // 获取正在拖拽的块
+  const activeContentBlock = activeContentId ? blocks.find((block) => block.id === activeContentId) : null;
 
   // 加载状态
   const isLoading = documentData === undefined;
@@ -188,7 +278,7 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex justify-center items-center p-8">
       {/* modal主体 */}
-      <div className="bg-white rounded-lg shadow-2xl w-[54rem] h-[84vh] flex flex-col overflow-hidden">
+      <div className="bg-white rounded-lg shadow-2xl w-[54rem] h-[84vh] flex flex-col overflow-hidden relative">
         {/* 简洁头部 */}
         <header className="relative flex items-center justify-between px-3 py-2 min-h-[48px]">
           <div className="flex items-center pl-3">
@@ -219,6 +309,28 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
           </div>
         </header>
         
+        {/* 左侧缩略导航器 - 浮动在左侧居中 */}
+        {!isLoading && blocks.length > 1 && (
+          <DndContext
+            collisionDetection={closestCenter}
+            onDragStart={handleThumbnailDragStart}
+            onDragEnd={handleThumbnailDragEnd}
+          >
+            <aside className="absolute left-4 top-1/2 -translate-y-1/2 z-10 bg-white/80 backdrop-blur-sm rounded-lg shadow-lg border border-gray-200/50 p-3">
+              <SortableContext
+                items={blocks.map((block) => block.id)}
+                strategy={verticalListSortingStrategy}
+              >
+                <div className="space-y-2">
+                  {blocks.map((block, index) => (
+                    <ThumbnailBlockItem key={block.id} block={block} index={index} />
+                  ))}
+                </div>
+              </SortableContext>
+            </aside>
+          </DndContext>
+        )}
+        
         {/* 内容区：按块显示 */}
         <main className="flex-1 overflow-auto px-24">
           {isLoading ? (
@@ -241,7 +353,8 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
               {/* 内容块列表 */}
               <DndContext
                 collisionDetection={closestCenter}
-                onDragEnd={handleDragEnd}
+                onDragStart={handleContentDragStart}
+                onDragEnd={handleContentDragEnd}
               >
                 <SortableContext
                   items={blocks.map((block) => block.id)}
@@ -254,6 +367,18 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
                     ))}
                   </section>
                 </SortableContext>
+                
+                {/* 内容区拖拽预览 */}
+                {createPortal(
+                  <DragOverlay dropAnimation={null}>
+                    {activeContentBlock ? (
+                      <div className="relative border border-neutral-300/70 rounded-md bg-white/95 backdrop-blur-[3px] shadow-2xl ring-1 ring-[#422303]/10 cursor-grabbing w-[40rem]">
+                        <BlockContent block={activeContentBlock} />
+                      </div>
+                    ) : null}
+                  </DragOverlay>,
+                  document.body
+                )}
               </DndContext>
 
               {/* 文档后置信息 */}
