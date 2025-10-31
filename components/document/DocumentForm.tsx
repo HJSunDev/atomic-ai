@@ -131,7 +131,7 @@ export const DocumentForm = ({
         <TiptapEditor
           content={content}
           onContentChange={handleContentChange}
-          placeholder="输入文本..."
+          placeholder={`输入“/”打开菜单`}
         />
       </section>
     </article>

@@ -17,44 +17,70 @@ interface FloatingMenuBarProps {
 /**
  * FloatingMenuBar
  * 
- * 当用户在空段落处创建新行时显示，提供快速插入不同类型内容块的选项
+ * 当用户输入斜杠 `/` 字符时显示，提供快速插入不同类型内容块的选项（斜杠命令）
+ * 点击菜单项时会自动删除斜杠字符并插入对应的内容格式
  */
 export const FloatingMenuBar = ({ editor }: FloatingMenuBarProps) => {
   if (!editor) {
     return null;
   }
 
+  // 删除斜杠字符的辅助函数
+  const deleteSlash = () => {
+    const { from } = editor.state.selection;
+    // 删除光标前的 `/` 字符
+    editor.chain().deleteRange({ from: from - 1, to: from }).run();
+  };
+
   // 菜单项配置：图标、标签、命令
   const menuItems = [
     {
       icon: Heading1,
       label: '一级标题',
-      onClick: () => editor.chain().focus().toggleHeading({ level: 1 }).run(),
+      onClick: () => {
+        deleteSlash();
+        editor.chain().focus().toggleHeading({ level: 1 }).run();
+      },
     },
     {
       icon: Heading2,
       label: '二级标题',
-      onClick: () => editor.chain().focus().toggleHeading({ level: 2 }).run(),
+      onClick: () => {
+        deleteSlash();
+        editor.chain().focus().toggleHeading({ level: 2 }).run();
+      },
     },
     {
       icon: Heading3,
       label: '三级标题',
-      onClick: () => editor.chain().focus().toggleHeading({ level: 3 }).run(),
+      onClick: () => {
+        deleteSlash();
+        editor.chain().focus().toggleHeading({ level: 3 }).run();
+      },
     },
     {
       icon: List,
       label: '无序列表',
-      onClick: () => editor.chain().focus().toggleBulletList().run(),
+      onClick: () => {
+        deleteSlash();
+        editor.chain().focus().toggleBulletList().run();
+      },
     },
     {
       icon: ListOrdered,
       label: '有序列表',
-      onClick: () => editor.chain().focus().toggleOrderedList().run(),
+      onClick: () => {
+        deleteSlash();
+        editor.chain().focus().toggleOrderedList().run();
+      },
     },
     {
       icon: Quote,
       label: '引用块',
-      onClick: () => editor.chain().focus().toggleBlockquote().run(),
+      onClick: () => {
+        deleteSlash();
+        editor.chain().focus().toggleBlockquote().run();
+      },
     },
   ];
 

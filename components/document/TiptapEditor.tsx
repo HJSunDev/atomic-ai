@@ -66,7 +66,7 @@ export const TiptapEditor = ({
           keepAttributes: false,
         },
       }),
-      // Placeholder扩展：按照官方文档的简单配置
+      // Placeholder扩展
       Placeholder.configure({
         placeholder,
       }),
@@ -125,7 +125,7 @@ export const TiptapEditor = ({
         />
       </div>
 
-      {/* FloatingMenu：仅在空段落时显示，提供快速插入不同类型内容块的选项 */}
+      {/* FloatingMenu：输入斜杠 `/` 时显示 */}
       {editor && (
         <FloatingMenu
           editor={editor}
@@ -134,19 +134,23 @@ export const TiptapEditor = ({
             const { selection } = state;
             const { $from, empty } = selection;
 
-            // 仅在空选择且编辑器处于聚焦状态时显示
+            // 如果有内容，不需要显示，直接结束
             if (!empty) {
               return false;
             }
 
-            // 检查是否为空段落
-            const currentDepth = $from.depth;
-            const currentNode = $from.node(currentDepth);
+            // 检查编辑器是否处于聚焦状态
+            if (!view.hasFocus()) {
+              return false;
+            }
 
-            // 确保当前节点是空段落
-            if (currentNode.type.name === 'paragraph' && currentNode.content.size === 0) {
-              // 检查编辑器是否处于聚焦状态
-              return view.hasFocus();
+            // 获取光标前的文本内容
+            const textBefore = $from.nodeBefore?.text || '';
+            
+            // 检查光标前是否有 `/` 字符
+            // 只有当输入 `/` 且后面没有其他字符时才显示菜单
+            if (textBefore.endsWith('/')) {
+              return true;
             }
 
             return false;
