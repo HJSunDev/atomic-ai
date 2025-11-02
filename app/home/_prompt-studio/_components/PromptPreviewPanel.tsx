@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, useRef } from 'react';
 import { X, MoreHorizontal, GripVertical, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -20,7 +20,7 @@ import {
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { createPortal } from 'react-dom';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
 import { jsonToMarkdown } from '@/lib/markdown';
@@ -38,6 +38,10 @@ interface Block {
   // Markdown 内容（从 Tiptap JSON 转换而来）
   formattedContent?: string;
   order: number;
+  // 源块ID（用于保存排序结果到数据库）
+  // - 对于文档自己的内容块：值为该内容块在数据库中的 _id
+  // - 对于引用展开的内容：值为引用块在数据库中的 _id（不是被引用文档的内容块ID）
+  sourceBlockId: Id<"blocks">;
 }
 
 // 块内容渲染组件（可复用于列表项和拖拽预览）
@@ -99,12 +103,12 @@ function ThumbnailBlockItem({ block, index }: { block: Block; index: number }) {
         className={`flex-shrink-0 w-8 h-8 rounded transition-all ${
           block.type === 'text'
             ? 'bg-gray-200 hover:bg-gray-300'
-            : 'bg-blue-200 hover:bg-blue-300'
+            : 'border border-dashed border-gray-400 bg-white hover:border-gray-500'
         }`}
       />
       
       {/* 拖拽提示 */}
-      <div className="absolute -left-3 top-1/2 -translate-y-1/2  ">
+      <div className="absolute -left-3 top-1/2 -translate-y-1/2">
         <GripVertical className="h-3 w-3 text-gray-400" />
       </div>
     </div>
@@ -163,9 +167,12 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
     /**
      * 递归处理块列表
      * @param blockList 块列表
-     * @param isFromReference 是否来自引用文档（用于区分块类型）
+     * @param referenceBlockId 引用块ID（用于标记当前处理的内容块是来自哪个引用块）
      */
-    function processBlocks(blockList: NonNullable<typeof documentData>['blocks'], isFromReference: boolean = false) {
+    function processBlocks(
+      blockList: NonNullable<typeof documentData>['blocks'], 
+      referenceBlockId?: Id<"blocks">
+    ) {
       for (const block of blockList) {
         if (block.type === 'text') {
           // 将 Tiptap JSON 格式的内容转换为 Markdown
@@ -185,23 +192,25 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
             }
           }
           
-          // 内容块：根据是否来自引用文档设置类型
           resultBlocks.push({
             id: `block-${blockIdCounter++}`,
-            type: isFromReference ? 'reference' : 'text',
+            // 有referenceBlockId，说明是 引用块指向文档的内容块，所以内容块的类型为 'reference'
+            type: referenceBlockId ? 'reference' : 'text',
             content: block.content || '',
             formattedContent,
             order: resultBlocks.length,
+            // 没有referenceBlockId，说明是 文档的内容块，sourceBlockId为自己的_id
+            sourceBlockId: referenceBlockId || block._id,
           });
         } else if (block.type === 'reference' && block.referencedDocument) {
-          // 引用块：递归处理，标记为来自引用
+          // 引用块：递归处理被引用文档的内容，并传递当前引用块的ID
           const refDoc = block.referencedDocument;
-          processBlocks(refDoc.blocks, true);
+          processBlocks(refDoc.blocks, block._id);
         }
       }
     }
 
-    // 开始处理根文档的块
+    // 开始处理根文档的块（初始调用时没有引用块上下文）
     processBlocks(documentData.blocks);
 
     return resultBlocks;
@@ -215,6 +224,67 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
   
   // 跟踪正在拖拽的块 ID（用于主内容区）
   const [activeContentId, setActiveContentId] = useState<string | null>(null);
+  // 保存状态（避免并发保存造成顺序抖动）
+  // isSaving 控制并发: 避免并发保存导致的乱序
+  const [isSaving, setIsSaving] = useState(false);
+
+  // 保存块顺序的后端接口
+  const updateBlocksOrder = useMutation(api.prompt.mutations.updateBlocksOrder);
+
+  // pendingSaveRef 存储最新请求，避免并发保存导致的乱序, 在上一个请求完成后检查，实现请求pending 队列
+  const pendingSaveRef = useRef<{
+    documentId: Id<"documents">;
+    blockOrders: { blockId: Id<"blocks">; order: number }[];
+  } | null>(null);
+
+  // 触发保存请求（只保留最近一次的顺序）
+  const requestSave = (items: Block[]) => {
+    pendingSaveRef.current = {
+      documentId: item.documentId as Id<"documents">,
+      blockOrders: items.map((block, index) => ({
+        blockId: block.sourceBlockId,
+        order: index,
+      })),
+    };
+    if (!isSaving) {
+      void flushSave();
+    }
+  };
+
+  // 执行保存；如果保存期间又产生了新的请求，结束后继续处理（尾随保存）
+  const flushSave = async () => {
+    if (isSaving) return;
+    const payload = pendingSaveRef.current;
+    if (!payload) return;
+    // 取出当前负载，防止本次保存期间被覆盖
+    pendingSaveRef.current = null;
+    try {
+      setIsSaving(true);
+      await updateBlocksOrder(payload);
+    } catch (error) {
+      console.error('自动保存排序失败:', error);
+    } finally {
+      setIsSaving(false);
+    }
+    // 如果在保存期间产生了新的请求，继续保存最新的一次
+    if (pendingSaveRef.current) {
+      await flushSave();
+    }
+  };
+
+  // 统一处理排序与自动保存
+  const reorderAndSave = (activeId: string, overId: string) => {
+    setBlocks((prev) => {
+      const oldIndex = prev.findIndex((it) => it.id === activeId);
+      const newIndex = prev.findIndex((it) => it.id === overId);
+      if (oldIndex === -1 || newIndex === -1) return prev;
+      if (oldIndex === newIndex) return prev;
+      const next = arrayMove(prev, oldIndex, newIndex);
+      // 异步持久化（仅保留最近一次的顺序）
+      requestSave(next);
+      return next;
+    });
+  };
 
   // 当初始数据加载完成后，更新blocks状态
   useEffect(() => {
@@ -232,12 +302,7 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
 
     // 仅当拖拽到有效目标且位置发生变化时才执行
     if (over && active.id !== over.id) {
-      setBlocks((items) => {
-        // 查找拖拽项和目标项的索引
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
+      reorderAndSave(active.id as string, over.id as string);
     }
     
     setActiveThumbnailId(null);
@@ -253,11 +318,7 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
     const { active, over } = event;
 
     if (over && active.id !== over.id) {
-      setBlocks((items) => {
-        const oldIndex = items.findIndex((item) => item.id === active.id);
-        const newIndex = items.findIndex((item) => item.id === over.id);
-        return arrayMove(items, oldIndex, newIndex);
-      });
+      reorderAndSave(active.id as string, over.id as string);
     }
     
     // 重置拖拽状态

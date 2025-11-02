@@ -391,6 +391,83 @@ export const deleteDocument = mutation({
 
 
 /**
+ * 更新文档块的排序
+ * 
+ * 用于保存用户在预览面板中调整的块顺序
+ * 
+ * 设计特性：
+ * - 批量更新：一次性更新所有块的 order
+ * - 严格验证：确保提供的 blockId 都属于目标文档，防止数据错误
+ * - 完整性检查：验证块数量、order连续性，保证数据一致性
+ * 
+ * 使用场景：
+ * - 用户在文档预览面板中拖拽调整块顺序后保存
+ */
+export const updateBlocksOrder = mutation({
+  args: {
+    documentId: v.id("documents"),
+    blockOrders: v.array(v.object({
+      blockId: v.id("blocks"),
+      order: v.number(),
+    })),
+  },
+  handler: async (ctx, args) => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    const document = await ctx.db.get(args.documentId);
+    if (!document) throw new Error("目标文档不存在");
+    if (document.userId !== userId) throw new Error("无权修改此文档");
+
+    const allBlocks = await ctx.db
+      .query("blocks")
+      .withIndex("by_documentId_order", (q) => q.eq("documentId", args.documentId))
+      .collect();
+
+    if (allBlocks.length !== args.blockOrders.length) {
+      throw new Error(
+        `块数量不匹配: 文档有 ${allBlocks.length} 个块，但提供了 ${args.blockOrders.length} 个排序信息`
+      );
+    }
+
+    const blockIdSet = new Set(allBlocks.map(b => b._id));
+    const providedBlockIds = new Set<string>();
+    
+    for (const { blockId } of args.blockOrders) {
+      if (!blockIdSet.has(blockId)) {
+        throw new Error(`块 ${blockId} 不属于文档 ${args.documentId}`);
+      }
+      if (providedBlockIds.has(blockId)) {
+        throw new Error(`块 ${blockId} 重复出现`);
+      }
+      providedBlockIds.add(blockId);
+    }
+
+    const orders = args.blockOrders.map(b => b.order).sort((a, b) => a - b);
+    for (let i = 0; i < orders.length; i++) {
+      if (orders[i] !== i) {
+        throw new Error(
+          `order 必须从0开始连续递增: 期望索引 ${i} 对应 order=${i}，但得到 order=${orders[i]}`
+        );
+      }
+    }
+
+    await Promise.all(
+      args.blockOrders.map(({ blockId, order }) =>
+        ctx.db.patch(blockId, { order })
+      )
+    );
+
+    return { 
+      success: true, 
+      updatedCount: args.blockOrders.length 
+    } as const;
+  },
+});
+
+
+
+/**
  * [内部] 更新块内容 (用于流式传输)
  * 
  * 设计特性：
