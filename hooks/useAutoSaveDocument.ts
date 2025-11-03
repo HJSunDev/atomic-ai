@@ -75,52 +75,61 @@ export const useAutoSaveDocument = (documentId: string | null) => {
   const debouncedContent = useDebouncedValue(content, 700);
   
 
-  // 数据初始化 - 执行一次
+  // 数据初始化与远程同步（AI 流式）统一入口
   useEffect(() => {
-    // 如果服务端数据还未到达，不需要执行后续数据初始化操作，直接跳过
+    // 如果服务端数据还未到达，不需要执行后续数据同步操作
     if (!documentData) {
       return;
     }
-
-    // 已初始化过当前文档则跳过，避免覆盖本地编辑
-    if (initializedForDocRef.current === documentId) {
-      return;
-    }
-
     const { document, contentBlock } = documentData;
     const serverTitle = document.title || "";
     const serverDescription = document.description || "";
     const serverPromptPrefix = document.promptPrefix || "";
     const serverPromptSuffix = document.promptSuffix || "";
     const serverContent = contentBlock.content || "";
+    // 是否切换了新文档
+    const isNewDocument = initializedForDocRef.current !== documentId;
+    // 是否存在来自服务端的变更（例如 AI 流式更新）
+    const hasRemoteChange =
+      !serverDataRef.current ||
+      serverDataRef.current.title !== serverTitle ||
+      serverDataRef.current.description !== serverDescription ||
+      serverDataRef.current.promptPrefix !== serverPromptPrefix ||
+      serverDataRef.current.promptSuffix !== serverPromptSuffix ||
+      serverDataRef.current.content !== serverContent;
+    // 仅在切换文档或检测到远程变更时同步
+    if (isNewDocument || hasRemoteChange) {
+      // 先同步服务器镜像，作为比较基准
+      serverDataRef.current = {
+        title: serverTitle,
+        description: serverDescription,
+        promptPrefix: serverPromptPrefix,
+        promptSuffix: serverPromptSuffix,
+        content: serverContent,
+      };
+      // 再更新本地 UI 状态（会触发防抖，但比较基准已同步，不会触发保存）
+      setTitle(serverTitle);
+      setDescription(serverDescription);
+      setPromptPrefix(serverPromptPrefix);
+      setPromptSuffix(serverPromptSuffix);
+      setContent(serverContent);
 
-    // 将服务器数据存入 ref
-    serverDataRef.current = {
-      title: serverTitle,
-      description: serverDescription,
-      promptPrefix: serverPromptPrefix,
-      promptSuffix: serverPromptSuffix,
-      content: serverContent,
-    };
 
-    // 用服务器数据初始化本地状态，会触发 值防抖
-    setTitle(serverTitle);
-    setDescription(serverDescription);
-    setPromptPrefix(serverPromptPrefix);
-    setPromptSuffix(serverPromptSuffix);
-    setContent(serverContent);
+      // 记录已初始化的文档 id
+      if (isNewDocument) {
+        initializedForDocRef.current = documentId;
+      }
 
-    // 标记当前文档已完成初始化
-    initializedForDocRef.current = documentId;
-    
-    // 重置初始化完成状态
-    initializationCompleteRef.current = false;
-
-    // 设置一个计时器，在所有防抖延迟（最长800ms）结束后，标记初始化完成
-    initCompletionTimerRef.current = setTimeout(() => {
-      initializationCompleteRef.current = true;
-    }, 900); // 使用900ms，确保安全地超过800ms的防抖
-
+      // 重置并延后开启“允许保存”的开关，避免将远程同步误判为用户输入
+      initializationCompleteRef.current = false;
+      if (initCompletionTimerRef.current) {
+        clearTimeout(initCompletionTimerRef.current);
+      }
+      // 设置一个计时器，在所有防抖延迟（最长800ms）结束后，标记初始化完成
+      initCompletionTimerRef.current = setTimeout(() => {
+        initializationCompleteRef.current = true;
+      }, 900);
+    }
     // 返回一个清理函数。
     // 在组件卸载，或 documentId/documentData 变化导致 effect 重新执行之前，
     // 清除上一个 effect 设置的计时器，防止内存泄漏或意外的状态更新。
@@ -129,23 +138,9 @@ export const useAutoSaveDocument = (documentId: string | null) => {
         clearTimeout(initCompletionTimerRef.current);
       }
     };
-
-  // 依赖 documentId 与 documentData，确保数据到达后能完成一次初始化
   }, [documentId, documentData]);
 
-  // 当 query 数据更新时，执行 同步更新 ref（但不覆盖本地状态） 的副作用
-  useEffect(() => {
-    if (documentData) {
-      const { document, contentBlock } = documentData;
-      serverDataRef.current = {
-        title: document.title || "",
-        description: document.description || "",
-        promptPrefix: document.promptPrefix || "",
-        promptSuffix: document.promptSuffix || "",
-        content: contentBlock.content || "",
-      };
-    }
-  }, [documentData]);
+  
 
   // 当 文档元信息防抖值 变化后，执行 文档元信息保存 的副作用
   useEffect(() => {
