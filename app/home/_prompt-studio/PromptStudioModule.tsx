@@ -1,11 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { TestBlock } from "./_components/TestBlock";
 import { PromptBoard } from "./_components/PromptBoard";
 
 import { useCreateDocument } from "@/hooks/useCreateDocument";
+import { useGenerationOrchestrator } from "@/services/prompt/generationOrchestrator";
+import { useChatStore } from "@/store/home/useChatStore";
 import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
-import { Card, CardContent } from "@/components/ui/card";
 import { ModelSelector } from "@/components/ai-chat/ModelSelector";
 import { NetworkSearchEntry } from "@/components/ai-chat/NetworkSearchEntry";
 import { ContextAdder } from "@/components/ai-chat/ContextAdder";
@@ -25,15 +27,46 @@ import {
   Search,
   MoreHorizontal,
   Plus,
+  Loader2,
 } from "lucide-react";
 
 
 export const PromptStudioModule = () => {
+  const [userPrompt, setUserPrompt] = useState("");
+  const [isSending, setIsSending] = useState(false);
 
   const { createAndOpen, isCreating } = useCreateDocument();
+  const { startGeneration } = useGenerationOrchestrator();
+  const { selectedModel } = useChatStore();
 
   const handleCreateNewDocument = async () => {
     await createAndOpen();
+  };
+
+  const handleSend = async () => {
+    if (!userPrompt.trim() || isSending) return;
+
+    setIsSending(true);
+    try {
+      const result = await startGeneration({
+        userPrompt: userPrompt.trim(),
+        modelId: selectedModel,
+        systemPrompt: "请以文档的形式生成内容，不要添加任何其他内容。",
+      });
+
+      if (result.success) {
+        setUserPrompt("");
+      }
+    } finally {
+      setIsSending(false);
+    }
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
   };
 
   return (
@@ -59,9 +92,13 @@ export const PromptStudioModule = () => {
             <ContextAdder />
           </header>
           <Textarea
+            value={userPrompt}
+            onChange={(e) => setUserPrompt(e.target.value)}
+            onKeyDown={handleKeyDown}
             placeholder="Make anything..."
             className="min-h-[68px] max-h-[110px] p-2 border-0 focus-visible:ring-0 text-base placeholder:text-muted-foreground/80 shadow-none resize-none overflow-y-auto"
             rows={2}
+            disabled={isSending}
           />
           <footer className="flex items-center justify-between w-full p-2">
             <div className="flex items-center gap-2">
@@ -69,9 +106,18 @@ export const PromptStudioModule = () => {
               <NetworkSearchEntry />
             </div>
             <div className="flex items-center gap-3">
-              <Button size="icon" className="rounded-lg w-7 h-7 bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer">
+              <Button 
+                size="icon" 
+                className="rounded-lg w-7 h-7 bg-muted/70 hover:bg-muted text-muted-foreground hover:text-foreground cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={handleSend}
+                disabled={!userPrompt.trim() || isSending}
+              >
                 <span className="sr-only">Send</span>
-                <ArrowUp className="w-4 h-4" />
+                {isSending ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : (
+                  <ArrowUp className="w-4 h-4" />
+                )}
               </Button>
             </div>
           </footer>

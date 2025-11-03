@@ -16,6 +16,7 @@ interface DocumentFormProps {
   setPromptPrefix: (prefix: string) => void;
   content: string;
   setContent: (content: string) => void;
+  disabled?: boolean;
 }
 
 // 文档表单：Notion 风格的可视化编辑器，现在作为受控组件
@@ -28,6 +29,7 @@ export const DocumentForm = ({
   setPromptPrefix,
   content,
   setContent,
+  disabled = false,
 }: DocumentFormProps) => {
   // 追踪用户是否正在编辑前置信息，用于显示/隐藏和动态调整高度
   const [isEditingPrefix, setIsEditingPrefix] = useState(false);
@@ -81,11 +83,12 @@ export const DocumentForm = ({
       {/* 标题输入：Notion风格的大标题 */}
       <section className="mb-[4px] ">
         <input
-          className="w-full text-4xl font-bold outline-none placeholder:text-[#E1E1E0] leading-tight"
+          className="w-full text-4xl font-bold outline-none placeholder:text-[#E1E1E0] leading-tight disabled:opacity-60 disabled:cursor-not-allowed"
           placeholder="无标题"
           value={title}
           onChange={handleTitleChange}
           autoFocus
+          disabled={disabled}
         />
       </section>
 
@@ -98,6 +101,7 @@ export const DocumentForm = ({
           onChange={handleDescriptionChange}
           onFocus={() => setIsEditingDescription(true)}
           onBlur={() => setIsEditingDescription(false)}
+          disabled={disabled}
         />
       </section>
 
@@ -106,7 +110,8 @@ export const DocumentForm = ({
         {!shouldShowPrefixInput ? (
           <button
             onClick={() => setIsEditingPrefix(true)}
-            className="flex items-center py-1 px-[4px] -m-[6px] text-[13px] text-[#a8a49c] hover:text-gray-600 hover:bg-gray-50 rounded transition-colors duration-150 cursor-pointer"
+            className="flex items-center py-1 px-[4px] -m-[6px] text-[13px] text-[#a8a49c] hover:text-gray-600 hover:bg-gray-50 rounded transition-colors duration-150 cursor-pointer disabled:opacity-60 disabled:cursor-not-allowed"
+            disabled={disabled}
           >
             <Plus className="h-3 w-3" />
             <span>添加前置信息</span>
@@ -121,6 +126,7 @@ export const DocumentForm = ({
               onFocus={() => setIsEditingPrefix(true)}
               onBlur={() => setIsEditingPrefix(false)}
               autoFocus={isEditingPrefix}
+              disabled={disabled}
             />
           </div>
         )}
@@ -131,7 +137,8 @@ export const DocumentForm = ({
         <TiptapEditor
           content={content}
           onContentChange={handleContentChange}
-          placeholder={`输入“/”打开菜单`}
+          placeholder={`输入"/"打开菜单`}
+          editable={!disabled}
         />
       </section>
     </article>

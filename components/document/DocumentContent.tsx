@@ -2,6 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useDocumentStore } from "@/store/home/documentStore";
+import { useGenerationJob } from "@/store/prompt/generationJobStore";
+import { useGenerationJobStore } from "@/store/prompt/generationJobStore";
 import { DocumentForm } from "./DocumentForm";
 import {
   DropdownMenu,
@@ -9,12 +11,13 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Check, X, MoreHorizontal, Plus, AlignLeft } from "lucide-react";
+import { Check, X, MoreHorizontal, Plus, AlignLeft, Loader2, Sparkles, AlertCircle } from "lucide-react";
 import { LocalCatalyst } from "@/components/ai-assistant/LocalCatalyst";
 import { SidebarDisplayIcon, ModalDisplayIcon, FullscreenDisplayIcon } from "@/components/icons";
 import { useAutoSaveDocument } from "@/hooks/useAutoSaveDocument";
 import { useCallback, useState, useEffect, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 
 // 提取为独立组件，避免因父组件重渲染而导致自身被重新创建
@@ -95,6 +98,10 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
   
   // 优先使用 prop documentId（全屏模式），否则从 Store 读取（drawer/modal）
   const finalDocumentId = propDocumentId ?? storeDocumentId;
+  
+  // 订阅生成任务状态
+  const { job, isLocked } = useGenerationJob(finalDocumentId);
+  const { cancelJob } = useGenerationJobStore();
 
   // 状态提升：将 useAutoSaveDocument Hook 从 DocumentForm 移至此处
   const {
@@ -205,6 +212,55 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
         </div>
       </header>
       
+      {/* AI 生成中横幅 */}
+      {job && (job.status === "starting" || job.status === "streaming") && (
+        <div className="flex items-center justify-between px-4 py-2 bg-blue-50 border-b border-blue-100">
+          <div className="flex items-center gap-2">
+            {job.status === "starting" && <Loader2 className="w-4 h-4 animate-spin text-blue-600" />}
+            {job.status === "streaming" && <Sparkles className="w-4 h-4 animate-pulse text-blue-600" />}
+            <span className="text-sm text-blue-900">
+              {job.status === "starting" && `正在启动 ${job.modelConfig.shortName}...`}
+              {job.status === "streaming" && `${job.modelConfig.shortName} 正在生成中...`}
+            </span>
+          </div>
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => finalDocumentId && cancelJob(finalDocumentId)}
+            className="h-7 text-xs text-blue-700 hover:text-blue-900 hover:bg-blue-100"
+          >
+            取消
+          </Button>
+        </div>
+      )}
+
+      {/* 错误横幅 */}
+      {job && job.status === "error" && (
+        <div className="flex items-center justify-between px-4 py-2 bg-red-50 border-b border-red-100">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <AlertCircle className="w-4 h-4 text-red-600 flex-shrink-0" />
+            <span className="text-sm text-red-900 truncate">
+              {job.error}
+            </span>
+          </div>
+          <div className="flex items-center gap-2 ml-2 flex-shrink-0">
+            <Button
+              size="sm"
+              variant="ghost"
+              onClick={() => {
+                // 清除当前错误状态，允许用户手动编辑或重新生成
+                if (finalDocumentId) {
+                  useGenerationJobStore.getState().cleanupJob(finalDocumentId, 0);
+                }
+              }}
+              className="h-7 text-xs text-red-700 hover:text-red-900 hover:bg-red-100"
+            >
+              关闭
+            </Button>
+          </div>
+        </div>
+      )}
+      
       <main className={`flex-1 overflow-auto ${contentPaddingByMode[displayMode]}`}>
         <DocumentForm
           title={title}
@@ -215,6 +271,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
           setPromptPrefix={setPromptPrefix}
           content={content}
           setContent={setContent}
+          disabled={isLocked}
         />
       </main>
 

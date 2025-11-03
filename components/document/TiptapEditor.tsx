@@ -14,6 +14,7 @@ interface TiptapEditorProps {
   content: string;
   onContentChange: (content: string) => void;
   placeholder?: string;
+  editable?: boolean;
 }
 
 /**
@@ -40,10 +41,11 @@ const parseContentFromJSON = (contentString: string): string | object => {
   }
 };
 
-export const TiptapEditor = ({ 
+export const TiptapEditor = ({
   content, 
   onContentChange, 
-  placeholder
+  placeholder,
+  editable = true
 }: TiptapEditorProps) => {
 
   // 浮动菜单的key,用更新key的方式来强制刷新 菜单的显示,用来处理中文输入 shouldShow 不执行的问题
@@ -74,8 +76,8 @@ export const TiptapEditor = ({
     content: parseContentFromJSON(content),
     // 修复SSR水合错误：在Next.js SSR环境中禁用立即渲染，避免服务端和客户端渲染不匹配
     immediatelyRender: false,
-    // 确保编辑器是可编辑的
-    editable: true,
+    // 根据 prop 控制编辑器可编辑状态
+    editable,
     editorProps: {
       attributes: {
         class: 'tiptap focus:outline-none',
@@ -110,6 +112,12 @@ export const TiptapEditor = ({
       editor.commands.setContent(parsedContent);
     }
   }, [content, editor]);
+
+  // 当 editable 状态变化时，更新编辑器
+  useEffect(() => {
+    if (!editor) return;
+    editor.setEditable(editable);
+  }, [editable, editor]);
 
   if (!editor) {
     return null;
