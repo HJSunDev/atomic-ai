@@ -17,14 +17,23 @@ interface ModelConfig {
 // 定义服务商类型
 export type ProviderType = 'openrouter';
 
-// 为不同厂商设定推荐的最大输出 tokens（非上下文窗口）。
-// 说明：这些值用于减少长输出被截断的概率，最终仍受各模型/路由的硬性上限约束。
-const OPENAI_DEFAULT_MAX_OUTPUT_TOKENS = 4096;
-const ANTHROPIC_DEFAULT_MAX_OUTPUT_TOKENS = 8192;
-const DEEPSEEK_DEFAULT_MAX_OUTPUT_TOKENS = 8192;
-const QWEN_DEFAULT_MAX_OUTPUT_TOKENS = 8192;
-const Z_AI_GLM_DEFAULT_MAX_OUTPUT_TOKENS = 8192;
-const FREE_MODEL_BASELINE_MAX_OUTPUT_TOKENS = 4096;
+// ===================================================================
+// 推荐的最大输出 tokens（按业务场景/模型家族设定基准值）
+// 说明：输出长度应为“可用且稳健”的安全值，以保证生成完整性并避免触发服务端硬性限制。
+// - 生成应用/代码：优先完整性，尽量接近长输出能力但保守留余量
+// - 生成文档：平衡成本与效果，8k 为常见上限的稳妥值
+// ===================================================================
+
+// 针对“生成应用/代码”的设置（要求极高完整性）
+const CLAUDE_4_OPUS_MAX_CODE_OUTPUT = 30720; // 为长代码输出预留空间，避免靠近极限
+const Z_AI_GLM_MAX_CODE_OUTPUT = 92160; // 仅用于未来引入付费版 GLM 4.5 时复用
+const QWEN_CODER_MAX_CODE_OUTPUT = 61440; // 仅用于未来引入付费版 Qwen Coder 时复用
+const GPT4o_EXTENDED_MAX_CODE_OUTPUT = 61440; // 用于可能的长输出版 gpt-4o
+
+// 针对“生成文档”的通用设置（平衡效果与成本）
+const GENERAL_PAID_MODEL_MAX_DOC_OUTPUT = 8192; // 常见付费通用模型的稳定输出长度
+const OPENAI_DEFAULT_MAX_DOC_OUTPUT = 4096; // OpenAI 常规模型输出限制更紧，取保守值
+const FREE_MODEL_BASELINE_MAX_OUTPUT = 4096; // 免费模型通常限制更严，统一基线
 
 // 按服务商分类的模型列表
 export const MODELS_BY_PROVIDER: Record<ProviderType, {
@@ -53,7 +62,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "openai",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: OPENAI_DEFAULT_MAX_OUTPUT_TOKENS,
+        maxTokens: OPENAI_DEFAULT_MAX_DOC_OUTPUT,
         description: "OpenAI的多模态旗舰模型，具备强大的推理能力和知识广度，适合复杂分析和创意任务",
         isRecommended: false,
         isFree: false,
@@ -65,7 +74,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "openai",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: OPENAI_DEFAULT_MAX_OUTPUT_TOKENS,
+        maxTokens: OPENAI_DEFAULT_MAX_DOC_OUTPUT,
         description: "OpenAI新一代对话模型，面向企业级应用，具备更强的多模态、长上下文与稳健推理能力",
         isRecommended: true,
         isFree: false,
@@ -77,7 +86,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "anthropic",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: ANTHROPIC_DEFAULT_MAX_OUTPUT_TOKENS,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "Anthropic最新的中型模型，提供卓越的推理和理解能力，擅长精确、有条理的回应",
         isRecommended: false,
         isFree: false,
@@ -89,7 +98,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "anthropic",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: ANTHROPIC_DEFAULT_MAX_OUTPUT_TOKENS,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "Anthropic的平衡型模型，擅长深度分析和情感理解，在准确性和创造性之间取得良好平衡",
         isRecommended: false,
         isFree: false,
@@ -101,7 +110,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "deepseek",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.4,
-        maxTokens: DEEPSEEK_DEFAULT_MAX_OUTPUT_TOKENS,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "基于强化学习优化的推理模型，擅长逻辑分析和复杂推理，在数学和编程领域表现出色",
         isRecommended: false,
         isFree: false,
@@ -113,7 +122,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "deepseek",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: DEEPSEEK_DEFAULT_MAX_OUTPUT_TOKENS,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "DeepSeek最新的通用对话模型，提供强大的语言理解和推理能力，适合多样化的复杂场景",
         isRecommended: false,
         isFree: false,
@@ -125,7 +134,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "anthropic",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: ANTHROPIC_DEFAULT_MAX_OUTPUT_TOKENS,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "Claude Sonnet 4：在编码与推理任务上较3.7代有明显提升，适合日常生产级使用，平衡性能与成本",
         isRecommended: true,
         isFree: false,
@@ -137,7 +146,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "anthropic",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: ANTHROPIC_DEFAULT_MAX_OUTPUT_TOKENS,
+        maxTokens: CLAUDE_4_OPUS_MAX_CODE_OUTPUT,
         description: "Claude Opus 4.1：旗舰级推理与研究分析能力，适合复杂代码重构、数据分析与工具协同任务",
         isRecommended: true,
         isFree: false,
@@ -152,7 +161,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "deepseek",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT_TOKENS,
+        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
         description: "DeepSeek提供的免费对话模型，具备良好的理解能力和基础推理能力，适合日常对话和简单分析",
         isRecommended: false,
         isFree: true,
@@ -164,7 +173,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "deepseek",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT_TOKENS,
+        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
         description: "DeepSeek最新发布的免费对话模型，基于685B参数的mixture-of-experts架构，具有出色的推理能力和知识广度",
         isRecommended: true,
         isFree: true,
@@ -176,7 +185,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "z-ai",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT_TOKENS,
+        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
         description: "GLM-4.5 Air 的轻量免费版本，采用MoE与混合推理模式，支持思维链推理开关，适合实时交互与工具使用",
         isRecommended: true,
         isFree: true,
@@ -188,7 +197,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "deepseek",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT_TOKENS,
+        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
         description: "DeepSeek R1 0528 版本的免费开源推理模型，支持开放的 reasoning tokens，性能接近同级闭源模型",
         isRecommended: false,
         isFree: true,
@@ -200,7 +209,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "qwen",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT_TOKENS,
+        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
         description: "Qwen3 Coder 免费版，基于MoE的代码生成模型，优化于工具调用、函数调用与长上下文推理",
         isRecommended: false,
         isFree: true,
