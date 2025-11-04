@@ -103,6 +103,22 @@ export const streamAssistantResponse = action({
       };
     } catch (error) {
       console.error("流式聊天继续失败:", error);
+      // 输出结构化上下文日志，便于快速定位模型/配置与耗时问题
+      try {
+        const durationMs = Date.now() - startTime;
+        const modelId = args.modelId || DEFAULT_MODEL_ID;
+        const modelConfig = AVAILABLE_MODELS[modelId];
+        console.error("[ChatStreamError]", {
+          conversationId: args.conversationId,
+          assistantMessageId: args.assistantMessageId,
+          modelId,
+          modelName: modelConfig?.modelName,
+          provider: modelConfig?.provider,
+          baseURL: modelConfig?.baseURL,
+          durationMs,
+          error,
+        });
+      } catch {}
       
       const errorMessage = error instanceof Error ? error.message : "未知错误";
       
@@ -300,6 +316,22 @@ export const streamGeneratePromptContent = action({
 
     } catch (error) {
       console.error("流式生成提示词内容失败:", error);
+      // 结构化上下文日志：模型、文档与耗时，帮助诊断上游限流/超时/鉴权问题
+      try {
+        const durationMs = Date.now() - startTime;
+        const modelId = args.modelId || DEFAULT_MODEL_ID;
+        const modelConfig = AVAILABLE_MODELS[modelId];
+        console.error("[PromptStreamError]", {
+          documentId: args.documentId,
+          contentBlockId,
+          modelId,
+          modelName: modelConfig?.modelName,
+          provider: modelConfig?.provider,
+          baseURL: modelConfig?.baseURL,
+          durationMs,
+          error,
+        });
+      } catch {}
       const errorMessage = error instanceof Error ? error.message : "未知错误";
 
       // 如果出错，并且已保存原始版本，则执行回滚操作

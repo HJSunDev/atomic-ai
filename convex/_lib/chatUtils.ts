@@ -114,6 +114,10 @@ export function createChatModel(options: AIClientOptions) {
     temperature: modelConfig.temperature,
     maxTokens: modelConfig.maxTokens,
     streaming: streaming,
+    // 为了与 OpenAI SDK 对齐，timeout 为毫秒单位，这里设置为 10 秒
+    timeout: 10000,
+    // 关闭 LangChain 层的自动重试，确保限流/错误能尽快反馈
+    maxRetries: 0,
   });
 }
 

@@ -146,6 +146,10 @@ export function useGenerationOrchestrator() {
           // 更新状态为 streaming
           updateJobStatus(docId, "streaming");
 
+          // 为诊断首包与整体耗时，记录开始时间
+          // 目的：当上游服务异常或被限流时，能在浏览器控制台看到完整原始错误与耗时分布
+          const startedAtMs = Date.now();
+
           // 调用 action（流式写入由 action 内部处理）
           const actionResult = await streamGenerateAction({
             documentId: docId as Id<"documents">,
@@ -170,6 +174,21 @@ export function useGenerationOrchestrator() {
               position: "top-center",
               duration: 6000,
             });
+
+            // 在浏览器控制台输出结构化、完整的原始错误信息，便于排查
+            // 说明：保留用户端友好提示，同时把原始错误、上下文与耗时写入 console
+            console.error("[PromptGenerationError] Action returned failure", {
+              docId,
+              jobId,
+              modelId,
+              modelName: modelConfig.modelName,
+              provider: modelConfig.provider,
+              baseURL: modelConfig.baseURL,
+              userPromptLength: userPrompt.length,
+              systemPromptProvided: Boolean(systemPrompt),
+              elapsedMs: Date.now() - startedAtMs,
+              rawError: actionResult.error,
+            });
           }
         } catch (error) {
           // 异常：更新状态并显示错误
@@ -179,6 +198,19 @@ export function useGenerationOrchestrator() {
           toast.error(friendlyError, { 
             position: "top-center",
             duration: 6000,
+          });
+
+          // 在浏览器控制台输出异常对象与上下文，保留堆栈与原始信息
+          console.error("[PromptGenerationException] Action threw", {
+            docId,
+            jobId,
+            modelId,
+            modelName: modelConfig.modelName,
+            provider: modelConfig.provider,
+            baseURL: modelConfig.baseURL,
+            userPromptLength: userPrompt.length,
+            systemPromptProvided: Boolean(systemPrompt),
+            error,
           });
         }
       })();
