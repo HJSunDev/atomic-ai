@@ -24,15 +24,8 @@ export type ProviderType = 'openrouter';
 // - 生成文档：平衡成本与效果，8k 为常见上限的稳妥值
 // ===================================================================
 
-// 针对“生成应用/代码”的设置（要求极高完整性）
-const CLAUDE_4_OPUS_MAX_CODE_OUTPUT = 30720; // 为长代码输出预留空间，避免靠近极限
-const Z_AI_GLM_MAX_CODE_OUTPUT = 92160; // 仅用于未来引入付费版 GLM 4.5 时复用
-const QWEN_CODER_MAX_CODE_OUTPUT = 61440; // 仅用于未来引入付费版 Qwen Coder 时复用
-const GPT4o_EXTENDED_MAX_CODE_OUTPUT = 61440; // 用于可能的长输出版 gpt-4o
-
 // 针对“生成文档”的通用设置（平衡效果与成本）
 const GENERAL_PAID_MODEL_MAX_DOC_OUTPUT = 8192; // 常见付费通用模型的稳定输出长度
-const OPENAI_DEFAULT_MAX_DOC_OUTPUT = 4096; // OpenAI 常规模型输出限制更紧，取保守值
 const FREE_MODEL_BASELINE_MAX_OUTPUT = 4096; // 免费模型通常限制更严，统一基线
 
 // 按服务商分类的模型列表
@@ -44,25 +37,12 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
   openrouter: {
     // 付费模型
     paid: {
-      "gpt-3.5-turbo": {
-        modelName: "gpt-3.5-turbo",
-        provider: "openai",
-        baseURL: "https://openrouter.ai/api/v1",
-        temperature: 0.7,
-        // GPT-3.5 的输出上限相对更紧，设为 2048 更稳妥，避免因超限报错
-        maxTokens: 2048,
-        description: "OpenAI的快速响应模型，平衡效率与性能，适合日常对话和一般分析任务",
-        isRecommended: false,
-        isFree: false,
-        shortName: "GPT-3.5",
-        modelSeries: "gpt"
-      },
       "gpt-4o": {
         modelName: "gpt-4o",
         provider: "openai",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: OPENAI_DEFAULT_MAX_DOC_OUTPUT,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "OpenAI的多模态旗舰模型，具备强大的推理能力和知识广度，适合复杂分析和创意任务",
         isRecommended: false,
         isFree: false,
@@ -74,112 +54,40 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         provider: "openai",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: OPENAI_DEFAULT_MAX_DOC_OUTPUT,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "OpenAI新一代对话模型，面向企业级应用，具备更强的多模态、长上下文与稳健推理能力",
         isRecommended: true,
         isFree: false,
         shortName: "GPT-5",
         modelSeries: "gpt"
       },
-      "claude-3-7-sonnet": {
-        modelName: "anthropic/claude-3-7-sonnet",
-        provider: "anthropic",
+      "gemini-2.5-pro": {
+        modelName: "google/gemini-2.5-pro",
+        provider: "google",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
         maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
-        description: "Anthropic最新的中型模型，提供卓越的推理和理解能力，擅长精确、有条理的回应",
-        isRecommended: false,
-        isFree: false,
-        shortName: "Claude 3.7",
-        modelSeries: "claude"
-      },
-      "claude-3.5-sonnet": {
-        modelName: "anthropic/claude-3.5-sonnet",
-        provider: "anthropic",
-        baseURL: "https://openrouter.ai/api/v1",
-        temperature: 0.5,
-        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
-        description: "Anthropic的平衡型模型，擅长深度分析和情感理解，在准确性和创造性之间取得良好平衡",
-        isRecommended: false,
-        isFree: false,
-        shortName: "Claude 3.5",
-        modelSeries: "claude"
-      },
-      "deepseek-r1": {
-        modelName: "deepseek/deepseek-r1",
-        provider: "deepseek",
-        baseURL: "https://openrouter.ai/api/v1",
-        temperature: 0.4,
-        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
-        description: "基于强化学习优化的推理模型，擅长逻辑分析和复杂推理，在数学和编程领域表现出色",
-        isRecommended: false,
-        isFree: false,
-        shortName: "DeepSeek R1",
-        modelSeries: "deepseek"
-      },
-      "deepseek-v3": {
-        modelName: "deepseek/deepseek-chat",
-        provider: "deepseek",
-        baseURL: "https://openrouter.ai/api/v1",
-        temperature: 0.5,
-        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
-        description: "DeepSeek最新的通用对话模型，提供强大的语言理解和推理能力，适合多样化的复杂场景",
-        isRecommended: false,
-        isFree: false,
-        shortName: "DeepSeek V3",
-        modelSeries: "deepseek"
-      },
-      "claude-sonnet-4": {
-        modelName: "anthropic/claude-sonnet-4",
-        provider: "anthropic",
-        baseURL: "https://openrouter.ai/api/v1",
-        temperature: 0.5,
-        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
-        description: "Claude Sonnet 4：在编码与推理任务上较3.7代有明显提升，适合日常生产级使用，平衡性能与成本",
+        description: "Google 的 Gemini 2.5 Pro，针对高级推理、编码、数学与科学任务优化，具备精细的上下文理解与思维模式，适合高要求生产级场景",
         isRecommended: true,
         isFree: false,
-        shortName: "Claude Sonnet 4",
-        modelSeries: "claude"
+        shortName: "Gemini 2.5 Pro",
+        modelSeries: "gemini"
       },
-      "claude-opus-4.1": {
-        modelName: "anthropic/claude-opus-4.1",
+      "claude-sonnet-4.5": {
+        modelName: "anthropic/claude-sonnet-4.5",
         provider: "anthropic",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
-        maxTokens: CLAUDE_4_OPUS_MAX_CODE_OUTPUT,
-        description: "Claude Opus 4.1：旗舰级推理与研究分析能力，适合复杂代码重构、数据分析与工具协同任务",
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
+        description: "Anthropic 的 Claude Sonnet 4.5，面向真实生产工作流与编码任务优化，强调工具编排、长上下文与稳健推理，适合工程、研究与企业级场景",
         isRecommended: true,
         isFree: false,
-        shortName: "Claude Opus 4.1",
+        shortName: "Claude Sonnet 4.5",
         modelSeries: "claude"
-      }
+      },
     },
     // 免费模型
     free: {
-      "deepseek-v3-free": {
-        modelName: "deepseek/deepseek-chat:free",
-        provider: "deepseek",
-        baseURL: "https://openrouter.ai/api/v1",
-        temperature: 0.5,
-        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
-        description: "DeepSeek提供的免费对话模型，具备良好的理解能力和基础推理能力，适合日常对话和简单分析",
-        isRecommended: false,
-        isFree: true,
-        shortName: "DeepSeek V3",
-        modelSeries: "deepseek"
-      },
-      "deepseek-v3-0324-free": {
-        modelName: "deepseek/deepseek-chat-v3-0324:free",
-        provider: "deepseek",
-        baseURL: "https://openrouter.ai/api/v1",
-        temperature: 0.5,
-        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
-        description: "DeepSeek最新发布的免费对话模型，基于685B参数的mixture-of-experts架构，具有出色的推理能力和知识广度",
-        isRecommended: true,
-        isFree: true,
-        shortName: "DeepSeek V3-0324",
-        modelSeries: "deepseek"
-      },
       "glm-4.5-air-free": {
         modelName: "z-ai/glm-4.5-air:free",
         provider: "z-ai",
@@ -187,34 +95,46 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         temperature: 0.5,
         maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
         description: "GLM-4.5 Air 的轻量免费版本，采用MoE与混合推理模式，支持思维链推理开关，适合实时交互与工具使用",
-        isRecommended: true,
+        isRecommended: false,
         isFree: true,
         shortName: "GLM 4.5 Air",
         modelSeries: "glm"
       },
-      "deepseek-r1-0528-free": {
-        modelName: "deepseek/deepseek-r1-0528:free",
-        provider: "deepseek",
-        baseURL: "https://openrouter.ai/api/v1",
-        temperature: 0.5,
-        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
-        description: "DeepSeek R1 0528 版本的免费开源推理模型，支持开放的 reasoning tokens，性能接近同级闭源模型",
-        isRecommended: false,
-        isFree: true,
-        shortName: "DeepSeek R1 0528",
-        modelSeries: "deepseek"
-      },
-      "qwen3-coder-free": {
-        modelName: "qwen/qwen3-coder:free",
+      "qwen3-235b-a22b-free": {
+        modelName: "qwen/qwen3-235b-a22b:free",
         provider: "qwen",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
         maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
-        description: "Qwen3 Coder 免费版，基于MoE的代码生成模型，优化于工具调用、函数调用与长上下文推理",
+        description: "Qwen3-235B A22B 免费版，MoE 架构；支持思维/非思维模式切换，原生 32K 上下文，YaRN 可扩展至更长窗口；在复杂推理、数学与代码任务上表现稳健，并具备多语种与工具调用能力",
         isRecommended: false,
         isFree: true,
-        shortName: "Qwen3 Coder",
+        shortName: "Qwen3 235B A22B",
         modelSeries: "qwen"
+      },
+      "deepseek-r1t2-chimera-free": {
+        modelName: "tngtech/deepseek-r1t2-chimera:free",
+        provider: "tngtech",
+        baseURL: "https://openrouter.ai/api/v1",
+        temperature: 0.5,
+        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
+        description: "TNG DeepSeek R1T2 Chimera 免费模型，基于 R1-0528、R1 与 V3-0324 的 Assembly-of-Experts 融合；在保证性价比的同时提供稳定的长上下文与稳健推理能力，适合长文本对话与通用生成",
+        isRecommended: false,
+        isFree: true,
+        shortName: "R1T2 Chimera",
+        modelSeries: "deepseek"
+      },
+      "gpt-oss-20b-free": {
+        modelName: "openai/gpt-oss-20b:free",
+        provider: "openai",
+        baseURL: "https://openrouter.ai/api/v1",
+        temperature: 0.5,
+        maxTokens: FREE_MODEL_BASELINE_MAX_OUTPUT,
+        description: "OpenAI 开源 21B 参数 MoE 模型（Harmony 响应格式），优化面向低延迟与易部署，支持函数调用、工具使用与结构化输出，适合通用对话与轻量推理",
+        isRecommended: true,
+        isFree: true,
+        shortName: "GPT-OSS 20B",
+        modelSeries: "gpt"
       }
     }
   }
@@ -244,7 +164,7 @@ function getAllModels(): Record<string, ModelConfig> {
 export const AVAILABLE_MODELS = getAllModels();
 
 // 默认模型ID
-export const DEFAULT_MODEL_ID = "deepseek-v3-0324-free";
+export const DEFAULT_MODEL_ID = "gpt-oss-20b-free";
 
 // 导出ModelConfig接口以便其他模块使用
 export type { ModelConfig }; 
