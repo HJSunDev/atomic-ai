@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo, useCallback } from "react";
 import { TestBlock } from "./_components/TestBlock";
 import { PromptBoard } from "./_components/PromptBoard";
 
@@ -11,6 +11,13 @@ import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 import { ModelSelector } from "@/components/ai-chat/ModelSelector";
 import { NetworkSearchEntry } from "@/components/ai-chat/NetworkSearchEntry";
 import { ContextAdder } from "@/components/ai-chat/ContextAdder";
+
+// 将不依赖输入状态的组件 memo 化以避免不必要的重新渲染
+const MemoizedPromptBoard = memo(PromptBoard);
+const MemoizedContextAdder = memo(ContextAdder);
+const MemoizedModelSelector = memo(ModelSelector);
+const MemoizedNetworkSearchEntry = memo(NetworkSearchEntry);
+
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,13 +44,14 @@ export const PromptStudioModule = () => {
 
   const { createAndOpen, isCreating } = useCreateDocument();
   const { startGeneration } = useGenerationOrchestrator();
-  const { selectedModel } = useChatStore();
+  // 只订阅需要的状态，避免不必要的重新渲染
+  const selectedModel = useChatStore((state) => state.selectedModel);
 
-  const handleCreateNewDocument = async () => {
+  const handleCreateNewDocument = useCallback(async () => {
     await createAndOpen();
-  };
+  }, [createAndOpen]);
 
-  const handleSend = async () => {
+  const handleSend = useCallback(async () => {
     if (!userPrompt.trim() || isSending) return;
 
     setIsSending(true);
@@ -60,14 +68,14 @@ export const PromptStudioModule = () => {
     } finally {
       setIsSending(false);
     }
-  };
+  }, [userPrompt, isSending, startGeneration, selectedModel]);
 
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
       handleSend();
     }
-  };
+  }, [handleSend]);
 
   return (
     // 采用可退化的垂直居中：当空间充足时居中，内容超出时自动顶对齐，避免顶部内容不可见
@@ -89,7 +97,7 @@ export const PromptStudioModule = () => {
         {/* 输入区 */}
         <section className="max-w-[43rem] w-full mx-auto flex flex-col items-center border border-border rounded-[18px] overflow-hidden shrink-0">
           <header className="w-full p-2">
-            <ContextAdder />
+            <MemoizedContextAdder />
           </header>
           <Textarea
             value={userPrompt}
@@ -102,8 +110,8 @@ export const PromptStudioModule = () => {
           />
           <footer className="flex items-center justify-between w-full p-2">
             <div className="flex items-center gap-2">
-              <ModelSelector />
-              <NetworkSearchEntry />
+              <MemoizedModelSelector />
+              <MemoizedNetworkSearchEntry />
             </div>
             <div className="flex items-center gap-3">
               <Button 
@@ -156,7 +164,7 @@ export const PromptStudioModule = () => {
               </div>
           </header>
           {/* 提示词管理区 */}
-          <PromptBoard />
+          <MemoizedPromptBoard />
           <footer className="flex justify-end w-full max-w-[43rem] mx-auto">
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/70 cursor-pointer">
                 <MoreHorizontal className="h-4 w-4" />
