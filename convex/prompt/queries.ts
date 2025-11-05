@@ -31,6 +31,57 @@ export const listDocuments = query({
 
 
 /**
+ * 按标题搜索当前用户的文档
+ * 
+ * 设计特性：
+ * - 使用子串匹配（includes），支持标题任意位置匹配
+ * - 不区分大小写
+ * - 自动过滤归档文档
+ * - 空搜索词返回所有未归档文档
+ * - 支持中英文混合搜索
+ * 
+ * 实现说明：
+ * - 原本使用 searchIndex，但其基于分词，无法很好支持中间匹配
+ * - 改用应用层过滤，在用户级别文档数量可控的情况下性能可接受
+ * - 如果将来数据量增大，可考虑集成专业搜索引擎（如 Algolia、Elasticsearch）
+ * 
+ * @param searchTerm - 搜索关键词，为空时返回所有文档
+ * @returns 匹配的文档列表，按创建时间降序排列
+ */
+export const searchDocumentsByTitle = query({
+  args: {
+    searchTerm: v.string(),
+  },
+  handler: async (ctx, args): Promise<Doc<"documents">[]> => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    // 查询用户的所有未归档文档
+    const documents = await ctx.db
+      .query("documents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .order("desc")
+      .collect();
+    
+    const unarchived = documents.filter((doc) => doc.isArchived !== true);
+
+    // 空搜索词返回所有文档
+    const searchTerm = args.searchTerm.trim();
+    if (!searchTerm) {
+      return unarchived;
+    }
+
+    // 不区分大小写的子串匹配（支持标题任意位置）
+    const searchLower = searchTerm.toLowerCase();
+    return unarchived.filter((doc) => {
+      const titleLower = (doc.title || "").toLowerCase();
+      return titleLower.includes(searchLower);
+    });
+  },
+});
+
+
+/**
  * 获取文档及其内容块
  * 
  * 用于获取单个文档的详细信息，包括文档元数据和关联的内容块

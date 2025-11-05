@@ -65,7 +65,12 @@ export const promptSchema = {
     // 按用户ID索引，用于查询用户的所有文档
     .index("by_userId", ["userId"])
     // 按用户ID和模块标题索引，方便用户查找自己创建的特定模块（若标题在用户级别需要唯一性或常用于搜索）
-    .index("by_userId_title", ["userId", "title"]),
+    .index("by_userId_title", ["userId", "title"])
+    // 文档标题搜索索引，支持按用户ID过滤的全文搜索
+    .searchIndex("search_documents_by_title", {
+      searchField: "title",
+      filterFields: ["userId"], 
+    }),
 
   // 块表（新架构）
   // 系统的核心，定义了所有文档的具体内容和结构

@@ -96,16 +96,31 @@ function convertDocumentToGridItem(doc: Doc<"documents">): GridItem {
   };
 }
 
+/**
+ * PromptBoard 组件属性
+ */
+interface PromptBoardProps {
+  /**
+   * 搜索关键词
+   * - 为空时显示所有文档
+   * - 有值时使用搜索索引进行模糊匹配
+   */
+  searchTerm?: string;
+}
 
-export function PromptBoard() {
+export function PromptBoard({ searchTerm = "" }: PromptBoardProps) {
   // 添加客户端渲染状态
   const [isMounted, setIsMounted] = useState(false);
   
   // Convex 客户端实例
   const convex = useConvex();
   
-  // 从后端查询文档列表
-  const documentsData = useQuery(api.prompt.queries.listDocuments);
+  // 统一使用 searchDocumentsByTitle 查询
+  // 该 query 内部已处理空字符串情况：空时返回所有文档，有值时进行搜索
+  const documentsData = useQuery(
+    api.prompt.queries.searchDocumentsByTitle,
+    { searchTerm }
+  );
   
   // 创建组合文档的 mutation
   const createComposedDocument = useMutation(api.prompt.mutations.createComposedDocument);

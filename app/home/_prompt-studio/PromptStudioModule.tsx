@@ -11,6 +11,7 @@ import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 import { ModelSelector } from "@/components/ai-chat/ModelSelector";
 import { NetworkSearchEntry } from "@/components/ai-chat/NetworkSearchEntry";
 import { ContextAdder } from "@/components/ai-chat/ContextAdder";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 // 将不依赖输入状态的组件 memo 化以避免不必要的重新渲染
 const MemoizedPromptBoard = memo(PromptBoard);
@@ -41,11 +42,15 @@ import {
 export const PromptStudioModule = () => {
   const [userPrompt, setUserPrompt] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const { createAndOpen, isCreating } = useCreateDocument();
   const { startGeneration } = useGenerationOrchestrator();
   // 只订阅需要的状态，避免不必要的重新渲染
   const selectedModel = useChatStore((state) => state.selectedModel);
+  
+  // 使用防抖优化搜索性能，避免每次输入都触发查询
+  const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
 
   const handleCreateNewDocument = useCallback(async () => {
     await createAndOpen();
@@ -158,13 +163,15 @@ export const PromptStudioModule = () => {
               <div className="relative w-48 group">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/60 group-hover:text-muted-foreground"/>
                 <Input
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search documents..."
                   className="h-9 pl-9 text-sm rounded-lg bg-transparent border-0 shadow-none focus-visible:bg-background focus-visible:ring-0 transition-colors"
                 />
               </div>
           </header>
           {/* 提示词管理区 */}
-          <MemoizedPromptBoard />
+          <MemoizedPromptBoard searchTerm={debouncedSearchTerm} />
           <footer className="flex justify-end w-full max-w-[43rem] mx-auto">
               <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground/70 cursor-pointer">
                 <MoreHorizontal className="h-4 w-4" />
