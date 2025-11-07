@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useImperativeHandle, forwardRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Tooltip,
@@ -31,11 +31,15 @@ import Image from "next/image";
 import { ModelSelector } from "./ModelSelector";
 import { NetworkSearchEntry } from "./NetworkSearchEntry";
 
+// 暴露给父组件的方法接口
+export interface ChatInputHandle {
+  setInputValue: (value: string) => void;
+  focus: () => void;
+  setSelectionRange: (start: number, end: number) => void;
+}
+
 interface ChatInputProps {
-  inputValue: string;
-  textareaRef: any; // 使用any类型避免类型问题
-  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
-  handleSendMessage: () => void;
+  onSendMessage: (messageContent: string) => void;
   onNewConversation?: () => void; // 新建对话回调
   isLoading?: boolean; // 添加加载状态属性
   promptOptions?: Array<{
@@ -44,28 +48,64 @@ interface ChatInputProps {
   }>;
 }
 
-export function ChatInput({
-  inputValue,
-  textareaRef,
-  handleInputChange,
-  handleSendMessage,
+export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
+  onSendMessage,
   onNewConversation,
   isLoading = false, // 默认为false
   promptOptions = [],
-}: ChatInputProps) {
-  // 添加聚焦状态管理
+}, ref) => {
+  // 输入框内容状态 - 内聚到组件内部
+  const [inputValue, setInputValue] = useState("");
+  // 聚焦状态管理
   const [isFocused, setIsFocused] = useState(false);
   // 控制tooltip显示状态，用于解决抽屉关闭后tooltip意外显示的问题
   const [isTooltipDisabled, setIsTooltipDisabled] = useState(false);
   // 输入区放大状态管理
   const [isMaximized, setIsMaximized] = useState(false);
 
+  // 内部 textarea ref，用于组件内部操作
+  const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // 暴露方法给父组件，用于外部控制输入框
+  useImperativeHandle(ref, () => ({
+    setInputValue: (value: string) => {
+      setInputValue(value);
+    },
+    focus: () => {
+      textareaRef.current?.focus();
+    },
+    setSelectionRange: (start: number, end: number) => {
+      if (textareaRef.current) {
+        textareaRef.current.setSelectionRange(start, end);
+      }
+    },
+  }), []);
+
+  // 处理输入变化
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setInputValue(e.target.value);
+  };
+
+  // 处理发送消息
+  const handleSendMessage = () => {
+    const trimmedValue = inputValue.trim();
+    if (!trimmedValue || isLoading) return;
+    
+    onSendMessage(trimmedValue);
+    // 发送后清空输入框
+    setInputValue("");
+    // 发送后取消放大状态
+    if (isMaximized) {
+      setIsMaximized(false);
+    }
+  };
+
   // 处理放大后自动聚焦
   useEffect(() => {
     if (isMaximized) {
       textareaRef.current?.focus();
     }
-  }, [isMaximized, textareaRef]);
+  }, [isMaximized]);
 
   // 切换放大状态
   const toggleMaximize = () => {
@@ -256,8 +296,6 @@ export function ChatInput({
                     if (e.shiftKey) {
                       e.preventDefault();
                       handleSendMessage();
-                      // 发送后取消放大状态
-                      setIsMaximized(false);
                     }
                     // 单独 Enter 不阻止默认行为，让其自然换行
                   } else {
@@ -306,13 +344,7 @@ export function ChatInput({
                       : "cursor-not-allowed"
                   }`}
                   disabled={!inputValue.trim() || isLoading}
-                  onClick={() => {
-                    handleSendMessage();
-                    // 发送后取消放大状态
-                    if (isMaximized) {
-                      setIsMaximized(false);
-                    }
-                  }}
+                  onClick={handleSendMessage}
                 >
                   {isLoading ? (
                     <Loader2 className="h-4 w-4 animate-spin text-[#3D8CDD]" />
@@ -340,6 +372,8 @@ export function ChatInput({
       </div>
     </>
   );
-}
+});
+
+ChatInput.displayName = "ChatInput";
 
 

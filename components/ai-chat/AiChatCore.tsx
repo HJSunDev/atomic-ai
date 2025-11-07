@@ -5,6 +5,7 @@ import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useChatStore } from "@/store/home/useChatStore";
 import { ThinkingCursor, TypingCursor } from "@/components/custom";
+import { ChatInputHandle } from "./ChatInput";
 
 // 消息类型定义 - 基于数据库schema
 export interface Message {
@@ -34,16 +35,14 @@ export interface AiChatCoreProps {
 // 传递给子组件的渲染属性
 export interface AiChatRenderProps {
   messages: Message[];
-  inputValue: string;
   isSendingMessage: boolean;
   isMessagesLoading: boolean;
-  isStreaming: boolean; // 新增：是否正在流式传输
-  streamingMessageId: Id<"messages"> | null; // 新增：正在流式传输的消息ID
-  textareaRef: React.RefObject<HTMLTextAreaElement | null>;
+  isStreaming: boolean; // 是否正在流式传输
+  streamingMessageId: Id<"messages"> | null; // 正在流式传输的消息ID
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  handleInputChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
+  chatInputRef: React.RefObject<ChatInputHandle | null>;
   handlePromptClick: (promptText: string) => void;
-  handleSendMessage: () => void;
+  handleSendMessage: (messageContent: string) => void;
   // 会话管理功能
   handleNewConversation: () => void;
   handleSelectConversation: (conversationId: Id<"conversations">) => void;
@@ -68,8 +67,6 @@ export function AiChatCore({
     setSelectedModel
   } = useChatStore();
   
-  // 聊天输入框的内容状态
-  const [inputValue, setInputValue] = useState("");
   // 是否正在发送消息的状态
   const [isSendingMessage, setIsSendingMessage] = useState(false);
   // 当前正在流式传输的消息ID（如无则为null）
@@ -77,7 +74,8 @@ export function AiChatCore({
   
   // DOM引用
   const messagesEndRef = useRef<HTMLDivElement>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  // ChatInput 组件的 ref，用于调用其暴露的方法
+  const chatInputRef = useRef<ChatInputHandle>(null);
   
   // Convex hooks
   const startNewChatRound = useMutation(api.chat.mutations.startNewChatRound);
@@ -119,49 +117,38 @@ export function AiChatCore({
     scrollToBottom();
   }, [messages]);
 
-  // 处理输入变化
-  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-    setInputValue(e.target.value);
-  };
-
-  // 处理提示点击
+  // 处理提示点击 - 通过 ref 设置输入框的值
   const handlePromptClick = (promptText: string) => {
     const placeholderText = "&&&";
     const placeholderIndex = promptText.indexOf(placeholderText);
     
     if (placeholderIndex !== -1) {
+      // 包含占位符的情况：移除占位符并设置光标位置
       const newText = promptText.replace(placeholderText, "");
-      setInputValue(newText);
-      
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-        setTimeout(() => {
-          if (textareaRef.current) {
-            textareaRef.current.setSelectionRange(placeholderIndex, placeholderIndex);
-          }
-        }, 0);
-      }
+      chatInputRef.current?.setInputValue(newText);
+      chatInputRef.current?.focus();
+      setTimeout(() => {
+        chatInputRef.current?.setSelectionRange(placeholderIndex, placeholderIndex);
+      }, 0);
     } else {
-      setInputValue(promptText);
-      if (textareaRef.current) {
-        textareaRef.current.focus();
-      }
+      // 不包含占位符：直接设置文本并聚焦
+      chatInputRef.current?.setInputValue(promptText);
+      chatInputRef.current?.focus();
     }
   };
 
-  // 发送消息 - 使用新的流式传输服务
-  const handleSendMessage = async () => {
+  // 发送消息 - 接收消息内容作为参数
+  const handleSendMessage = async (messageContent: string) => {
     // 验证条件：输入不为空、未登录、不在加载中、不在流式传输中
-    if (!inputValue.trim() || isSendingMessage || !isSignedIn || streamingMessageId) return;
+    const trimmedContent = messageContent.trim();
+    if (!trimmedContent || isSendingMessage || !isSignedIn || streamingMessageId) return;
 
-    const userMessage = inputValue;
-    setInputValue("");
     setIsSendingMessage(true);
 
     try {
       // 步骤1: 快速创建消息占位符
       const result = await startNewChatRound({
-        userMessage,
+        userMessage: trimmedContent,
         conversationId: currentConversationId || undefined,
       });
 
@@ -210,14 +197,12 @@ export function AiChatCore({
   // 构建渲染属性
   const renderProps: AiChatRenderProps = {
     messages: messages || [],
-    inputValue,
     isSendingMessage,
     isMessagesLoading,
     isStreaming: !!streamingMessageId,
     streamingMessageId,
-    textareaRef,
     messagesEndRef,
-    handleInputChange,
+    chatInputRef,
     handlePromptClick,
     handleSendMessage,
     handleNewConversation,

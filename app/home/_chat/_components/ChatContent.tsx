@@ -36,10 +36,8 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
       >
         {({ 
           messages, 
-          inputValue, 
-          textareaRef, 
           messagesEndRef, 
-          handleInputChange, 
+          chatInputRef,
           handlePromptClick, 
           handleSendMessage,
           handleNewConversation,
@@ -74,10 +72,8 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
             {/* 输入区域 - 限制最大宽度并居中 */}
             <div className="w-[50rem] mx-auto">
               <ChatInput
-                inputValue={inputValue}
-                textareaRef={textareaRef}
-                handleInputChange={handleInputChange}
-                handleSendMessage={handleSendMessage}
+                ref={chatInputRef}
+                onSendMessage={handleSendMessage}
                 onNewConversation={handleNewConversation}
                 isLoading={isSendingMessage || isStreaming || isMessagesLoading}
               />

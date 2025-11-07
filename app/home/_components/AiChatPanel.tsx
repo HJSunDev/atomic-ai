@@ -40,10 +40,8 @@ export function AiChatPanel() {
       >
         {({ 
           messages, 
-          inputValue, 
-          textareaRef, 
           messagesEndRef, 
-          handleInputChange, 
+          chatInputRef,
           handlePromptClick, 
           handleSendMessage,
           handleNewConversation,
@@ -110,10 +108,8 @@ export function AiChatPanel() {
             
             {/* 输入区域 */}
             <ChatInput
-              inputValue={inputValue}
-              textareaRef={textareaRef}
-              handleInputChange={handleInputChange}
-              handleSendMessage={handleSendMessage}
+              ref={chatInputRef}
+              onSendMessage={handleSendMessage}
               onNewConversation={handleNewConversation}
               isLoading={isSendingMessage || isStreaming || isMessagesLoading}
             />
