@@ -103,9 +103,13 @@ export const streamAssistantResponse = action({
       };
     } catch (error) {
       console.error("流式聊天继续失败:", error);
+      
+      const endTime = Date.now();
+      const durationMs = endTime - startTime;
+      const errorMessage = error instanceof Error ? error.message : "未知错误";
+      
       // 输出结构化上下文日志，便于快速定位模型/配置与耗时问题
       try {
-        const durationMs = Date.now() - startTime;
         const modelId = args.modelId || DEFAULT_MODEL_ID;
         const modelConfig = AVAILABLE_MODELS[modelId];
         console.error("[ChatStreamError]", {
@@ -120,13 +124,18 @@ export const streamAssistantResponse = action({
         });
       } catch {}
       
-      const errorMessage = error instanceof Error ? error.message : "未知错误";
-      
       // 当发生错误时，更新助手消息的内容以向用户显示错误
       await ctx.runMutation(api.chat.mutations.updateMessageContent, {
           messageId: args.assistantMessageId,
           content: `抱歉，处理时遇到错误: ${errorMessage}`,
           skipAuth: true // 使用内部权限跳过用户检查
+      });
+      
+      // 更新消息元数据，标记错误状态已完成（设置durationMs让前端能检测到流式传输结束）
+      await updateMessageMetadata(ctx, args.assistantMessageId, {
+        aiModel: "error",
+        tokensUsed: 0,
+        durationMs,
       });
       
       return {
