@@ -2,6 +2,7 @@ import { create } from "zustand";
 import { Id } from "@/convex/_generated/dataModel";
 import { DEFAULT_MODEL_ID } from "@/convex/_lib/models";
 import { persist, createJSONStorage } from "zustand/middleware";
+import { createEncryptionStorage } from "../storage/encryptionStorage";
 
 /**
  * 聊天模块的状态管理
@@ -64,9 +65,15 @@ export const useChatStore = create<ChatStoreState>()(
     }),
     {
       name: "aa.userApiKey",
-      storage: createJSONStorage(() => localStorage),
+      // 使用通用的加密存储工厂函数，并指定只加密`userApiKey`字段
+      storage: createJSONStorage(() =>
+        createEncryptionStorage({
+          keysToEncrypt: ["userApiKey"],
+        })
+      ),
       // 仅持久化 userApiKey 字段，避免污染其他UI状态
-      partialize: (state) => ({ userApiKey: state.userApiKey }),
+      partialize: (state) =>
+        ({ userApiKey: state.userApiKey } as Partial<ChatStoreState>),
       version: 1,
     }
   )

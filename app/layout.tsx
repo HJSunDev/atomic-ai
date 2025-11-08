@@ -7,6 +7,7 @@ import { ThemeProviderWrapper } from "@/components/providers/theme-provider";
 
 import { Toaster } from "sonner";
 import { AuthGuardProvider } from "@/components/providers/auth-guard-provider";
+import { AuthStoreProvider } from "@/components/providers/auth-store-provider";
 
 // 定义 Geist Sans 字体
 const geistSans = Geist({
@@ -39,8 +40,10 @@ export default function RootLayout({
         <ConvexClientProvider>
           <ThemeProviderWrapper>
             <AuthGuardProvider>
-              <Toaster position="bottom-center" />
-              {children}
+              <AuthStoreProvider>
+                <Toaster position="bottom-center" />
+                {children}
+              </AuthStoreProvider>
             </AuthGuardProvider>
           </ThemeProviderWrapper>
         </ConvexClientProvider>
