@@ -11,6 +11,7 @@ import { AVAILABLE_MODELS } from "@/convex/_lib/models";
 import { useChatStore } from "@/store/home/useChatStore";
 import { getModelIcon } from "@/lib/model-icon-utils";
 import Image from "next/image";
+import { ApiKeyInlineEditor } from "./ApiKeyInlineEditor";
 
 // 模型选择器组件：显示当前选择的模型，点击弹出下拉列表
 export function ModelSelector() {
@@ -60,10 +61,15 @@ export function ModelSelector() {
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" className="w-48 max-h-80 overflow-y-auto p-1 bg-white dark:bg-[#202020] border border-gray-200 dark:border-gray-700 shadow-lg">
-        {/* 面板标题行：图标 + 文本"模型" */}
-        <div className="px-2 py-1.5 mb-1 bg-white dark:bg-[#202020] border-b border-gray-100 dark:border-gray-800 flex items-center gap-1.5">
-          <Brain className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
-          <span className="text-[11px] text-gray-500 dark:text-gray-400">模型</span>
+        {/* 面板标题行：左侧标题 + 右侧API Key行内编辑器（占满剩余空间） */}
+        <div className="px-2 py-1.5 pr-0 mb-1 bg-white dark:bg-[#202020] border-b border-gray-100 dark:border-gray-800 flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5">
+            <Brain className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+            <span className="text-[11px] text-gray-500 dark:text-gray-400">模型</span>
+          </div>
+          <div className="flex-1 min-w-0 flex items-center justify-end">
+            <ApiKeyInlineEditor />
+          </div>
         </div>
         {entries.map(([id, model]) => (
           <DropdownMenuItem

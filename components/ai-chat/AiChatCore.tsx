@@ -28,8 +28,6 @@ export interface AiChatCoreProps {
   children: (props: AiChatRenderProps) => React.ReactNode;
   // 可选的系统提示
   systemPrompt?: string;
-  // 可选的API密钥
-  apiKey?: string;
 }
 
 // 传递给子组件的渲染属性
@@ -53,7 +51,6 @@ export interface AiChatRenderProps {
 export function AiChatCore({ 
   children, 
   systemPrompt,
-  apiKey
 }: AiChatCoreProps) {
   // 认证状态
   const { isSignedIn } = useUser();
@@ -64,7 +61,8 @@ export function AiChatCore({
     selectedModel,
     selectConversation,
     startNewConversation,
-    setSelectedModel
+    setSelectedModel,
+    userApiKey
   } = useChatStore();
   
   // 是否正在发送消息的状态
@@ -168,7 +166,7 @@ export function AiChatCore({
           conversationId,
           assistantMessageId,
           modelId: selectedModel,
-          userApiKey: apiKey || undefined,
+          userApiKey: userApiKey || undefined,
           systemPrompt: systemPrompt || undefined,
         }).catch((error) => {
           console.error("流式传输失败:", error);
