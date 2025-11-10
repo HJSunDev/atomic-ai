@@ -1,11 +1,12 @@
-import React, { useState } from "react";
+import React from "react";
 import { cn } from "@/lib/utils";
 import { Globe } from "lucide-react";
+import { useChatStore } from "@/store/home/useChatStore";
 
-// 网络查询入口组件：提供全网开关（仅前端状态）
+// 网络查询入口组件：提供全网开关（与全局 Store 打通）
 export function NetworkSearchEntry() {
-  // 控制是否开启全网搜索，仅前端本地状态
-  const [enabled, setEnabled] = useState(false);
+  const enabled = useChatStore((s) => s.webSearchEnabled);
+  const setWebSearchEnabled = useChatStore((s) => s.setWebSearchEnabled);
 
   return (
     <button
@@ -17,7 +18,7 @@ export function NetworkSearchEntry() {
           : "bg-transparent text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
       )}
       title="网络查询"
-      onClick={() => setEnabled((v) => !v)}
+      onClick={() => setWebSearchEnabled(!enabled)}
       aria-pressed={enabled}
     >
       {/* 左侧图标 */}

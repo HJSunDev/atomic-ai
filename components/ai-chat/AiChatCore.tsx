@@ -7,7 +7,7 @@ import { useChatStore } from "@/store/home/useChatStore";
 import { ThinkingCursor, TypingCursor } from "@/components/custom";
 import { ChatInputHandle } from "./ChatInput";
 
-// 消息类型定义 - 基于数据库schema
+// 消息类型定义 
 export interface Message {
   _id: Id<"messages">;
   conversationId: Id<"conversations">;
@@ -20,7 +20,26 @@ export interface Message {
     tokensUsed?: number;
     durationMs?: number;
   };
+  // 为了支持 Agent 联网搜索步骤展示，这里增加 steps 字段
+  steps?: AgentStep[];
   _creationTime: number;
+}
+
+
+export interface AgentStepResult {
+  title: string;
+  url: string;
+  content?: string;
+  score?: number;
+  favicon?: string;
+}
+
+export interface AgentStep {
+  type: string; // 例如 "web_search"
+  status: "started" | "in_progress" | "completed" | "failed";
+  input?: any;
+  output?: AgentStepResult[];
+  error?: string;
 }
 
 // AiChatCore 组件属性
@@ -62,7 +81,8 @@ export function AiChatCore({
     selectConversation,
     startNewConversation,
     setSelectedModel,
-    userApiKey
+    userApiKey,
+    webSearchEnabled,
   } = useChatStore();
   
   // 是否正在发送消息的状态
@@ -168,6 +188,9 @@ export function AiChatCore({
           modelId: selectedModel,
           userApiKey: userApiKey || undefined,
           systemPrompt: systemPrompt || undefined,
+          agentFlags: {
+            webSearch: webSearchEnabled,
+          },
         }).catch((error) => {
           console.error("流式传输失败:", error);
           // 清除流式状态，允许用户重试

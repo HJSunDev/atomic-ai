@@ -19,6 +19,8 @@ interface ChatStoreState {
   selectedModel: string;
   // 用户自定义的API密钥（用于付费模型）。如果为null，表示未设置。
   userApiKey: string | null;
+  // 是否启用联网搜索（Agent webSearch 开关）
+  webSearchEnabled: boolean;
 
   // --- 操作 ---
   /**
@@ -41,6 +43,10 @@ interface ChatStoreState {
    * @param key - API密钥字符串，如果传入null则清除已保存的密钥
    */
   setUserApiKey: (key: string | null) => void;
+  /**
+   * 设置是否启用联网搜索。
+   */
+  setWebSearchEnabled: (enabled: boolean) => void;
 }
 
 // 创建Zustand Store（仅对 userApiKey 做本地持久化）
@@ -53,6 +59,8 @@ export const useChatStore = create<ChatStoreState>()(
       selectedModel: DEFAULT_MODEL_ID,
       // 用户API密钥初始为null
       userApiKey: null,
+      // 联网搜索默认关闭
+      webSearchEnabled: false,
 
       // 实现操作
       selectConversation: (id) => set({ currentConversationId: id }),
@@ -62,6 +70,8 @@ export const useChatStore = create<ChatStoreState>()(
       setSelectedModel: (model) => set({ selectedModel: model }),
 
       setUserApiKey: (key) => set({ userApiKey: key }),
+
+      setWebSearchEnabled: (enabled) => set({ webSearchEnabled: enabled }),
     }),
     {
       name: "aa.userApiKey",

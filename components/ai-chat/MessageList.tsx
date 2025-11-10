@@ -99,6 +99,61 @@ const MessagesSkeleton = () => (
   </div>
 );
 
+// 为了增强可读性，这里为 Agent 步骤渲染提供一个帮助函数
+function StepsPanel({ steps }: { steps: NonNullable<Message["steps"]> }) {
+  // 将步骤状态转换为用户可读的文案
+  const statusLabel = (status: string) => {
+    if (status === "started") return "正在搜索...";
+    if (status === "in_progress") return "检索中...";
+    if (status === "completed") return "已找到资料";
+    if (status === "failed") return "搜索失败";
+    return status;
+  };
+
+  return (
+    <div className="mb-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-[#1F1F22]">
+      <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300">
+        联网搜索
+      </div>
+      <div className="px-3 py-2 space-y-3">
+        {steps.map((step, idx) => (
+          <div key={idx} className="text-xs text-gray-600 dark:text-gray-300">
+            <div className="mb-1">
+              <span className="font-medium">{statusLabel(step.status)}</span>
+              {step.type && <span className="ml-2 text-gray-500">({step.type})</span>}
+              {step.error && <span className="ml-2 text-red-500">{step.error}</span>}
+            </div>
+            {/* 当有输出结果时，展示链接列表 */}
+            {Array.isArray(step.output) && step.output.length > 0 && (
+              <ul className="list-disc ml-5 space-y-1">
+                {step.output.map((res, i) => (
+                  <li key={i} className="leading-snug">
+                    <a
+                      href={res.url}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline text-blue-600 dark:text-blue-400 hover:opacity-80"
+                    >
+                      {res.title}
+                    </a>
+                    {typeof res.score === "number" && (
+                      <span className="ml-2 text-[11px] text-gray-500">score: {res.score.toFixed(2)}</span>
+                    )}
+                    {res.content && (
+                      <div className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">
+                        {res.content}
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
 
 export function MessageList({ 
   messages, 
@@ -174,6 +229,11 @@ export function MessageList({
                     </span>
                   )}
                 </div>
+
+                {/* 联网搜索步骤：显示在 AI 内容上方 */}
+                {Array.isArray(message.steps) && message.steps.length > 0 && (
+                  <StepsPanel steps={message.steps} />
+                )}
                 
                 {/* AI消息内容 */}
                 <div className="text-sm whitespace-pre-line">

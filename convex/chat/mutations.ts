@@ -63,6 +63,52 @@ export const updateMessageMetadata = internalMutation({
 });
 
 /**
+ * 更新消息的 Agent 执行步骤
+ * 用于记录 Agent 执行过程中的工具调用步骤（如联网搜索）
+ * 支持实时更新步骤状态，让前端可以展示 "正在搜索..." → "已找到资料" 的进度
+ * 仅供内部调用，不对前端开放
+ */
+export const updateMessageAgentSteps = internalMutation({
+  args: {
+    messageId: v.id("messages"),
+    steps: v.array(
+      v.object({
+        // 步骤类型，例如 "web_search"
+        type: v.string(),
+        // 步骤的当前状态
+        status: v.union(
+          v.literal("started"),
+          v.literal("in_progress"),
+          v.literal("completed"),
+          v.literal("failed")
+        ),
+        // 步骤的输入，例如 Agent 决定的搜索查询词
+        input: v.optional(v.any()),
+        // 步骤的输出，例如搜索结果
+        output: v.optional(
+          v.array(
+            v.object({
+              title: v.string(),
+              url: v.string(),
+              content: v.optional(v.string()),
+              score: v.optional(v.number()),
+              favicon: v.optional(v.string()),
+            })
+          )
+        ),
+        // 错误信息（当 status 为 "failed" 时）
+        error: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.messageId, {
+      steps: args.steps,
+    });
+  },
+});
+
+/**
  * 选择AI回复作为主要答案
  * 当有多个AI回复时，用户选择其中一个作为主对话线
  */

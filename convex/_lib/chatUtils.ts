@@ -9,6 +9,7 @@ import {
   BaseMessage,
 } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
+import { AgentExecutor } from "langchain/agents";
 
 /**
  * 根据用户消息生成对话标题。
@@ -220,6 +221,112 @@ export const handlePromptStreamAndPersist = async (
   await ctx.runMutation(internal.prompt.mutations.updateBlockContent, {
     blockId: blockId,
     content: fullResponse,
+  });
+
+  return { fullResponse, tokenCount };
+};
+
+/**
+ * 处理 Agent 的响应流，并将其逐步持久化到数据库。
+ * 这个函数专门处理带有工具调用的 Agent 场景。
+ * 
+ * @param ctx - Convex的Action上下文。
+ * @param agentExecutor - LangChain Agent 执行器实例。
+ * @param userInput - 用户最新的输入文本。
+ * @param chatHistory - 之前的对话历史，不包含最新的用户输入。
+ * @param assistantMessageId - 需要更新内容的AI助手消息的ID。
+ * @returns 包含完整响应和token数量的对象。
+ */
+export const handleAgentStreamAndPersist = async (
+  ctx: ActionCtx,
+  agentExecutor: AgentExecutor,
+  userInput: string,
+  chatHistory: BaseMessage[],
+  assistantMessageId: Id<"messages">
+) => {
+  console.log('进入handleAgentStreamAndPersist');
+  let fullResponse = "";
+  let tokenCount = 0;
+  let lastContentUpdateTime = Date.now();
+  const UPDATE_INTERVAL_MS = 200; // 更新数据库的时间间隔
+
+  // 使用 v2 版本的 streamEvents API，以获取结构化的事件流
+  const stream = agentExecutor.streamEvents(
+    {
+      input: userInput,
+      chat_history: chatHistory,
+    },
+    { version: "v2" }
+  );
+
+  // 获取当前消息的 steps，以便在此基础上追加
+  const initialMessage = await ctx.runQuery(internal.chat.queries.getMessage, { messageId: assistantMessageId });
+  const currentSteps = initialMessage?.steps ?? [];
+
+  console.log('进入到for await (const event of stream)前面');
+
+  for await (const event of stream) {
+    const eventName = event.event;
+
+    // 1. 捕获工具调用开始事件
+    if (eventName === "on_tool_start") {
+      currentSteps.push({
+        type: event.name, // 例如 "web_search"
+        status: "started",
+        input: event.data.input,
+      });
+      await ctx.runMutation(internal.chat.mutations.updateMessageAgentSteps, {
+        messageId: assistantMessageId,
+        steps: currentSteps,
+      });
+    }
+
+    // 2. 捕获工具调用结束事件
+    if (eventName === "on_tool_end") {
+      const lastStep = currentSteps[currentSteps.length - 1];
+      if (lastStep) {
+        lastStep.status = "completed";
+        // Tavily 工具的输出是字符串化的 JSON，需要解析
+        try {
+          lastStep.output = JSON.parse(event.data.output as string);
+        } catch (e) {
+          lastStep.status = "failed";
+          lastStep.error = "Failed to parse tool output.";
+          console.error("Failed to parse tool output:", event.data.output);
+        }
+        await ctx.runMutation(internal.chat.mutations.updateMessageAgentSteps, {
+          messageId: assistantMessageId,
+          steps: currentSteps,
+        });
+      }
+    }
+
+    // 3. 捕获最终答案的流式输出
+    if (eventName === "on_chat_model_stream") {
+      const content = event.data.chunk.content;
+      if (typeof content === "string" && content) {
+        fullResponse += content;
+        tokenCount++; // 粗略计算 token
+
+        // 按时间间隔节流更新数据库
+        const now = Date.now();
+        if (now - lastContentUpdateTime >= UPDATE_INTERVAL_MS) {
+          await ctx.runMutation(api.chat.mutations.updateMessageContent, {
+            messageId: assistantMessageId,
+            content: fullResponse,
+            skipAuth: true,
+          });
+          lastContentUpdateTime = now;
+        }
+      }
+    }
+  }
+
+  // 确保最终的完整内容被写入数据库
+  await ctx.runMutation(api.chat.mutations.updateMessageContent, {
+    messageId: assistantMessageId,
+    content: fullResponse,
+    skipAuth: true,
   });
 
   return { fullResponse, tokenCount };

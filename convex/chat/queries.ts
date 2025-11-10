@@ -1,4 +1,4 @@
-import { query } from "../_generated/server";
+import { query, internalQuery } from "../_generated/server";
 import { v } from "convex/values";
 import { groupConversationsByTime } from "../_lib/timeUtils";
 
@@ -155,5 +155,16 @@ export const listGroupedByTime = query({
       favorited: favoritedConversations,
       grouped: groupedConversations,
     };
+  },
+});
+
+/**
+ * 按消息 ID 获取单个消息
+ * 用于在 Agent 流式处理开始时获取初始的 steps 数组
+ */
+export const getMessage = internalQuery({
+  args: { messageId: v.id("messages") },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.messageId);
   },
 });

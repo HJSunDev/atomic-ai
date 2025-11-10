@@ -11,7 +11,9 @@ import {
   handleStreamAndPersist,
   updateMessageMetadata,
   handlePromptStreamAndPersist,
+  handleAgentStreamAndPersist,
 } from "../_lib/chatUtils";
+import { createAgentExecutor } from "../_lib/agentUtils";
 
 // 任务相关
 import { buildFinalPrompt, TaskIdentifier, taskIdentifierValidator } from "../_lib/taskUtils";
@@ -74,15 +76,62 @@ export const streamAssistantResponse = action({
         streaming: true,
       });
 
-      // 5. 处理流式生成与持久化
-      const { fullResponse, tokenCount } = await handleStreamAndPersist(
-        ctx,
+      // 5. 【新增】尝试创建 Agent 执行器
+      const agentExecutor = await createAgentExecutor(
         chatModel,
-        langchainMessages,
-        args.assistantMessageId
+        args.agentFlags?.webSearch ?? false
       );
 
-      // 6. 更新最终的元数据
+      let fullResponse: string;
+      let tokenCount: number;
+
+      // 6. 【分支处理】根据是否存在 Agent 执行器，选择不同的处理流程
+      if (agentExecutor) {
+        // --- Agent 流程 ---
+        const userInput = langchainMessages[langchainMessages.length - 1].content as string;
+        const chatHistory = langchainMessages.slice(0, -1);
+        
+        try {
+          ({ fullResponse, tokenCount } = await handleAgentStreamAndPersist(
+            ctx,
+            agentExecutor,
+            userInput,
+            chatHistory,
+            args.assistantMessageId
+          ));
+        // 当 Agent 工具调用失败时，降级为普通流式对话
+        } catch (agentError) {
+          const errMsg = agentError instanceof Error ? agentError.message : "Agent 执行失败";
+          try {
+            // 合并已有 steps 并追加失败步骤，便于前端展示错误
+            const existing = await ctx.runQuery(internal.chat.queries.getMessage, { messageId: args.assistantMessageId });
+            const steps = Array.isArray(existing?.steps) ? [...existing!.steps] : [];
+            steps.push({ type: "web_search", status: "failed", error: errMsg });
+            await ctx.runMutation(internal.chat.mutations.updateMessageAgentSteps, {
+              messageId: args.assistantMessageId,
+              steps,
+            });
+          } catch {}
+
+          // 回退到普通对话流式处理
+          ({ fullResponse, tokenCount } = await handleStreamAndPersist(
+            ctx,
+            chatModel,
+            langchainMessages,
+            args.assistantMessageId
+          ));
+        }
+      } else {
+        // --- 普通流程 (处理流式生成与持久化) ---
+        ({ fullResponse, tokenCount } = await handleStreamAndPersist(
+          ctx,
+          chatModel,
+          langchainMessages,
+          args.assistantMessageId
+        ));
+      }
+
+      // 7. 更新最终的元数据
       const endTime = Date.now();
       const durationMs = endTime - startTime;
 
