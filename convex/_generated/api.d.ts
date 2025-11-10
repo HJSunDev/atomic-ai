@@ -9,6 +9,7 @@
  */
 
 import type * as _lib_agentTools from "../_lib/agentTools.js";
+import type * as _lib_agentUtils from "../_lib/agentUtils.js";
 import type * as _lib_chatUtils from "../_lib/chatUtils.js";
 import type * as _lib_envUtils from "../_lib/envUtils.js";
 import type * as _lib_models from "../_lib/models.js";
@@ -45,6 +46,7 @@ import type {
  */
 declare const fullApi: ApiFromModules<{
   "_lib/agentTools": typeof _lib_agentTools;
+  "_lib/agentUtils": typeof _lib_agentUtils;
   "_lib/chatUtils": typeof _lib_chatUtils;
   "_lib/envUtils": typeof _lib_envUtils;
   "_lib/models": typeof _lib_models;
