@@ -10,6 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@langchain/community": "^0.3.24",
     "@clerk/nextjs": "^6.12.4",
     "@convex-dev/persistent-text-streaming": "^0.2.3",
     "@dnd-kit/core": "^6.3.1",

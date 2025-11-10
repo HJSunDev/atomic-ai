@@ -82,6 +82,45 @@ export const chatSchema = {
      */
     content: v.string(),
   
+    /**
+     * 用于记录AI在生成最终回复前执行的中间步骤，例如联网搜索。
+     * 这是一个对象数组，每个对象代表一个独立的步骤。
+     * 这使得前端可以实时展示 "正在搜索..." -> "已找到资料" -> (展示链接) 的过程。
+     */
+    steps: v.optional(
+      v.array(
+        v.object({
+          // 步骤类型，例如 "web_search"
+          type: v.string(),
+          // 步骤的当前状态
+          status: v.union(
+            v.literal("started"), // 已开始
+            v.literal("in_progress"), // 进行中
+            v.literal("completed"), // 已完成
+            v.literal("failed") // 执行失败
+          ),
+          // 步骤的输入，例如 Agent 决定的搜索查询词
+          input: v.optional(v.any()),
+          // 步骤的输出，例如搜索结果
+          output: v.optional(
+            v.array(
+              v.object({
+                title: v.string(),
+                url: v.string(),
+                content: v.optional(v.string()),
+                // 相关性得分
+                score: v.optional(v.number()),
+                // 网站图标
+                favicon: v.optional(v.string()),
+              })
+            )
+          ),
+          // 错误信息（当 status 为 "failed" 时）
+          error: v.optional(v.string()),
+        })
+      )
+    ),
+  
     // -- 高级功能支持字段 --
   
     /**

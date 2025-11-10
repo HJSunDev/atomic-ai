@@ -48,7 +48,7 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
         }) => (
           <>
             {/* 内容区域 - 让内容区域占满宽度并允许滚动 */}
-            <div className="flex-1 overflow-y-auto w-full scrollbar-hide">
+            <div className="flex-1 overflow-y-auto w-full">
               {/* 内容居中容器 - 限制内容最大宽度并居中，同时占满父容器高度 */}
               <div className="w-[50rem] mx-auto h-full">
                 <MessageList 
