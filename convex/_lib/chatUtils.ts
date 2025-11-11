@@ -286,13 +286,33 @@ export const handleAgentStreamAndPersist = async (
       const lastStep = currentSteps[currentSteps.length - 1];
       if (lastStep) {
         lastStep.status = "completed";
-        // Tavily 工具的输出是字符串化的 JSON，需要解析
+        // Tavily 工具的输出可能是字符串化的 JSON，或直接是对象/数组
         try {
-          lastStep.output = JSON.parse(event.data.output as string);
+          const rawOutput = typeof event.data.output === "string"
+            ? JSON.parse(event.data.output as string)
+            : event.data.output;
+
+          // 兼容两种形态：数组 或 { results: [...] }
+          const resultsArray = Array.isArray(rawOutput)
+            ? rawOutput
+            : Array.isArray((rawOutput as any)?.results)
+              ? (rawOutput as any).results
+              : [];
+
+          // 仅保留 schema 允许的字段，移除 raw_content 等多余字段
+          const cleaned = (resultsArray as any[]).map((r) => ({
+            title: String(r.title ?? ""),
+            url: String(r.url ?? ""),
+            content: typeof r.content === "string" ? r.content : undefined,
+            score: typeof r.score === "number" ? r.score : undefined,
+            favicon: typeof r.favicon === "string" ? r.favicon : undefined,
+          }));
+
+          lastStep.output = cleaned;
         } catch (e) {
           lastStep.status = "failed";
-          lastStep.error = "Failed to parse tool output.";
-          console.error("Failed to parse tool output:", event.data.output);
+          lastStep.error = "Failed to parse or normalize tool output.";
+          console.error("Failed to parse/normalize tool output:", event.data.output);
         }
         await ctx.runMutation(internal.chat.mutations.updateMessageAgentSteps, {
           messageId: assistantMessageId,

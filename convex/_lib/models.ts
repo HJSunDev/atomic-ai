@@ -85,6 +85,18 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         shortName: "Claude Sonnet 4.5",
         modelSeries: "claude"
       },
+      "kimi-k2-thinking": {
+        modelName: "moonshotai/kimi-k2-thinking",
+        provider: "moonshotai",
+        baseURL: "https://openrouter.ai/api/v1",
+        temperature: 0.5,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
+        description: "Moonshot AI 的 Kimi K2 Thinking，面向 agentic、长程推理与工具使用的生产级模型，支持超长上下文与稳定的分步推理能力",
+        isRecommended: true,
+        isFree: false,
+        shortName: "Kimi K2 Thinking",
+        modelSeries: "kimi"
+      },
     },
     // 免费模型
     free: {
