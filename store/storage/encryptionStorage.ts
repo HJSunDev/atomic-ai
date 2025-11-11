@@ -10,10 +10,30 @@ interface EncryptionStorageOptions {
 }
 
 /**
+ * 等待 AuthStore 完成初始化（_hasHydrated 变为 true）。
+ * 如果已经完成，立即 resolve；否则订阅状态变化并等待。
+ */
+async function waitForAuthHydration(): Promise<void> {
+  if (useAuthStore.getState()._hasHydrated) {
+    return Promise.resolve();
+  }
+
+  return new Promise<void>((resolve) => {
+    const unsubscribe = useAuthStore.subscribe((state) => {
+      if (state._hasHydrated) {
+        resolve();
+        unsubscribe();
+      }
+    });
+  });
+}
+
+/**
  * 创建一个通用的、可配置的Zustand加密存储中间件。
  *
- * 这个高阶函数返回一个符合Zustand `StateStorage`接口的对象，
+ * 这个高阶函数返回一个符合Zustand `StateStorage`接口的对象（支持异步操作），
  * 它可以根据传入的`keysToEncrypt`选项来加密和解密指定的多个状态字段。
+ * 在执行加解密操作前，会自动等待 AuthStore 准备就绪，确保密钥可用。
  *
  * @param options - 配置对象，包含一个`keysToEncrypt`数组。
  * @returns 返回一个为Zustand `persist`中间件定制的`StateStorage`对象。
@@ -25,14 +45,22 @@ export function createEncryptionStorage(
 
   return {
     /**
-     * 从存储中获取并解密项。
+     * 从存储中获取并解密项（异步）。
+     * 在解密前会等待 AuthStore 准备就绪，确保密钥可用。
+     * 如果没有密钥（未登录），则跳过解密，保持密文原样。
      */
-    getItem: (name: string): string | null => {
+    getItem: async (name: string): Promise<string | null> => {
+      await waitForAuthHydration();
+
       const secretKey = useAuthStore.getState().userId;
       const storedValue = localStorage.getItem(name);
 
       if (!storedValue) {
         return null;
+      }
+
+      if (!secretKey) {
+        return storedValue;
       }
 
       try {
@@ -41,23 +69,26 @@ export function createEncryptionStorage(
         for (const key of keysToEncrypt) {
           const value = state.state?.[key];
           if (value && typeof value === "string") {
-            // 如果没有密钥（用户未登录），则清除潜在的敏感信息，防止密文泄露。
-            // 如果有密钥，则尝试解密。
-            state.state[key] = secretKey ? decrypt(value, secretKey) : null;
+            state.state[key] = decrypt(value, secretKey);
           }
         }
         return JSON.stringify(state);
       } catch (error) {
         console.error("从localStorage获取或解密状态失败:", error);
-        return storedValue; // 在出错时返回原始值，让Zustand处理
+        return storedValue;
       }
     },
 
     /**
-     * 加密并向存储中设置项。
+     * 加密并向存储中设置项（异步）。
+     * 如果没有密钥（未登录），则不写入敏感字段，避免覆盖已存在的密文。
      */
-    setItem: (name: string, value: string): void => {
+    setItem: async (name: string, value: string): Promise<void> => {
       const secretKey = useAuthStore.getState().userId;
+
+      if (!secretKey) {
+        return;
+      }
 
       try {
         const state = JSON.parse(value);
@@ -65,11 +96,7 @@ export function createEncryptionStorage(
         for (const key of keysToEncrypt) {
           const dataToProcess = state.state?.[key];
           if (dataToProcess && typeof dataToProcess === "string") {
-            // 如果没有密钥（用户未登录），则不存储敏感信息。
-            // 如果有密钥，则加密数据。
-            state.state[key] = secretKey
-              ? encrypt(dataToProcess, secretKey)
-              : null;
+            state.state[key] = encrypt(dataToProcess, secretKey);
           }
         }
         localStorage.setItem(name, JSON.stringify(state));
@@ -81,9 +108,9 @@ export function createEncryptionStorage(
     },
 
     /**
-     * 从存储中移除项。
+     * 从存储中移除项（异步）。
      */
-    removeItem: (name: string): void => {
+    removeItem: async (name: string): Promise<void> => {
       localStorage.removeItem(name);
     },
   };

@@ -12,6 +12,8 @@ interface AuthState {
   userId: string | null;
   // Clerk认证状态是否已加载完成。
   isLoaded: boolean;
+  // 内部标记：Auth Store 是否已准备就绪（用于依赖此状态的加密存储等待）
+  _hasHydrated: boolean;
 }
 
 interface AuthActions {
@@ -24,15 +26,23 @@ interface AuthActions {
    * 清除认证信息，回到未加载的初始状态。
    */
   clearAuth: () => void;
+  /**
+   * 内部方法：标记 AuthStore 已准备就绪。
+   */
+  _setHasHydrated: (hydrated: boolean) => void;
 }
 
 const initialState: AuthState = {
   userId: null,
   isLoaded: false,
+  _hasHydrated: false,
 };
 
 export const useAuthStore = create<AuthState & AuthActions>((set) => ({
   ...initialState,
-  setAuth: ({ userId, isLoaded }) => set({ userId, isLoaded }),
+  setAuth: ({ userId, isLoaded }) => {
+    set({ userId, isLoaded, _hasHydrated: true });
+  },
   clearAuth: () => set(initialState),
+  _setHasHydrated: (hydrated) => set({ _hasHydrated: hydrated }),
 }));
