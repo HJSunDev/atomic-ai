@@ -99,6 +99,167 @@ const MessagesSkeleton = () => (
   </div>
 );
 
+/**
+ * 错误匹配模式配置接口
+ */
+interface ErrorPattern {
+  // 匹配器函数：判断是否匹配此错误类型
+  matcher: (error: string) => boolean;
+  // 友好的错误提示
+  friendlyMessage: string;
+  // 可选的操作建议
+  suggestion?: string;
+}
+
+/**
+ * 工具调用相关的错误模式配置
+ * 采用配置化方式，便于后续扩展新的错误类型
+ */
+const TOOL_ERROR_PATTERNS: ErrorPattern[] = [
+  {
+    // 模型不支持工具调用错误
+    // 使用多个关键词组合判断，提高匹配的健壮性
+    matcher: (error: string) => {
+      const lowerError = error.toLowerCase();
+      return (
+        (lowerError.includes('no endpoints') && lowerError.includes('tool')) ||
+        (lowerError.includes('404') && lowerError.includes('tool use')) ||
+        lowerError.includes('support tool use')
+      );
+    },
+    friendlyMessage: "该模型尚不支持模型原生工具调用 (Tool Calling)",
+    suggestion: "请更换模型联网查询"
+  },
+  // 未来可以在这里添加更多错误类型，例如：
+  // {
+  //   matcher: (error) => {
+  //     const lower = error.toLowerCase();
+  //     return lower.includes('rate limit') || lower.includes('too many requests');
+  //   },
+  //   friendlyMessage: "请求频率超限",
+  //   suggestion: "请稍后再试或降低请求频率"
+  // },
+];
+
+/**
+ * 保底错误提示（用于工具调用步骤）
+ * 当所有错误模式都不匹配时使用此提示，避免向用户暴露技术细节
+ */
+const FALLBACK_ERROR: { message: string; suggestion: string } = {
+  message: "工具调用失败且无法匹配任何错误模式，可能是该模型尚不支持模型原生工具调用 (Tool Calling)",
+  suggestion: "请更换模型联网查询"
+};
+
+/**
+ * 将技术性的错误信息转换为用户友好的提示（用于工具调用步骤）
+ */
+function transformToolError(originalError: string): {
+  message: string;
+  suggestion?: string;
+  isTransformed: boolean;
+} {
+  // 遍历所有错误模式，找到第一个匹配的
+  for (const pattern of TOOL_ERROR_PATTERNS) {
+    if (pattern.matcher(originalError)) {
+      return {
+        message: pattern.friendlyMessage,
+        suggestion: pattern.suggestion,
+        isTransformed: true
+      };
+    }
+  }
+  
+  // 如果没有匹配到任何已知模式，使用保底错误提示
+  // 避免向用户暴露技术性的错误细节
+  return {
+    message: FALLBACK_ERROR.message,
+    suggestion: FALLBACK_ERROR.suggestion,
+    isTransformed: true
+  };
+
+  // 返回原始错误信息
+  // return {
+  //   message: originalError,
+  //   suggestion: undefined,
+  //   isTransformed: false
+  // };
+}
+
+
+
+
+/**
+ * 消息内容错误匹配模式配置接口
+ */
+interface MessageErrorPattern {
+  // 匹配器函数：判断消息内容是否为此类错误
+  matcher: (content: string) => boolean;
+  // 转换函数：将错误内容转换为友好提示
+  transformer: (originalContent: string) => string;
+}
+
+/**
+ * 消息内容错误模式配置
+ * 用于将AI返回的错误信息转换为用户友好的提示
+ */
+const MESSAGE_ERROR_PATTERNS: MessageErrorPattern[] = [
+  {
+    // 429 速率限制错误
+    matcher: (content: string) => {
+      const lowerContent = content.toLowerCase();
+      return (
+        lowerContent.includes('429') && 
+        lowerContent.includes('provider')
+      ) || (
+        lowerContent.includes('rate') && 
+        lowerContent.includes('limit')
+      );
+    },
+    transformer: () => 
+      "⏱️ 该模型服务暂不可用，或遇到速率限制\n\n💡 请稍后再试或者更换模型-429 速率限制错误"
+  },
+  {
+    // 502 网关错误
+    matcher: (content: string) => {
+      const lowerContent = content.toLowerCase();
+      return (
+        lowerContent.includes('502') && 
+        lowerContent.includes('provider')
+      ) || (
+        lowerContent.includes('bad gateway') ||
+        lowerContent.includes('gateway error')
+      );
+    },
+    transformer: () => 
+      "⚠️ 该模型服务暂时不可用\n\n💡 请稍后再试或者更换模型-502 网关错误"
+  },
+];
+
+/**
+ * 将AI消息内容中的技术性错误转换为用户友好的提示
+ * 这个函数用于处理整个消息内容，而非工具调用步骤
+ * 
+ * @param content - 原始消息内容
+ * @returns 转换后的消息内容（如果匹配到错误模式则返回友好提示，否则返回原内容）
+ */
+function transformMessageContent(content: string): string {
+  // 只对较短的消息进行错误检测（避免误判正常的长文本响应）
+  // 错误消息通常比较简短
+  if (content.length > 150) {
+    return content;
+  }
+  
+  // 遍历所有消息错误模式，找到第一个匹配的
+  for (const pattern of MESSAGE_ERROR_PATTERNS) {
+    if (pattern.matcher(content)) {
+      return pattern.transformer(content);
+    }
+  }
+  
+  // 没有匹配到任何错误模式，返回原始内容
+  return content;
+}
+
 // 为了增强可读性，这里为 Agent 步骤渲染提供一个帮助函数
 function StepsPanel({ steps }: { steps: NonNullable<Message["steps"]> }) {
   // 将步骤状态转换为用户可读的文案
@@ -116,40 +277,55 @@ function StepsPanel({ steps }: { steps: NonNullable<Message["steps"]> }) {
         联网搜索
       </div>
       <div className="px-3 py-2 space-y-3">
-        {steps.map((step, idx) => (
-          <div key={idx} className="text-xs text-gray-600 dark:text-gray-300">
-            <div className="mb-1">
-              <span className="font-medium">{statusLabel(step.status)}</span>
-              {step.type && <span className="ml-2 text-gray-500">({step.type})</span>}
-              {step.error && <span className="ml-2 text-red-500">{step.error}</span>}
-            </div>
-            {/* 当有输出结果时，展示链接列表 */}
-            {Array.isArray(step.output) && step.output.length > 0 && (
-              <ul className="list-disc ml-5 space-y-1">
-                {step.output.map((res, i) => (
-                  <li key={i} className="leading-snug">
-                    <a
-                      href={res.url}
-                      target="_blank"
-                      rel="noreferrer"
-                      className="underline text-blue-600 dark:text-blue-400 hover:opacity-80"
-                    >
-                      {res.title}
-                    </a>
-                    {typeof res.score === "number" && (
-                      <span className="ml-2 text-[11px] text-gray-500">score: {res.score.toFixed(2)}</span>
-                    )}
-                    {res.content && (
-                      <div className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">
-                        {res.content}
+        {steps.map((step, idx) => {
+          // 处理错误信息转换
+          const errorDisplay = step.error ? transformToolError(step.error) : null;
+          
+          return (
+            <div key={idx} className="text-xs text-gray-600 dark:text-gray-300">
+              <div className="mb-1">
+                <span className="font-medium">{statusLabel(step.status)}</span>
+                {step.type && <span className="ml-2 text-gray-500">({step.type})</span>}
+                {/* 显示转换后的友好错误信息 */}
+                {errorDisplay && (
+                  <div className="mt-1.5 space-y-1">
+                    <div className="text-red-500">{errorDisplay.message}</div>
+                    {errorDisplay.suggestion && (
+                      <div className="text-amber-600 dark:text-amber-400">
+                        💡 {errorDisplay.suggestion}
                       </div>
                     )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        ))}
+                  </div>
+                )}
+              </div>
+              {/* 当有输出结果时，展示链接列表 */}
+              {Array.isArray(step.output) && step.output.length > 0 && (
+                <ul className="list-disc ml-5 space-y-1">
+                  {step.output.map((res, i) => (
+                    <li key={i} className="leading-snug">
+                      <a
+                        href={res.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="underline text-blue-600 dark:text-blue-400 hover:opacity-80"
+                      >
+                        {res.title}
+                      </a>
+                      {typeof res.score === "number" && (
+                        <span className="ml-2 text-[11px] text-gray-500">score: {res.score.toFixed(2)}</span>
+                      )}
+                      {res.content && (
+                        <div className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">
+                          {res.content}
+                        </div>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          );
+        })}
       </div>
     </div>
   );
@@ -239,7 +415,7 @@ export function MessageList({
                 <div className="text-sm whitespace-pre-line">
                   <MessageRenderer
                     className="prose prose-sm dark:prose-invert max-w-none text-sm"
-                    parts={[{ type: "md", content: message.content } satisfies MessagePart]}
+                    parts={[{ type: "md", content: transformMessageContent(message.content) } satisfies MessagePart]}
                   />
                   {/* 流式传输效果 */}
                   <MessageStreamingEffects 

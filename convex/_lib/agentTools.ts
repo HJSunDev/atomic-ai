@@ -34,7 +34,7 @@ export const getTools = () => {
   tavilyTool.description = 
     "Search the web for current information. Use this tool when you need recent events, news, or topics you are not certain about. " +
     "Input should be a clear and specific search query. " +
-    "Returns structured results with titles, URLs, content snippets, and relevance scores.";
+    "Returns structured results with titles, URLs, content snippets, relevance scores, and favicon.";
 
   return [tavilyTool];
 };

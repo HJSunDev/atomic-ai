@@ -263,8 +263,6 @@ export const handleAgentStreamAndPersist = async (
   const initialMessage = await ctx.runQuery(internal.chat.queries.getMessage, { messageId: assistantMessageId });
   const currentSteps = initialMessage?.steps ?? [];
 
-  console.log('进入到for await (const event of stream)前面');
-
   for await (const event of stream) {
     const eventName = event.event;
 
