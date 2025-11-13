@@ -16,6 +16,7 @@ export interface Message {
   content: string;
   isChosenReply?: boolean; // 可选字段
   metadata?: {
+    status?: "success" | "error" | "pending";
     aiModel?: string;
     tokensUsed?: number;
     durationMs?: number;

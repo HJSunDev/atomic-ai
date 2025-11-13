@@ -50,6 +50,11 @@ export const updateMessageMetadata = internalMutation({
   args: {
     messageId: v.id("messages"),
     metadata: v.object({
+      status: v.optional(v.union(
+        v.literal("success"),
+        v.literal("error"),
+        v.literal("pending")
+      )),
       aiModel: v.optional(v.string()),
       tokensUsed: v.optional(v.number()),
       durationMs: v.optional(v.number()),
@@ -262,8 +267,7 @@ export const startNewChatRound = mutation({
       content: "", // 内容为空，等待action填充
       isChosenReply: true,
       metadata: {
-        // 初始元数据，表示正在处理
-        aiModel: "pending...",
+        status: "pending",
       },
     });
 

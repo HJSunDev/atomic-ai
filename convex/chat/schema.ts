@@ -141,7 +141,13 @@ export const chatSchema = {
      * 对于用户消息，此字段通常为空。
      */
     metadata: v.optional(v.object({
-      // 生成此回复的AI模型名称，例如 "gpt-4-turbo"。
+      // AI消息的状态标识
+      status: v.optional(v.union(
+        v.literal("success"),  // 成功生成
+        v.literal("error"),    // 生成失败
+        v.literal("pending")   // 正在生成中
+      )),
+      // 生成此回复的AI模型名称
       aiModel: v.optional(v.string()),
       // 本次回复消耗的token数量。
       tokensUsed: v.optional(v.number()),

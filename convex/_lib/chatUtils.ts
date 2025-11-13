@@ -354,9 +354,10 @@ export const handleAgentStreamAndPersist = async (
  * 定义消息元数据的结构。
  */
 interface MessageMetadata {
-  aiModel: string;
-  tokensUsed: number;
-  durationMs: number;
+  status?: "success" | "error" | "pending";
+  aiModel?: string;
+  tokensUsed?: number;
+  durationMs?: number;
 }
 
 /**

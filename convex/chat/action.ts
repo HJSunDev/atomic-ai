@@ -136,6 +136,7 @@ export const streamAssistantResponse = action({
       const durationMs = endTime - startTime;
 
       await updateMessageMetadata(ctx, args.assistantMessageId, {
+        status: "success",
         aiModel: modelConfig.modelName,
         tokensUsed: tokenCount,
         durationMs,
@@ -151,8 +152,7 @@ export const streamAssistantResponse = action({
         },
       };
     } catch (error) {
-      console.error("流式聊天继续失败:", error);
-      
+            
       const endTime = Date.now();
       const durationMs = endTime - startTime;
       const errorMessage = error instanceof Error ? error.message : "未知错误";
@@ -180,9 +180,13 @@ export const streamAssistantResponse = action({
           skipAuth: true // 使用内部权限跳过用户检查
       });
       
-      // 更新消息元数据，标记错误状态已完成（设置durationMs让前端能检测到流式传输结束）
+      // 获取模型配置信息以便在错误状态下也能记录正确的模型名称
+      const modelId = args.modelId || DEFAULT_MODEL_ID;
+      const modelConfig = AVAILABLE_MODELS[modelId];
+      
       await updateMessageMetadata(ctx, args.assistantMessageId, {
-        aiModel: "error",
+        status: "error",
+        aiModel: modelConfig?.modelName,
         tokensUsed: 0,
         durationMs,
       });

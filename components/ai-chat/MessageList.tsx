@@ -240,12 +240,16 @@ const MESSAGE_ERROR_PATTERNS: MessageErrorPattern[] = [
  * 这个函数用于处理整个消息内容，而非工具调用步骤
  * 
  * @param content - 原始消息内容
- * @returns 转换后的消息内容（如果匹配到错误模式则返回友好提示，否则返回原内容）
+ * @param status - 消息状态（从 metadata.status 获取）
+ * @returns 转换后的消息内容（如果是错误状态且匹配到错误模式则返回友好提示，否则返回原内容）
  */
-function transformMessageContent(content: string): string {
-  // 只对较短的消息进行错误检测（避免误判正常的长文本响应）
-  // 错误消息通常比较简短
-  if (content.length > 150) {
+function transformMessageContent(
+  content: string, 
+  status?: "success" | "error" | "pending"
+): string {
+  // 只对明确标记为错误状态的消息进行错误转换
+  // 这比之前基于内容长度的判断更准确、更可靠
+  if (status !== "error") {
     return content;
   }
   
@@ -256,7 +260,8 @@ function transformMessageContent(content: string): string {
     }
   }
   
-  // 没有匹配到任何错误模式，返回原始内容
+  // 如果是错误状态但没有匹配到任何已知错误模式，返回原始内容
+  // 这样至少能让用户看到具体的错误信息
   return content;
 }
 
@@ -415,7 +420,13 @@ export function MessageList({
                 <div className="text-sm whitespace-pre-line">
                   <MessageRenderer
                     className="prose prose-sm dark:prose-invert max-w-none text-sm"
-                    parts={[{ type: "md", content: transformMessageContent(message.content) } satisfies MessagePart]}
+                    parts={[{ 
+                      type: "md", 
+                      content: transformMessageContent(
+                        message.content, 
+                        message.metadata?.status
+                      ) 
+                    } satisfies MessagePart]}
                   />
                   {/* 流式传输效果 */}
                   <MessageStreamingEffects 
