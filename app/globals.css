@@ -375,3 +375,11 @@
     font-style: italic;
   }
 }
+
+/* Markdown 段落替换样式 - 用于 MessageRenderer 中将 p 标签替换为 div 的情况 */
+.markdown-p-replacement {
+  margin: 0.5rem 0;
+  line-height: 1.75;
+  /* 重置可能的其他样式影响 */
+  display: block;
+}

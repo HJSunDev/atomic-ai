@@ -361,7 +361,7 @@ export function MessageList({
   };
 
   return (
-    <div className="p-4">
+    <article className="p-4">
       {messages.map((message, index) => (
         <div 
           key={message._id}
@@ -369,7 +369,7 @@ export function MessageList({
         >
           {message.role === "user" ? (
             // 用户消息容器
-            <div className="flex flex-col items-end">
+            <section className="flex flex-col items-end">
               {/* 用户消息内容 */}
               <div className="w-3/4 bg-[#F1F2F3] dark:bg-[#2B2B2D] rounded-tl-lg rounded-tr-lg rounded-bl-lg p-4 ml-auto">
                 <MessageRenderer
@@ -384,18 +384,18 @@ export function MessageList({
               </div>
               
               {/* 用户消息功能区 - 根据是否为最后一条消息决定是否默认显示 */}
-              <div className={`mt-2 flex items-center gap-1 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
+              <footer className={`mt-2 flex items-center gap-1 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
                 <button className="w-6 h-6 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A]">
                   <Copy className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
                 </button>
                 <button className="w-6 h-6 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A]">
                   <MoreHorizontal className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
                 </button>
-              </div>
-            </div>
+              </footer>
+            </section>
           ) : (
             // AI消息容器
-            <div className="flex flex-col">
+            <section className="flex flex-col">
               {/* AI消息内容 */}
               <div className="w-full">
                 {/* AI信息栏 */}
@@ -417,7 +417,7 @@ export function MessageList({
                 )}
                 
                 {/* AI消息内容 */}
-                <div className="text-sm whitespace-pre-line">
+                <div className="markdown-content">
                   <MessageRenderer
                     className="prose prose-sm dark:prose-invert max-w-none text-sm"
                     parts={[{ 
@@ -453,7 +453,7 @@ export function MessageList({
               </div>
               
               {/* AI消息功能区 - 根据是否为最后一条消息决定是否默认显示 */}
-              <div className={`mt-2 flex items-center gap-1.5 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
+              <footer className={`mt-2 flex items-center gap-1.5 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
                 <button className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A]">
                   <ThumbsUp className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
                 </button>
@@ -466,13 +466,13 @@ export function MessageList({
                 <button className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A]">
                   <MoreHorizontal className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
                 </button>
-              </div>
-            </div>
+              </footer>
+            </section>
           )}
         </div>
       ))}
       {/* 用于滚动到底部的空div */}
-      <div ref={messagesEndRef} />
-    </div>
+      <aside className="h-4" ref={messagesEndRef} />
+    </article>
   );
 } 
