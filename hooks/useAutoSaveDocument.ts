@@ -250,6 +250,10 @@ export const useAutoSaveDocument = (documentId: string | null) => {
     content,
     setContent,
 
+    // AI 流式生成状态
+    streamingMarkdown: documentData?.contentBlock.streamingMarkdown ?? "",
+    isStreaming: documentData?.contentBlock.isStreaming ?? false,
+
     // 加载和保存状态
     isLoading: documentData === undefined && documentId !== null,
     isSaving: savingMetadata || savingContent,

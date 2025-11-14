@@ -79,8 +79,15 @@ export const promptSchema = {
     documentId: v.id("documents"),
     // 块的类型。初期支持 'text' 和 'reference'
     type: v.union(v.literal("text"), v.literal("reference")),
-    // 文本内容。为内容块时，有值；为引用块时，为空
+    // 文本内容（Tiptap JSON 格式字符串）。为内容块时，有值；为引用块时，为空
+    // 用于：用户手动编辑的内容、AI 生成完成后转换的内容
     content: v.optional(v.string()),
+    // AI 流式生成的临时内容（Markdown 格式字符串）
+    // 仅在 AI 生成过程中使用，用于前端实时渲染，生成完成后会转换为 JSON 格式存入 content 字段
+    streamingMarkdown: v.optional(v.string()),
+    // 标记当前块是否正在进行 AI 流式内容生成
+    // true: AI 正在生成中，前端应渲染 streamingMarkdown；false: 生成完成或用户编辑，前端使用 content
+    isStreaming: v.optional(v.boolean()),
     // 引用的文档ID。仅当 type === 'reference' 时有值，关联到documents表的_id字段
     referenceId: v.optional(v.id("documents")),
     // 该块在其父文档中的显示顺序，从0开始

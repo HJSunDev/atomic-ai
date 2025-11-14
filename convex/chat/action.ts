@@ -396,12 +396,22 @@ export const streamGeneratePromptContent = action({
       } catch {}
       const errorMessage = error instanceof Error ? error.message : "未知错误";
 
-      // 如果出错，并且已保存原始版本，则执行回滚操作
-      if (contentBlockId && originalContent !== undefined) {
-        await ctx.runMutation(internal.prompt.mutations.updateBlockContent, {
+      // 如果出错，清理流式状态并恢复原始内容
+      if (contentBlockId) {
+        // 清理流式字段，恢复 isStreaming 状态
+        await ctx.runMutation(internal.prompt.mutations.updateBlockStreamingMarkdown, {
           blockId: contentBlockId,
+          streamingMarkdown: "",
+          isStreaming: false,
+        });
+        
+        // 如果有原始内容，恢复它
+        if (originalContent !== undefined) {
+          await ctx.runMutation(internal.prompt.mutations.updateBlockContent, {
+            blockId: contentBlockId,
           content: originalContent,
         });
+        }
       }
       
       return {

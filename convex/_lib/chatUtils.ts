@@ -176,7 +176,12 @@ export const handleStreamAndPersist = async (
 };
 
 /**
- * 处理AI模型的响应流，并将其逐步持久化到指定块的 `content` 字段。
+ * 处理AI模型的响应流，并将其逐步持久化到指定块的 `streamingMarkdown` 字段。
+ * 
+ * 设计特性：
+ * - AI生成的内容以 Markdown 格式写入 streamingMarkdown 临时字段
+ * - 设置 isStreaming=true 标记正在生成中
+ * - 流式完成后，前端负责将 MD 转换为 JSON 并保存到 content 字段
  *
  * @param ctx - Convex的Action上下文。
  * @param chatModel - ChatOpenAI模型实例。
@@ -195,6 +200,13 @@ export const handlePromptStreamAndPersist = async (
   let lastUpdateTime = Date.now();
   const UPDATE_INTERVAL_MS = 200; // 每200ms更新一次数据库
 
+  // 在流式开始前，初始化流式状态
+  await ctx.runMutation(internal.prompt.mutations.updateBlockStreamingMarkdown, {
+    blockId: blockId,
+    streamingMarkdown: "",
+    isStreaming: true,
+  });
+
   const stream = await chatModel.stream(langchainMessages);
 
   for await (const chunk of stream) {
@@ -206,21 +218,23 @@ export const handlePromptStreamAndPersist = async (
       // 按时间间隔更新数据库，避免过于频繁的更新
       const now = Date.now();
       if (now - lastUpdateTime >= UPDATE_INTERVAL_MS) {
-        await ctx.runMutation(internal.prompt.mutations.updateBlockContent, {
+        await ctx.runMutation(internal.prompt.mutations.updateBlockStreamingMarkdown, {
           blockId: blockId,
-          content: fullResponse,
+          streamingMarkdown: fullResponse,
+          isStreaming: true,
         });
         lastUpdateTime = now;
       }
     }
   }
-
   // 循环内的更新是按时间间隔进行的。这最后一次调用是"保险"操作，
   // 确保在流结束后，所有剩余内容（特别是那些在最后一个时间间隔内到达的）都被完整地写入数据库，
-  // 从而保证数据的最终完整性。
-  await ctx.runMutation(internal.prompt.mutations.updateBlockContent, {
+  // 流式完成：写入最终的完整 Markdown 内容，并设置 isStreaming=false
+  // 前端检测到 isStreaming 变为 false 后，会触发 MD→JSON 转换并保存到 content 字段
+  await ctx.runMutation(internal.prompt.mutations.updateBlockStreamingMarkdown, {
     blockId: blockId,
-    content: fullResponse,
+    streamingMarkdown: fullResponse,
+    isStreaming: false,
   });
 
   return { fullResponse, tokenCount };

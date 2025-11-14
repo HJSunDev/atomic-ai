@@ -2,9 +2,17 @@
 
 import { TiptapEditor } from "./TiptapEditor";
 import type React from "react";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { generateJSON } from '@tiptap/html';
+import StarterKit from '@tiptap/starter-kit';
+import { marked } from 'marked';
 
 // 文档表单属性（现在是受控组件）
 interface DocumentFormProps {
@@ -16,6 +24,9 @@ interface DocumentFormProps {
   setPromptPrefix: (prefix: string) => void;
   content: string;
   setContent: (content: string) => void;
+  streamingMarkdown: string;
+  isStreaming: boolean;
+  documentId?: string;
   disabled?: boolean;
 }
 
@@ -29,10 +40,88 @@ export const DocumentForm = ({
   setPromptPrefix,
   content,
   setContent,
+  streamingMarkdown,
+  isStreaming,
+  documentId,
   disabled = false,
 }: DocumentFormProps) => {
   // 追踪用户是否正在编辑前置信息，用于显示/隐藏和动态调整高度
   const [isEditingPrefix, setIsEditingPrefix] = useState(false);
+
+  // 保存流式完成后的转换结果
+  const finalizeStreamingContent = useMutation(api.prompt.mutations.finalizeStreamingContent);
+  
+  // 维护上一次的 isStreaming 值（用于检测状态变化）
+  const prevIsStreamingRef = useRef(isStreaming);
+  // 防止重复转换的标记（异步转换过程中避免再次触发）
+  const isFinalizingRef = useRef(false);
+
+  // 核心逻辑：检测 AI 流式完成时刻，自动将 Markdown 转换为 JSON 并保存
+  useEffect(() => {
+    // 流式完成的判断条件：isStreaming 从 true 变为 false，且有内容
+    const shouldFinalize = 
+      prevIsStreamingRef.current &&              // 之前：正在流式生成
+      !isStreaming &&                            // 现在：流式已结束
+      streamingMarkdown.trim().length > 0 &&     // 且：有生成的内容
+      !isFinalizingRef.current &&                // 且：未在转换中
+      documentId;                                // 且：有文档ID
+    
+    if (shouldFinalize) {
+      isFinalizingRef.current = true;
+      
+      // 【转换流程】Markdown → HTML → JSON
+      let jsonContent = null;
+      try {
+        // 步骤1：使用 marked 将 Markdown 转换为 HTML
+        const html = marked.parse(streamingMarkdown) as string;
+        
+        // 步骤2：使用 Tiptap 的 generateJSON 将 HTML 转换为 JSON
+        // 配置与 TiptapEditor 一致的扩展
+        jsonContent = generateJSON(html, [
+          StarterKit.configure({
+            heading: {
+              levels: [1, 2, 3, 4, 5, 6],
+            },
+            bulletList: {
+              keepMarks: true,
+              keepAttributes: false,
+            },
+            orderedList: {
+              keepMarks: true,
+              keepAttributes: false,
+            },
+          }),
+        ]);
+      } catch (error) {
+        console.error('[DocumentForm] 转换失败:', error);
+        jsonContent = null;
+      }
+      
+      if (jsonContent) {
+        // 保存转换后的 JSON 内容
+        finalizeStreamingContent({
+          documentId: documentId as Id<"documents">,
+          jsonContent: JSON.stringify(jsonContent),
+        })
+          .then(() => {
+            console.log('AI 生成内容已成功转换并保存');
+          })
+          .catch((error) => {
+            console.error('保存转换后的内容失败:', error);
+          })
+          .finally(() => {
+            isFinalizingRef.current = false;
+          });
+      } else {
+        console.warn('MD 转 JSON 失败，无法保存');
+        isFinalizingRef.current = false;
+      }
+    }
+    
+    // 每次 effect 执行后，更新 prevIsStreamingRef，为下次检测状态变化做准备
+    prevIsStreamingRef.current = isStreaming;
+    
+  }, [isStreaming, streamingMarkdown, documentId, finalizeStreamingContent]);
 
   // 派生状态：有内容或正在编辑时，显示输入框
   const shouldShowPrefixInput = promptPrefix.length > 0 || isEditingPrefix;
@@ -132,14 +221,28 @@ export const DocumentForm = ({
         )}
       </section>
 
-      {/* 富文本编辑器：Notion风格的富文本编辑 */}
+      {/* 富文本编辑器/Markdown 预览区：根据流式状态切换显示 */}
       <section>
-        <TiptapEditor
-          content={content}
-          onContentChange={handleContentChange}
-          placeholder={`输入"/"打开菜单`}
-          editable={!disabled}
-        />
+        {isStreaming ? (
+          // AI 流式生成中：显示 Markdown 实时渲染
+          <div className="min-h-[400px] w-full markdown-content py-4">
+            {streamingMarkdown ? (
+              <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                {streamingMarkdown}
+              </ReactMarkdown>
+            ) : (
+              <span className="text-gray-400 italic">AI 正在生成中...</span>
+            )}
+          </div>
+        ) : (
+          // 正常编辑模式：显示 Tiptap 富文本编辑器
+          <TiptapEditor
+            content={content}
+            onContentChange={handleContentChange}
+            placeholder={`输入"/"打开菜单`}
+            editable={!disabled}
+          />
+        )}
       </section>
     </article>
   );

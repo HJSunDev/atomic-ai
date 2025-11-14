@@ -468,7 +468,7 @@ export const updateBlocksOrder = mutation({
 
 
 /**
- * [内部] 更新块内容 (用于流式传输)
+ * [内部] 更新块内容 (用于内部更新content字段)
  * 
  * 设计特性：
  * - 作为内部mutation，只能被服务器端的action调用，保证安全性
@@ -477,7 +477,6 @@ export const updateBlocksOrder = mutation({
  * - 每次调用都会覆盖块的content字段
  * 
  * 使用场景：
- * - AI流式生成内容时，高频调用更新块内容
  * - 从action或工具函数中调用
  */
 export const updateBlockContent = internalMutation({
@@ -489,5 +488,90 @@ export const updateBlockContent = internalMutation({
     await ctx.db.patch(args.blockId, { 
       content: args.content 
     });
+  },
+});
+
+
+/**
+ * [内部] 更新块的AI流式内容和状态
+ * 
+ * 设计特性：
+ * - 专门用于AI流式生成场景，更新 streamingMarkdown 和 isStreaming 字段
+ * - 无权限检查，因为权限验证已在调用方action中完成
+ * - 高频调用优化：零查询，直接patch
+ * 
+ * 数据流：
+ * 1. AI开始生成：设置 isStreaming=true, streamingMarkdown="" 
+ * 2. AI生成中：不断更新 streamingMarkdown (增量累加的MD内容)
+ * 3. AI完成后：前端负责将 streamingMarkdown 转换为JSON，保存到 content，并清理流式字段
+ * 
+ * 使用场景：
+ * - AI流式生成文档内容时，从 action 中高频调用
+ * - handlePromptStreamAndPersist 工具函数中使用
+ */
+export const updateBlockStreamingMarkdown = internalMutation({
+  args: {
+    blockId: v.id("blocks"),
+    streamingMarkdown: v.string(),
+    isStreaming: v.boolean(),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.blockId, { 
+      streamingMarkdown: args.streamingMarkdown,
+      isStreaming: args.isStreaming,
+    });
+  },
+});
+
+
+/**
+ * 完成AI流式生成并保存最终内容
+ * 
+ * 设计特性：
+ * - 前端在AI流式完成后调用，完成MD→JSON转换并保存
+ * - 原子操作：同时更新 content、设置 isStreaming=false
+ * - 包含权限验证，确保只有文档所有者可以操作
+ * 
+ * 数据流：
+ * 1. 前端检测到 isStreaming 从 true 变为 false
+ * 2. 前端使用 marked + Tiptap generateJSON 转换 MD → JSON
+ * 3. 调用此 mutation 保存最终的 JSON 内容
+ * 
+ * 使用场景：
+ * - AI生成完成后，前端处理 MD→JSON 转换
+ * - 保存转换后的内容到 content 字段
+ */
+export const finalizeStreamingContent = mutation({
+  args: {
+    documentId: v.id("documents"),
+    jsonContent: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    const document = await ctx.db.get(args.documentId);
+    if (!document) throw new Error("目标文档不存在");
+    if (document.userId !== userId) throw new Error("无权更新此文档");
+
+    const contentBlock = await ctx.db
+      .query("blocks")
+      .withIndex("by_documentId_type", (q) => 
+        q.eq("documentId", args.documentId).eq("type", "text")
+      )
+      .first();
+
+    if (!contentBlock) {
+      throw new Error("文档内容块不存在");
+    }
+
+    // 原子更新：保存最终内容，保留 streamingMarkdown 用于调试
+    await ctx.db.patch(contentBlock._id, { 
+      content: args.jsonContent,
+      // streamingMarkdown: "", // 保留用于调试
+      isStreaming: false,
+    });
+
+    return { success: true } as const;
   },
 });

@@ -117,6 +117,9 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
     // `promptSuffix` 和 `setPromptSuffix` 将在后续步骤中使用
     promptSuffix,
     setPromptSuffix,
+    // AI 流式生成状态
+    streamingMarkdown,
+    isStreaming,
   } = useAutoSaveDocument(finalDocumentId ?? null);
 
   // 当用户点击“添加”后，此状态为 true，输入框出现并自动聚焦。
@@ -271,6 +274,9 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
           setPromptPrefix={setPromptPrefix}
           content={content}
           setContent={setContent}
+          streamingMarkdown={streamingMarkdown}
+          isStreaming={isStreaming}
+          documentId={finalDocumentId ?? undefined}
           disabled={isLocked}
         />
       </main>
