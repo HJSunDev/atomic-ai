@@ -235,6 +235,8 @@ export const updateDocumentContent = mutation({
       throw new Error("文档内容块不存在");
     }
 
+    // 【防重复保护】内容相同时直接返回，避免不必要的数据库写入
+    // 这也能保护 AI 流式完成时，setContent 触发的防抖保存与 finalizeStreamingContent 的冲突
     if (contentBlock.content === args.content) {
       return { success: true, updated: false } as const;
     }

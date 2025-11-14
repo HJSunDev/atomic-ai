@@ -55,6 +55,8 @@ export const DocumentForm = ({
   const prevIsStreamingRef = useRef(isStreaming);
   // 防止重复转换的标记（异步转换过程中避免再次触发）
   const isFinalizingRef = useRef(false);
+  // 本地状态标记，追踪是否正在转换（用于延迟视图切换，避免闪烁）
+  const [isFinalizing, setIsFinalizing] = useState(false);
 
   // 核心逻辑：检测 AI 流式完成时刻，自动将 Markdown 转换为 JSON 并保存
   useEffect(() => {
@@ -68,6 +70,7 @@ export const DocumentForm = ({
     
     if (shouldFinalize) {
       isFinalizingRef.current = true;
+      setIsFinalizing(true);
       
       // 【转换流程】Markdown → HTML → JSON
       let jsonContent = null;
@@ -98,10 +101,23 @@ export const DocumentForm = ({
       }
       
       if (jsonContent) {
-        // 保存转换后的 JSON 内容
+        const jsonString = JSON.stringify(jsonContent);
+        
+        // 【关键设计】立即更新本地状态，避免切换到编辑器时出现闪烁
+        // 注意：这会触发 useAutoSaveDocument 的防抖保存，但有双重保护机制：
+        // 1. 如果网络快（< 700ms）：finalizeStreamingContent 会先完成，
+        //    useQuery 回流后更新 serverDataRef，防抖触发时检测到内容相同，跳过保存
+        // 2. 如果网络慢（> 700ms）：防抖会先触发 updateContentMutation，
+        //    但 finalizeStreamingContent 执行时会被 updateDocumentContent 的内容检测拦截
+        // 结果：无论网络快慢，都不会产生重复的数据库写入
+        setContent(jsonString);
+        
+        // 【必需】调用 finalizeStreamingContent 保存到数据库
+        // 作用：1) 持久化 content；2) 设置 isStreaming=false（updateContentMutation 做不到）
+        // 与 setContent 的关系：setContent 更新本地状态消除闪烁，此处确保数据持久化
         finalizeStreamingContent({
           documentId: documentId as Id<"documents">,
-          jsonContent: JSON.stringify(jsonContent),
+          jsonContent: jsonString,
         })
           .then(() => {
             console.log('AI 生成内容已成功转换并保存');
@@ -111,17 +127,19 @@ export const DocumentForm = ({
           })
           .finally(() => {
             isFinalizingRef.current = false;
+            setIsFinalizing(false);
           });
       } else {
         console.warn('MD 转 JSON 失败，无法保存');
         isFinalizingRef.current = false;
+        setIsFinalizing(false);
       }
     }
     
     // 每次 effect 执行后，更新 prevIsStreamingRef，为下次检测状态变化做准备
     prevIsStreamingRef.current = isStreaming;
     
-  }, [isStreaming, streamingMarkdown, documentId, finalizeStreamingContent]);
+  }, [isStreaming, streamingMarkdown, documentId, finalizeStreamingContent, setContent]);
 
   // 派生状态：有内容或正在编辑时，显示输入框
   const shouldShowPrefixInput = promptPrefix.length > 0 || isEditingPrefix;
@@ -223,8 +241,8 @@ export const DocumentForm = ({
 
       {/* 富文本编辑器/Markdown 预览区：根据流式状态切换显示 */}
       <section>
-        {isStreaming ? (
-          // AI 流式生成中：显示 Markdown 实时渲染
+        {(isStreaming || isFinalizing) ? (
+          // AI 流式生成中或转换中：显示 Markdown 实时渲染
           <div className="min-h-[400px] w-full markdown-content py-4">
             {streamingMarkdown ? (
               <ReactMarkdown remarkPlugins={[remarkGfm]}>
