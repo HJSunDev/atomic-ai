@@ -577,3 +577,50 @@ export const finalizeStreamingContent = mutation({
     return { success: true } as const;
   },
 });
+
+
+/**
+ * [内部] 更新块的 Agent 执行步骤
+ * 
+ * 设计特性：
+ * - 专门用于 Agent 场景，记录AI执行的中间步骤（如联网搜索）
+ * - 与 chat 模块的 updateMessageAgentSteps 保持一致的结构
+ * - 无权限检查，因为权限验证已在调用方 action 中完成
+ * - 高频调用优化：零查询，直接 patch
+ * 
+ * 使用场景：
+ * - handlePromptAgentStreamAndPersist 工具函数中使用
+ * - 实时更新联网搜索的状态和结果
+ */
+export const updateBlockAgentSteps = internalMutation({
+  args: {
+    blockId: v.id("blocks"),
+    steps: v.array(
+      v.object({
+        type: v.string(),
+        status: v.union(
+          v.literal("started"),
+          v.literal("in_progress"),
+          v.literal("completed"),
+          v.literal("failed")
+        ),
+        input: v.optional(v.any()),
+        output: v.optional(
+          v.array(
+            v.object({
+              title: v.string(),
+              url: v.string(),
+              content: v.optional(v.string()),
+              score: v.optional(v.number()),
+              favicon: v.optional(v.string()),
+            })
+          )
+        ),
+        error: v.optional(v.string()),
+      })
+    ),
+  },
+  handler: async (ctx, args) => {
+    await ctx.db.patch(args.blockId, { steps: args.steps });
+  },
+});

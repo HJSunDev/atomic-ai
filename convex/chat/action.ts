@@ -12,6 +12,7 @@ import {
   updateMessageMetadata,
   handlePromptStreamAndPersist,
   handleAgentStreamAndPersist,
+  handlePromptAgentStreamAndPersist,
 } from "../_lib/chatUtils";
 import { createAgentExecutor } from "../_lib/agentUtils";
 
@@ -354,15 +355,63 @@ export const streamGeneratePromptContent = action({
         streaming: true,
       });
 
-      // 7. 处理流式生成并持久化到内容块
-      const { fullResponse, tokenCount } = await handlePromptStreamAndPersist(
-        ctx,
+      // 7. 尝试创建 Agent 执行器
+      const agentExecutor = await createAgentExecutor(
         chatModel,
-        langchainMessages,
-        contentBlockId
+        args.agentFlags?.webSearch ?? false
       );
 
-      // 8. 成功返回
+      let fullResponse: string;
+      let tokenCount: number;
+
+      // 8. 根据是否存在 Agent 执行器，选择不同的处理流程
+      if (agentExecutor) {
+        // --- Agent 流程 ---
+        const userInput = args.userPrompt;
+        const chatHistory = langchainMessages.slice(0, -1);
+        
+        try {
+          ({ fullResponse, tokenCount } = await handlePromptAgentStreamAndPersist(
+            ctx,
+            agentExecutor,
+            userInput,
+            chatHistory,
+            contentBlockId
+          ));
+        } catch (agentError) {
+          // 降级处理：记录失败步骤
+          const errMsg = agentError instanceof Error ? agentError.message : "Agent 执行失败";
+          try {
+            const existing = await ctx.runQuery(internal.prompt.queries.getBlockById, { 
+              blockId: contentBlockId 
+            });
+            const steps = Array.isArray(existing?.steps) ? [...existing!.steps] : [];
+            steps.push({ type: "web_search", status: "failed", error: errMsg });
+            await ctx.runMutation(internal.prompt.mutations.updateBlockAgentSteps, {
+              blockId: contentBlockId,
+              steps,
+            });
+          } catch {}
+          
+          // 回退到普通流式处理
+          ({ fullResponse, tokenCount } = await handlePromptStreamAndPersist(
+            ctx,
+            chatModel,
+            langchainMessages,
+            contentBlockId
+          ));
+        }
+      } else {
+        // --- 普通流程 ---
+        ({ fullResponse, tokenCount } = await handlePromptStreamAndPersist(
+          ctx,
+          chatModel,
+          langchainMessages,
+          contentBlockId
+        ));
+      }
+
+      // 9. 成功返回
       const endTime = Date.now();
       const durationMs = endTime - startTime;
 

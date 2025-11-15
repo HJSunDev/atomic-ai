@@ -365,6 +365,139 @@ export const handleAgentStreamAndPersist = async (
 };
 
 /**
+ * 处理 Prompt Agent 的响应流，并将其逐步持久化到块。
+ * 专门为 Prompt 模块的 Agent 场景设计，与 handleAgentStreamAndPersist 结构类似。
+ * 
+ * 核心差异：
+ * - 写入目标：blocks 表而非 messages 表
+ * - 使用 updateBlockStreamingMarkdown 更新流式 Markdown 内容
+ * - 使用 updateBlockAgentSteps 更新 Agent 步骤
+ * - 管理 isStreaming 状态
+ * 
+ * @param ctx - Convex的Action上下文
+ * @param agentExecutor - LangChain Agent 执行器实例
+ * @param userInput - 用户最新的输入文本
+ * @param chatHistory - 之前的对话历史，不包含最新的用户输入
+ * @param blockId - 需要更新内容的块ID
+ * @returns 包含完整响应和token数量的对象
+ */
+export const handlePromptAgentStreamAndPersist = async (
+  ctx: ActionCtx,
+  agentExecutor: AgentExecutor,
+  userInput: string,
+  chatHistory: BaseMessage[],
+  blockId: Id<"blocks">
+) => {
+  let fullResponse = "";
+  let tokenCount = 0;
+  let lastContentUpdateTime = Date.now();
+  const UPDATE_INTERVAL_MS = 200;
+
+  // 初始化流式状态
+  await ctx.runMutation(internal.prompt.mutations.updateBlockStreamingMarkdown, {
+    blockId: blockId,
+    streamingMarkdown: "",
+    isStreaming: true,
+  });
+
+  const stream = agentExecutor.streamEvents(
+    {
+      input: userInput,
+      chat_history: chatHistory,
+    },
+    { version: "v2" }
+  );
+
+  // 获取当前 block 的 steps
+  const initialBlock = await ctx.runQuery(internal.prompt.queries.getBlockById, { 
+    blockId 
+  });
+  const currentSteps = initialBlock?.steps ?? [];
+
+  for await (const event of stream) {
+    const eventName = event.event;
+
+    // 1. 捕获工具调用开始事件
+    if (eventName === "on_tool_start") {
+      currentSteps.push({
+        type: event.name,
+        status: "started",
+        input: event.data.input,
+      });
+      await ctx.runMutation(internal.prompt.mutations.updateBlockAgentSteps, {
+        blockId,
+        steps: currentSteps,
+      });
+    }
+
+    // 2. 捕获工具调用结束事件
+    if (eventName === "on_tool_end") {
+      const lastStep = currentSteps[currentSteps.length - 1];
+      if (lastStep) {
+        lastStep.status = "completed";
+        try {
+          const rawOutput = typeof event.data.output === "string"
+            ? JSON.parse(event.data.output as string)
+            : event.data.output;
+          
+          const resultsArray = Array.isArray(rawOutput)
+            ? rawOutput
+            : Array.isArray((rawOutput as any)?.results)
+              ? (rawOutput as any).results
+              : [];
+          
+          const cleaned = (resultsArray as any[]).map((r) => ({
+            title: String(r.title ?? ""),
+            url: String(r.url ?? ""),
+            content: typeof r.content === "string" ? r.content : undefined,
+            score: typeof r.score === "number" ? r.score : undefined,
+            favicon: typeof r.favicon === "string" ? r.favicon : undefined,
+          }));
+
+          lastStep.output = cleaned;
+        } catch (e) {
+          lastStep.status = "failed";
+          lastStep.error = "Failed to parse or normalize tool output.";
+          console.error("Failed to parse/normalize tool output:", event.data.output);
+        }
+        await ctx.runMutation(internal.prompt.mutations.updateBlockAgentSteps, {
+          blockId,
+          steps: currentSteps,
+        });
+      }
+    }
+
+    // 3. 捕获最终答案的流式输出
+    if (eventName === "on_chat_model_stream") {
+      const content = event.data.chunk.content;
+      if (typeof content === "string" && content) {
+        fullResponse += content;
+        tokenCount++;
+
+        const now = Date.now();
+        if (now - lastContentUpdateTime >= UPDATE_INTERVAL_MS) {
+          await ctx.runMutation(internal.prompt.mutations.updateBlockStreamingMarkdown, {
+            blockId,
+            streamingMarkdown: fullResponse,
+            isStreaming: true,
+          });
+          lastContentUpdateTime = now;
+        }
+      }
+    }
+  }
+
+  // 最终写入完整内容并标记流式结束
+  await ctx.runMutation(internal.prompt.mutations.updateBlockStreamingMarkdown, {
+    blockId,
+    streamingMarkdown: fullResponse,
+    isStreaming: false,
+  });
+
+  return { fullResponse, tokenCount };
+};
+
+/**
  * 定义消息元数据的结构。
  */
 interface MessageMetadata {

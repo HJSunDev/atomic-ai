@@ -463,3 +463,17 @@ export const getDocumentContentBlock = internalQuery({
       .first();
   },
 });
+
+
+/**
+ * [内部] 获取指定ID的块
+ * 用于 Agent 场景中获取块的当前 steps 状态
+ */
+export const getBlockById = internalQuery({
+  args: {
+    blockId: v.id("blocks"),
+  },
+  handler: async (ctx, args) => {
+    return await ctx.db.get(args.blockId);
+  },
+});

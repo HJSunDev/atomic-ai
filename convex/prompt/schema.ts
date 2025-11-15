@@ -92,6 +92,33 @@ export const promptSchema = {
     referenceId: v.optional(v.id("documents")),
     // 该块在其父文档中的显示顺序，从0开始
     order: v.number(),
+    // AI生成过程中的中间步骤记录（如联网搜索）
+    steps: v.optional(
+      v.array(
+        v.object({
+          type: v.string(),
+          status: v.union(
+            v.literal("started"),
+            v.literal("in_progress"),
+            v.literal("completed"),
+            v.literal("failed")
+          ),
+          input: v.optional(v.any()),
+          output: v.optional(
+            v.array(
+              v.object({
+                title: v.string(),
+                url: v.string(),
+                content: v.optional(v.string()),
+                score: v.optional(v.number()),
+                favicon: v.optional(v.string()),
+              })
+            )
+          ),
+          error: v.optional(v.string()),
+        })
+      )
+    ),
   })
     // 核心索引：按顺序高效查询某个文档的所有块（渲染文档内容时使用）
     .index("by_documentId_order", ["documentId", "order"])
