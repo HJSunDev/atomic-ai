@@ -43,6 +43,9 @@ export interface GenerationParams {
   
   // 可选：用户自己的 API Key
   userApiKey?: string;
+  
+  // 可选：是否启用联网搜索
+  webSearchEnabled?: boolean;
 }
 
 // 生成结果
@@ -85,6 +88,7 @@ export function useGenerationOrchestrator() {
       openMode,
       contextDocIds = [],
       userApiKey,
+      webSearchEnabled = false,
     } = params;
 
     // 参数校验
@@ -157,6 +161,9 @@ export function useGenerationOrchestrator() {
             systemPrompt,
             modelId, // 直接使用 modelId，与 chat 模块一致
             userApiKey,
+            agentFlags: {
+              webSearch: webSearchEnabled,
+            },
           });
 
           // ============================================

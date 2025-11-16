@@ -48,6 +48,8 @@ export const PromptStudioModule = () => {
   const { startGeneration } = useGenerationOrchestrator();
   // 只订阅需要的状态，避免不必要的重新渲染
   const selectedModel = useChatStore((state) => state.selectedModel);
+  const webSearchEnabled = useChatStore((state) => state.webSearchEnabled);
+  const userApiKey = useChatStore((state) => state.userApiKey);
   
   // 使用防抖优化搜索性能，避免每次输入都触发查询
   const debouncedSearchTerm = useDebouncedValue(searchTerm, 300);
@@ -65,6 +67,8 @@ export const PromptStudioModule = () => {
         userPrompt: userPrompt.trim(),
         modelId: selectedModel,
         systemPrompt: "请以文档的形式生成内容，不要添加任何其他内容。",
+        webSearchEnabled,
+        userApiKey: userApiKey || undefined,
       });
 
       if (result.success) {
@@ -73,7 +77,7 @@ export const PromptStudioModule = () => {
     } finally {
       setIsSending(false);
     }
-  }, [userPrompt, isSending, startGeneration, selectedModel]);
+  }, [userPrompt, isSending, startGeneration, selectedModel, webSearchEnabled, userApiKey]);
 
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
