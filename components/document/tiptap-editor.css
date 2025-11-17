@@ -234,3 +234,42 @@
 .tiptap-editor .ProseMirror > *:last-child {
   margin-bottom: 0;
 }
+
+/* Basic table styles */
+.tiptap table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.tiptap th,
+.tiptap td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+  vertical-align: top;
+  min-width: 1em;
+  position: relative;
+}
+
+.tiptap th {
+  font-weight: bold;
+  background-color: #f2f2f2;
+}
+
+/* Column resizing styles */
+.column-resizing {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  cursor: col-resize;
+  user-select: none;
+  background-color: #adf;
+}
+
+.resize-cursor {
+  cursor: col-resize;
+}

@@ -23,7 +23,7 @@ import { createPortal } from 'react-dom';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from '@/convex/_generated/api';
 import type { Id } from '@/convex/_generated/dataModel';
-import { jsonToMarkdown } from '@/lib/markdown';
+import { jsonToMarkdownV2 } from '@/lib/markdown';
 
 interface PromptPreviewPanelProps {
   item: GridItem;
@@ -180,7 +180,8 @@ export function PromptPreviewPanel({ item, onClose }: PromptPreviewPanelProps) {
           let formattedContent = '';
           if (block.content) {
             try {
-              formattedContent = jsonToMarkdown(block.content);
+              // 使用 V2 版本，它基于官方 HTML 转换和 GFM 插件，更健壮
+              formattedContent = jsonToMarkdownV2(block.content);
               // 如果转换结果为空，可能是无效的 JSON，保留原始内容用于显示
               if (!formattedContent && block.content.trim()) {
                 formattedContent = block.content;

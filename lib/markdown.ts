@@ -3,13 +3,22 @@ import { getSchema } from '@tiptap/core';
 import { MarkdownSerializer, defaultMarkdownSerializer } from '@tiptap/pm/markdown';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
+import TurndownService from 'turndown';
+import { generateHTML } from '@tiptap/html';
+import { Extension } from '@tiptap/core';
+import { gfm } from 'turndown-plugin-gfm';
+import { Table } from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
+import { AnyExtension } from '@tiptap/core';
 
 /**
  * 创建与 TiptapEditor 一致的 schema，用于解析 JSON 数据
  * 使用与编辑器相同的扩展配置，确保节点类型匹配
  */
 const createSchema = () => {
-  return getSchema([
+  const extensions: AnyExtension[] = [
     StarterKit.configure({
       heading: {
         levels: [1, 2, 3, 4, 5, 6],
@@ -26,7 +35,13 @@ const createSchema = () => {
     Placeholder.configure({
       placeholder: '',
     }),
-  ]);
+    // 添加表格扩展以识别表格节点
+    Table,
+    TableRow,
+    TableCell,
+    TableHeader,
+  ];
+  return getSchema(extensions);
 };
 
 /**
@@ -159,6 +174,190 @@ export function jsonToMarkdown(
   } catch (error) {
     // 顶层容错：捕获所有未预期的错误，返回空字符串而不是抛出异常
     console.error('Error converting JSON to Markdown:', error);
+    return '';
+  }
+}
+
+
+
+/**
+ * 将 Tiptap JSON 内容高效、健壮地转换为 Markdown 字符串 (V2 实现)。
+ *
+ * **转换流程**:
+ * 1.  `JSON → HTML`: 使用 Tiptap 官方的 `generateHTML` 函数，确保与编辑器渲染一致。
+ * 2.  `HTML → Markdown`: 使用 `turndown` 库，将 HTML 精确转换为 Markdown。
+ *
+ * **优势**:
+ * - **零维护成本**: 当 Tiptap 编辑器增加新扩展（如表格、任务列表）时，此函数无需任何修改即可自动支持。
+ * - **高保真度**: 转换结果能最大程度地还原编辑器的视觉表现。
+ * - **技术栈成熟**: 完全依赖于 Tiptap 官方库和业界广泛使用的 `turndown`。
+ *
+ * @param jsonContent - Tiptap 编辑器生成的 JSON 对象或 JSON 字符串。
+ * @param turndownOptions - (可选) `turndown` 库的配置选项，用于自定义 Markdown 输出格式。
+ * @returns 转换后的 Markdown 字符串，如果失败则返回空字符串。
+ *
+ * @example
+ * ```typescript
+ * const json = { type: 'doc', content: [...] };
+ * const markdown = jsonToMarkdownV2(json);
+ * ```
+ */
+export function jsonToMarkdownV2(
+  jsonContent: object | string,
+  turndownOptions?: TurndownService.Options
+): string {
+  try {
+    // 1. 标准化输入：确保我们处理的是一个对象
+    let json: any;
+    if (typeof jsonContent === 'string') {
+      if (!jsonContent.trim()) return '';
+      try {
+        json = JSON.parse(jsonContent);
+      } catch {
+        // 如果解析失败，可能不是有效的 JSON，直接返回空字符串
+        return '';
+      }
+    } else {
+      json = jsonContent;
+    }
+
+    // 2. 验证 JSON 结构
+    if (!json || typeof json !== 'object' || !json.type) {
+      return '';
+    }
+
+    // 3. 获取与编辑器一致的 Tiptap 扩展配置
+    // 注意：这里的扩展列表必须与 TiptapEditor 和 DocumentForm 中的 `generateJSON` 保持同步
+    const extensions: AnyExtension[] = [
+      StarterKit.configure({
+        heading: { levels: [1, 2, 3, 4, 5, 6] },
+        bulletList: { keepMarks: true, keepAttributes: false },
+        orderedList: { keepMarks: true, keepAttributes: false },
+      }),
+      Placeholder.configure({ placeholder: '' }),
+      // 表格支持
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
+    ];
+
+    // 4. JSON -> HTML: 使用 Tiptap 官方工具转换
+    const html = generateHTML(json, extensions);
+
+    // 5. HTML -> Markdown: 使用 turndown 及其 GFM 插件进行转换
+    const turndownService = new TurndownService({
+      headingStyle: 'atx',
+      codeBlockStyle: 'fenced',
+      ...turndownOptions,
+    });
+
+    // 使用 GFM 插件，它会自动处理表格、删除线、任务列表和带语言的高亮代码块
+    turndownService.use(gfm);
+
+    // 自定义规则 1：处理表格单元格中的 <p> 标签，避免多余换行破坏表格结构
+    turndownService.addRule('tableCellParagraphs', {
+      filter(node) {
+        // 仅匹配位于 TH/TD 内部的段落标签
+        return node.nodeName === 'P' && !!node.parentNode?.nodeName.match(/^(TH|TD)$/);
+      },
+      replacement(content) {
+        // 直接返回内容，不添加任何额外的换行符
+        return content;
+      },
+    });
+
+    // 自定义规则 2：将 Tiptap 生成的 HTML 表格转换为 GFM 风格的 Markdown 表格
+    turndownService.addRule('tiptapTable', {
+      filter(node) {
+        return node.nodeName === 'TABLE';
+      },
+      replacement(content, node) {
+        try {
+          // 额外防御：如果当前环境的节点不支持 querySelectorAll，则回退为默认内容
+          const table = node as HTMLElement;
+          const canQuery =
+            typeof (table as any).querySelectorAll === 'function' &&
+            typeof (table as any).querySelector === 'function';
+          if (!canQuery) {
+            return content || '\n';
+          }
+
+          const rows = Array.from(table.querySelectorAll('tr')) as HTMLElement[];
+          if (!rows.length) {
+            return '\n';
+          }
+
+          // 处理表头行：优先使用 TH，如果没有则使用第一行的 TD
+          const headerCells = Array.from(
+            rows[0].querySelectorAll('th,td'),
+          ) as HTMLElement[];
+          const headerTexts = headerCells.map((cell) => {
+            const cellHtml = cell.innerHTML;
+            // 使用同一个 turndown 实例转换单元格内容，以保留加粗等内联格式
+            const md = turndownService
+              .turndown(cellHtml)
+              .replace(/\n+/g, ' ')
+              .trim();
+            return md || ' ';
+          });
+
+          const columnCount = headerTexts.length || 1;
+
+          // 生成表头和分隔行
+          const headerLine = `| ${headerTexts.join(' | ')} |`;
+          const separatorLine = `| ${Array(columnCount)
+            .fill('---')
+            .join(' | ')} |`;
+
+          // 处理数据行
+          const bodyLines: string[] = [];
+          const dataRows = rows.slice(1);
+
+          for (const row of dataRows) {
+            const cells = Array.from(
+              row.querySelectorAll('td,th'),
+            ) as HTMLElement[];
+            const cellTexts = cells.map((cell) => {
+              const cellHtml = cell.innerHTML;
+              const md = turndownService
+                .turndown(cellHtml)
+                .replace(/\n+/g, ' ')
+                .trim();
+              return md || ' ';
+            });
+
+            // 如果某些行少于表头列数，用空字符串补齐，保证列数一致
+            while (cellTexts.length < columnCount) {
+              cellTexts.push(' ');
+            }
+
+            const rowLine = `| ${cellTexts
+              .slice(0, columnCount)
+              .join(' | ')} |`;
+            bodyLines.push(rowLine);
+          }
+
+          const tableMarkdown = ['\n', headerLine, separatorLine, ...bodyLines, '\n'].join(
+            '\n',
+          );
+          return tableMarkdown;
+        } catch (error) {
+          // 防御性回退：任何内部异常都不会让调用方崩溃，直接退回到已有内容
+          console.warn('tiptapTable rule failed, fallback to content:', error);
+          return content || '\n';
+        }
+      },
+    });
+    
+    const markdown = turndownService.turndown(html);
+
+    return markdown;
+
+  } catch (error) {
+    console.error('Error converting JSON to Markdown (V2):', error);
     return '';
   }
 }

@@ -13,6 +13,10 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { generateJSON } from '@tiptap/html';
 import StarterKit from '@tiptap/starter-kit';
 import { marked } from 'marked';
+import { Table } from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
 
 // 文档表单属性（现在是受控组件）
 interface DocumentFormProps {
@@ -94,6 +98,13 @@ export const DocumentForm = ({
               keepAttributes: false,
             },
           }),
+          // 添加表格相关扩展，使其能够正确解析 <table> 标签
+          Table.configure({
+            resizable: true,
+          }),
+          TableRow,
+          TableCell,
+          TableHeader,
         ]);
       } catch (error) {
         console.error('[DocumentForm] 转换失败:', error);

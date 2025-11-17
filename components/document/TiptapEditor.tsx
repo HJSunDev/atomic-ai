@@ -8,6 +8,10 @@ import { useEffect, useState } from 'react';
 import type { EditorState } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { FloatingMenuBar } from './FloatingMenuBar';
+import { Table } from '@tiptap/extension-table';
+import TableRow from '@tiptap/extension-table-row';
+import TableCell from '@tiptap/extension-table-cell';
+import TableHeader from '@tiptap/extension-table-header';
 import './tiptap-editor.css';
 
 interface TiptapEditorProps {
@@ -72,6 +76,13 @@ export const TiptapEditor = ({
       Placeholder.configure({
         placeholder,
       }),
+      // 表格支持
+      Table.configure({
+        resizable: true,
+      }),
+      TableRow,
+      TableCell,
+      TableHeader,
     ],
     content: parseContentFromJSON(content),
     // 修复SSR水合错误：在Next.js SSR环境中禁用立即渲染，避免服务端和客户端渲染不匹配
