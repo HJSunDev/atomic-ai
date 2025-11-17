@@ -10,13 +10,7 @@ import remarkGfm from 'remark-gfm';
 import { useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { generateJSON } from '@tiptap/html';
-import StarterKit from '@tiptap/starter-kit';
-import { marked } from 'marked';
-import { Table } from '@tiptap/extension-table';
-import TableRow from '@tiptap/extension-table-row';
-import TableCell from '@tiptap/extension-table-cell';
-import TableHeader from '@tiptap/extension-table-header';
+import { markdownToTiptapJSON } from '@/lib/markdown';
 
 // 文档表单属性（现在是受控组件）
 interface DocumentFormProps {
@@ -76,40 +70,8 @@ export const DocumentForm = ({
       isFinalizingRef.current = true;
       setIsFinalizing(true);
       
-      // 【转换流程】Markdown → HTML → JSON
-      let jsonContent = null;
-      try {
-        // 步骤1：使用 marked 将 Markdown 转换为 HTML
-        const html = marked.parse(streamingMarkdown) as string;
-        
-        // 步骤2：使用 Tiptap 的 generateJSON 将 HTML 转换为 JSON
-        // 配置与 TiptapEditor 一致的扩展
-        jsonContent = generateJSON(html, [
-          StarterKit.configure({
-            heading: {
-              levels: [1, 2, 3, 4, 5, 6],
-            },
-            bulletList: {
-              keepMarks: true,
-              keepAttributes: false,
-            },
-            orderedList: {
-              keepMarks: true,
-              keepAttributes: false,
-            },
-          }),
-          // 添加表格相关扩展，使其能够正确解析 <table> 标签
-          Table.configure({
-            resizable: true,
-          }),
-          TableRow,
-          TableCell,
-          TableHeader,
-        ]);
-      } catch (error) {
-        console.error('[DocumentForm] 转换失败:', error);
-        jsonContent = null;
-      }
+      // 【转换流程】Markdown → HTML → JSON（封装在工具函数中，复用统一扩展配置）
+      const jsonContent = markdownToTiptapJSON(streamingMarkdown);
       
       if (jsonContent) {
         const jsonString = JSON.stringify(jsonContent);

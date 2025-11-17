@@ -4,7 +4,7 @@ import { MarkdownSerializer, defaultMarkdownSerializer } from '@tiptap/pm/markdo
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import TurndownService from 'turndown';
-import { generateHTML } from '@tiptap/html';
+import { generateHTML, generateJSON } from '@tiptap/html';
 import { Extension } from '@tiptap/core';
 import { gfm } from 'turndown-plugin-gfm';
 import { Table } from '@tiptap/extension-table';
@@ -12,35 +12,44 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import { AnyExtension } from '@tiptap/core';
+import { marked } from 'marked';
+
+/**
+ * 统一获取与编辑器一致的扩展配置
+ * 所有 JSON/HTML/Markdown 之间的转换都应复用此配置，避免各处手动维护导致不一致。
+ */
+const getEditorExtensions = (): AnyExtension[] => [
+  StarterKit.configure({
+    heading: {
+      levels: [1, 2, 3, 4, 5, 6],
+    },
+    bulletList: {
+      keepMarks: true,
+      keepAttributes: false,
+    },
+    orderedList: {
+      keepMarks: true,
+      keepAttributes: false,
+    },
+  }),
+  Placeholder.configure({
+    placeholder: '',
+  }),
+  // 表格扩展
+  Table.configure({
+    resizable: true,
+  }),
+  TableRow,
+  TableCell,
+  TableHeader,
+];
 
 /**
  * 创建与 TiptapEditor 一致的 schema，用于解析 JSON 数据
  * 使用与编辑器相同的扩展配置，确保节点类型匹配
  */
 const createSchema = () => {
-  const extensions: AnyExtension[] = [
-    StarterKit.configure({
-      heading: {
-        levels: [1, 2, 3, 4, 5, 6],
-      },
-      bulletList: {
-        keepMarks: true,
-        keepAttributes: false,
-      },
-      orderedList: {
-        keepMarks: true,
-        keepAttributes: false,
-      },
-    }),
-    Placeholder.configure({
-      placeholder: '',
-    }),
-    // 添加表格扩展以识别表格节点
-    Table,
-    TableRow,
-    TableCell,
-    TableHeader,
-  ];
+  const extensions: AnyExtension[] = getEditorExtensions();
   return getSchema(extensions);
 };
 
@@ -228,21 +237,7 @@ export function jsonToMarkdownV2(
 
     // 3. 获取与编辑器一致的 Tiptap 扩展配置
     // 注意：这里的扩展列表必须与 TiptapEditor 和 DocumentForm 中的 `generateJSON` 保持同步
-    const extensions: AnyExtension[] = [
-      StarterKit.configure({
-        heading: { levels: [1, 2, 3, 4, 5, 6] },
-        bulletList: { keepMarks: true, keepAttributes: false },
-        orderedList: { keepMarks: true, keepAttributes: false },
-      }),
-      Placeholder.configure({ placeholder: '' }),
-      // 表格支持
-      Table.configure({
-        resizable: true,
-      }),
-      TableRow,
-      TableCell,
-      TableHeader,
-    ];
+    const extensions: AnyExtension[] = getEditorExtensions();
 
     // 4. JSON -> HTML: 使用 Tiptap 官方工具转换
     const html = generateHTML(json, extensions);
@@ -359,6 +354,57 @@ export function jsonToMarkdownV2(
   } catch (error) {
     console.error('Error converting JSON to Markdown (V2):', error);
     return '';
+  }
+}
+
+/**
+ * 将 Markdown 字符串转换为 Tiptap JSON 文档结构
+ *
+ * 转换流程：
+ * 1. Markdown -> HTML（使用 marked）
+ * 2. HTML -> Tiptap JSON（使用 generateJSON + 与编辑器一致的扩展配置）
+ *
+ * 设计目标：
+ * - 与编辑器使用的扩展保持完全一致，避免出现“某些节点能编辑但不能解析”的情况
+ * - 出错时不抛异常，而是返回 null，由调用方决定后续处理策略
+ */
+export function markdownToTiptapJSON(
+  markdown: string,
+  options: {
+    trim?: boolean;
+  } = {},
+): any | null {
+  try {
+    if (!markdown) {
+      return null;
+    }
+
+    const shouldTrim = options.trim ?? true;
+    const source = shouldTrim ? markdown.trim() : markdown;
+
+    if (!source) {
+      return null;
+    }
+
+    // 1. Markdown -> HTML
+    const html = marked.parse(source) as string;
+    if (!html || !html.trim()) {
+      return null;
+    }
+
+    // 2. HTML -> Tiptap JSON（使用与编辑器一致的扩展）
+    const extensions: AnyExtension[] = getEditorExtensions();
+    const json = generateJSON(html, extensions) as any;
+
+    if (!json || typeof json !== 'object') {
+      return null;
+    }
+
+    // 不强制要求 type === 'doc'，以兼容未来可能的根节点扩展
+    return json;
+  } catch (error) {
+    console.error('[markdownToTiptapJSON] Error converting Markdown to Tiptap JSON:', error);
+    return null;
   }
 }
 
