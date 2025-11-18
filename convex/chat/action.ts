@@ -39,6 +39,30 @@ export const streamAssistantResponse = action({
         webSearch: v.optional(v.boolean()),
       })
     ),
+    // 新增：动态上下文构建器参数
+    context: v.optional(
+      v.object({
+        // 动态指定的核心任务
+        coreTask: v.optional(v.string()),
+        // 动态指定的输出规范
+        specification: v.optional(v.string()),
+        // 动态指定的背景信息
+        backgroundInfo: v.optional(v.string()),
+        // 文档现在是带有类型的对象数组
+        documents: v.optional(
+          v.array(
+            v.object({
+              id: v.id("documents"),
+              type: v.union(
+                v.literal("core_task"),
+                v.literal("specification"),
+                v.literal("background_info")
+              ),
+            })
+          )
+        ),
+      })
+    ),
   },
   handler: async (ctx, args) => {
 

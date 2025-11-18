@@ -83,7 +83,7 @@ export default function DashboardLayout({ children }: DashboardLayoutProps) {
           className={cn(
             "flex flex-col transition-all duration-300 relative h-full",
             // 仅在客户端挂载后应用条件样式，避免水合不匹配
-            hasMounted && showAiPanel ? 'w-[60%]' : 'w-full'
+            hasMounted && showAiPanel ? 'w-[75%]' : 'w-full'
           )}
         >
           {children}

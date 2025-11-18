@@ -10,6 +10,54 @@ import {
 } from "@langchain/core/messages";
 import { ChatOpenAI } from "@langchain/openai";
 import { AgentExecutor } from "langchain/agents";
+import { ContextBuilder } from "./contextBuilder";
+
+/**
+ * 构建用于聊天的最终输入字符串。
+ *
+ * 该函数负责将用户的原始输入与 action 中提供的动态上下文（如核心任务、规范、背景信息和RAG文档）
+ * 结合起来，通过 ContextBuilder 生成一个结构化的、可以直接提供给 LLM 的字符串。
+ *
+ * @param ctx - Convex 的 Action 或 Query 上下文，用于未来可能的数据库查询。
+ * @param userInput - 用户的原始消息内容。
+ * @param context - 从 action 参数传入的动态上下文对象。
+ * @returns 一个结构化的字符串，准备好作为 LLM 的输入。
+ */
+export const buildChatInput = async (
+  ctx: ActionCtx | QueryCtx,
+  userInput: string,
+  context?: {
+    coreTask?: string | null;
+    specification?: string | null;
+    backgroundInfo?: string | null;
+    documents?: {
+      id: Id<"documents">;
+      type: "core_task" | "specification" | "background_info";
+    }[];
+  }
+): Promise<string> => {
+  const builder = new ContextBuilder(userInput);
+
+  if (!context) {
+    return builder.build();
+  }
+
+  // 1. 处理非文档的动态内容
+  builder
+    .withCoreTask(context.coreTask)
+    .withSpecification(context.specification)
+    .withBackgroundInfo(context.backgroundInfo);
+
+  // 2. TODO: 处理作为上下文的文档
+  // 此处将根据 context.documents 列表，从数据库获取文档内容，
+  // 并根据其 type 调用 builder.withDocument() 方法。
+  if (context.documents && context.documents.length > 0) {
+    // 文档处理逻辑待实现...
+  }
+
+  return builder.build();
+};
+
 
 /**
  * 根据用户消息生成对话标题。
