@@ -13,6 +13,8 @@ import {
   handlePromptStreamAndPersist,
   handleAgentStreamAndPersist,
   handlePromptAgentStreamAndPersist,
+  extractUserInputAndHistory,
+  removeEmptyAIMessagePlaceholder,
 } from "../_lib/chatUtils";
 import { createAgentExecutor } from "../_lib/agentUtils";
 
@@ -113,8 +115,8 @@ export const streamAssistantResponse = action({
       // 6. 【分支处理】根据是否存在 Agent 执行器，选择不同的处理流程
       if (agentExecutor) {
         // --- Agent 流程 ---
-        const userInput = langchainMessages[langchainMessages.length - 1].content as string;
-        const chatHistory = langchainMessages.slice(0, -1);
+        // 正确提取最后一条用户消息和聊天历史（排除空的 AI 占位符消息）
+        const { userInput, chatHistory } = extractUserInputAndHistory(langchainMessages);
         
         try {
           ({ fullResponse, tokenCount } = await handleAgentStreamAndPersist(
@@ -139,19 +141,23 @@ export const streamAssistantResponse = action({
           } catch {}
 
           // 回退到普通对话流式处理
+          // 移除最后的空 AI 占位符消息，避免传递给模型
+          const cleanedMessages = removeEmptyAIMessagePlaceholder(langchainMessages);
           ({ fullResponse, tokenCount } = await handleStreamAndPersist(
             ctx,
             chatModel,
-            langchainMessages,
+            cleanedMessages,
             args.assistantMessageId
           ));
         }
       } else {
         // --- 普通流程 (处理流式生成与持久化) ---
+        // 移除最后的空 AI 占位符消息，避免传递给模型
+        const cleanedMessages = removeEmptyAIMessagePlaceholder(langchainMessages);
         ({ fullResponse, tokenCount } = await handleStreamAndPersist(
           ctx,
           chatModel,
-          langchainMessages,
+          cleanedMessages,
           args.assistantMessageId
         ));
       }

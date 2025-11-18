@@ -13,6 +13,69 @@ import { AgentExecutor } from "langchain/agents";
 import { ContextBuilder } from "./contextBuilder";
 
 /**
+ * 从 LangChain 消息数组中提取最后一条用户消息和聊天历史。
+ * 
+ * 由于 startNewChatRound 会创建一条空的 AI 占位符消息，langchainMessages 的最后一个元素
+ * 可能是空的 AIMessage。此函数会从后往前查找最后一条 HumanMessage，并正确分离用户输入和聊天历史。
+ * 
+ * @param langchainMessages - LangChain 消息数组，可能包含空的 AI 占位符消息。
+ * @returns 包含 userInput（最后一条用户消息内容）和 chatHistory（不包含最后一条用户消息的历史）的对象。
+ */
+export const extractUserInputAndHistory = (
+  langchainMessages: BaseMessage[]
+): { userInput: string; chatHistory: BaseMessage[] } => {
+  // 从后往前查找最后一条 HumanMessage
+  let lastUserMessageIndex = -1;
+  for (let i = langchainMessages.length - 1; i >= 0; i--) {
+    if (langchainMessages[i] instanceof HumanMessage) {
+      lastUserMessageIndex = i;
+      break;
+    }
+  }
+
+  if (lastUserMessageIndex === -1) {
+    // 如果没有找到用户消息，返回空字符串和完整历史（这种情况理论上不应该发生）
+    return {
+      userInput: "",
+      chatHistory: langchainMessages,
+    };
+  }
+
+  const userInput = (langchainMessages[lastUserMessageIndex] as HumanMessage).content as string;
+  const chatHistory = langchainMessages.slice(0, lastUserMessageIndex);
+
+  return { userInput, chatHistory };
+};
+
+/**
+ * 移除 LangChain 消息数组中最后的空 AI 占位符消息。
+ * 
+ * startNewChatRound 会创建一条 content 为空的 AIMessage 作为占位符。
+ * 此函数会检查最后一条消息是否是空的 AIMessage，如果是则移除它。
+ * 
+ * @param langchainMessages - LangChain 消息数组，可能包含空的 AI 占位符消息。
+ * @returns 清理后的消息数组，不包含最后的空 AI 占位符消息。
+ */
+export const removeEmptyAIMessagePlaceholder = (
+  langchainMessages: BaseMessage[]
+): BaseMessage[] => {
+  if (langchainMessages.length === 0) {
+    return langchainMessages;
+  }
+
+  const lastMessage = langchainMessages[langchainMessages.length - 1];
+  // 如果最后一条是空的 AIMessage，移除它
+  if (
+    lastMessage instanceof AIMessage &&
+    (!lastMessage.content || (typeof lastMessage.content === "string" && lastMessage.content.trim() === ""))
+  ) {
+    return langchainMessages.slice(0, -1);
+  }
+
+  return langchainMessages;
+};
+
+/**
  * 构建用于聊天的最终输入字符串。
  *
  * 该函数负责将用户的原始输入与 action 中提供的动态上下文（如核心任务、规范、背景信息和RAG文档）
