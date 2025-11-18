@@ -13,38 +13,50 @@ import { AgentExecutor } from "langchain/agents";
 import { ContextBuilder } from "./contextBuilder";
 
 /**
+ * 从 LangChain 消息数组中查找最后一条用户消息的索引。
+ * 
+ * @param langchainMessages - LangChain 消息数组，可能包含空的 AI 占位符消息。
+ * @returns 最后一条 HumanMessage 的索引，如果未找到则返回 -1。
+ */
+const findLastUserMessageIndex = (
+  langchainMessages: BaseMessage[]
+): number => {
+  for (let i = langchainMessages.length - 1; i >= 0; i--) {
+    if (langchainMessages[i] instanceof HumanMessage) {
+      return i;
+    }
+  }
+  return -1;
+};
+
+/**
  * 从 LangChain 消息数组中提取最后一条用户消息和聊天历史。
  * 
  * 由于 startNewChatRound 会创建一条空的 AI 占位符消息，langchainMessages 的最后一个元素
  * 可能是空的 AIMessage。此函数会从后往前查找最后一条 HumanMessage，并正确分离用户输入和聊天历史。
  * 
  * @param langchainMessages - LangChain 消息数组，可能包含空的 AI 占位符消息。
- * @returns 包含 userInput（最后一条用户消息内容）和 chatHistory（不包含最后一条用户消息的历史）的对象。
+ * @returns 包含 userInput（最后一条用户消息内容）、chatHistory（不包含最后一条用户消息的历史）和 index（用户消息索引）的对象。
  */
 export const extractUserInputAndHistory = (
   langchainMessages: BaseMessage[]
-): { userInput: string; chatHistory: BaseMessage[] } => {
-  // 从后往前查找最后一条 HumanMessage
-  let lastUserMessageIndex = -1;
-  for (let i = langchainMessages.length - 1; i >= 0; i--) {
-    if (langchainMessages[i] instanceof HumanMessage) {
-      lastUserMessageIndex = i;
-      break;
-    }
-  }
+): { userInput: string; chatHistory: BaseMessage[]; index: number } => {
+  
+  const lastUserMessageIndex = findLastUserMessageIndex(langchainMessages);
 
   if (lastUserMessageIndex === -1) {
     // 如果没有找到用户消息，返回空字符串和完整历史（这种情况理论上不应该发生）
     return {
       userInput: "",
       chatHistory: langchainMessages,
+      index: -1,
     };
   }
 
   const userInput = (langchainMessages[lastUserMessageIndex] as HumanMessage).content as string;
   const chatHistory = langchainMessages.slice(0, lastUserMessageIndex);
 
-  return { userInput, chatHistory };
+  return { userInput, chatHistory, index: lastUserMessageIndex };
 };
 
 /**

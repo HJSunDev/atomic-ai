@@ -15,6 +15,7 @@ import {
   handlePromptAgentStreamAndPersist,
   extractUserInputAndHistory,
   removeEmptyAIMessagePlaceholder,
+  buildChatInput,
 } from "../_lib/chatUtils";
 import { createAgentExecutor } from "../_lib/agentUtils";
 
@@ -95,6 +96,16 @@ export const streamAssistantResponse = action({
         args.conversationId,
         args.systemPrompt
       );
+
+      // 3.5. 如果提供了动态上下文，使用 ContextBuilder 构建最终的输入
+      if (args.context) {
+        const { userInput: originalUserInput, index: userMessageIndex } = extractUserInputAndHistory(langchainMessages);
+        if (originalUserInput && userMessageIndex !== -1) {
+          const finalInput = await buildChatInput(ctx, originalUserInput, args.context);
+          // 用构建后的输入替换最后一条用户消息的内容
+          langchainMessages[userMessageIndex] = new HumanMessage(finalInput);
+        }
+      }
 
       // 4. 创建流式聊天模型
       const chatModel = createChatModel({
@@ -335,6 +346,30 @@ export const streamGeneratePromptContent = action({
         webSearch: v.optional(v.boolean()),
       })
     ),
+    // 新增：动态上下文构建器参数
+    context: v.optional(
+      v.object({
+        // 动态指定的核心任务
+        coreTask: v.optional(v.string()),
+        // 动态指定的输出规范
+        specification: v.optional(v.string()),
+        // 动态指定的背景信息
+        backgroundInfo: v.optional(v.string()),
+        // 文档现在是带有类型的对象数组
+        documents: v.optional(
+          v.array(
+            v.object({
+              id: v.id("documents"),
+              type: v.union(
+                v.literal("core_task"),
+                v.literal("specification"),
+                v.literal("background_info")
+              ),
+            })
+          )
+        ),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const startTime = Date.now();
@@ -371,21 +406,27 @@ export const streamGeneratePromptContent = action({
       const apiKey = getApiKey(modelConfig, args.userApiKey);
       if (!apiKey) throw new Error("缺少API密钥，请提供有效的API密钥");
 
-      // 5. 构建 LangChain 消息（无历史记录，纯粹的单次生成）
+      // 5. 如果提供了动态上下文，使用 ContextBuilder 构建最终的输入
+      let finalUserPrompt = args.userPrompt;
+      if (args.context) {
+        finalUserPrompt = await buildChatInput(ctx, args.userPrompt, args.context);
+      }
+
+      // 6. 构建 LangChain 消息（无历史记录，纯粹的单次生成）
       const langchainMessages = [];
       if (args.systemPrompt) {
         langchainMessages.push(new SystemMessage(args.systemPrompt));
       }
-      langchainMessages.push(new HumanMessage(args.userPrompt));
+      langchainMessages.push(new HumanMessage(finalUserPrompt));
 
-      // 6. 创建流式聊天模型
+      // 7. 创建流式聊天模型
       const chatModel = createChatModel({
         apiKey,
         modelConfig,
         streaming: true,
       });
 
-      // 7. 尝试创建 Agent 执行器
+      // 8. 尝试创建 Agent 执行器
       const agentExecutor = await createAgentExecutor(
         chatModel,
         args.agentFlags?.webSearch ?? false
@@ -394,10 +435,11 @@ export const streamGeneratePromptContent = action({
       let fullResponse: string;
       let tokenCount: number;
 
-      // 8. 根据是否存在 Agent 执行器，选择不同的处理流程
+      // 9. 根据是否存在 Agent 执行器，选择不同的处理流程
       if (agentExecutor) {
         // --- Agent 流程 ---
-        const userInput = args.userPrompt;
+        // 使用构建后的最终输入（可能包含动态上下文）
+        const userInput = finalUserPrompt;
         const chatHistory = langchainMessages.slice(0, -1);
         
         try {
