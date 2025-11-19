@@ -158,11 +158,23 @@ export function useGenerationOrchestrator() {
           const actionResult = await streamGenerateAction({
             documentId: docId as Id<"documents">,
             userPrompt,
-            systemPrompt,
+            // systemPrompt, 不再使用 systemPrompt, 改为通过 context 传递结构化指令
             modelId, // 直接使用 modelId，与 chat 模块一致
             userApiKey,
             agentFlags: {
               webSearch: webSearchEnabled,
+            },
+            // 使用上下文构建器，为本次生成提供结构化的任务与规范说明
+            context: {
+              // 告诉 AI：这是一个“文档生成”任务
+              coreTask:
+                "根据用户的需求，生成一篇文档。",
+              // 告诉 AI：必须以 Markdown 形式输出
+              specification: [
+                "请使用 Markdown 格式输出最终结果（支持 GFM）。",
+                "不要添加与文档内容无关的额外解释性文字或前后缀说明。",
+              ].join("\n"),
+              // 预留：将上下文文档 ID 映射为“背景信息”文档，供上下文构建器使用
             },
           });
 

@@ -66,7 +66,6 @@ export const PromptStudioModule = () => {
       const result = await startGeneration({
         userPrompt: userPrompt.trim(),
         modelId: selectedModel,
-        systemPrompt: "请以文档的形式生成内容，不要添加任何其他内容。",
         webSearchEnabled,
         userApiKey: userApiKey || undefined,
       });
