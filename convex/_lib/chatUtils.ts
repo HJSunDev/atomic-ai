@@ -88,6 +88,50 @@ export const removeEmptyAIMessagePlaceholder = (
 };
 
 /**
+ * 递归将文档结构（包含引用）转换为扁平化的 Markdown 字符串。
+ * 优先使用数据库中缓存的 contentMarkdown 字段。
+ * 
+ * @param docData - 包含文档元数据和块列表的对象（结构同 getDocumentWithBlocks 返回值）。
+ * @returns 拼接后的完整 Markdown 字符串。
+ */
+function processDocumentToMarkdown(docData: any): string {
+  if (!docData || !docData.document) return "";
+
+  const parts: string[] = [];
+  const { document, blocks } = docData;
+
+  // 1. 前置信息
+  if (document.promptPrefix) {
+    parts.push(document.promptPrefix);
+  }
+
+  // 2. 递归处理内容块
+  if (blocks && Array.isArray(blocks)) {
+    for (const block of blocks) {
+      if (block.type === "text") {
+        // 优先使用预计算的 Markdown
+        if (block.contentMarkdown) {
+          parts.push(block.contentMarkdown);
+        } 
+      } else if (block.type === "reference" && block.referencedDocument) {
+        // 递归处理引用文档
+        const refContent = processDocumentToMarkdown(block.referencedDocument);
+        if (refContent) {
+          parts.push(refContent);
+        }
+      }
+    }
+  }
+
+  // 3. 后置信息
+  if (document.promptSuffix) {
+    parts.push(document.promptSuffix);
+  }
+
+  return parts.join("\n\n");
+}
+
+/**
  * 构建用于聊天的最终输入字符串。
  *
  * 该函数负责将用户的原始输入与 action 中提供的动态上下文（如核心任务、规范、背景信息和RAG文档）
@@ -123,11 +167,42 @@ export const buildChatInput = async (
     .withSpecification(context.specification)
     .withBackgroundInfo(context.backgroundInfo);
 
-  // 2. TODO: 处理作为上下文的文档
+  // 2. 处理作为上下文的文档
   // 此处将根据 context.documents 列表，从数据库获取文档内容，
   // 并根据其 type 调用 builder.withDocument() 方法。
   if (context.documents && context.documents.length > 0) {
-    // 文档处理逻辑待实现...
+    try {
+      // 并行获取所有文档数据
+      const docPromises = context.documents.map(async (docCtx) => {
+        // 调用现有的查询获取文档完整树状结构（包含递归引用）
+        const docData = await ctx.runQuery(api.prompt.queries.getDocumentWithBlocks, {
+          documentId: docCtx.id,
+        });
+        
+        if (!docData) return null;
+
+        // 在服务端内存中将其拍平为 Markdown
+        const content = processDocumentToMarkdown(docData);
+        
+        return {
+          title: docData.document.title || "未命名文档",
+          content,
+          type: docCtx.type
+        };
+      });
+
+      const docs = await Promise.all(docPromises);
+
+      // 注入构建器
+      for (const doc of docs) {
+        if (doc && doc.content) {
+          builder.withDocument(doc.title, doc.content, doc.type);
+        }
+      }
+    } catch (error) {
+      console.error("Failed to fetch context documents:", error);
+      // 出错时不中断流程，仅打印日志，保证对话能继续进行（尽管缺失了部分上下文）
+    }
   }
 
   return builder.build();

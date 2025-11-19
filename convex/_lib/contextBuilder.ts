@@ -72,7 +72,11 @@ export class ContextBuilder {
 
   /**
    * 根据指定类型，添加一个文档作为上下文。
-   * 文档内容会被格式化，并明确标注来源，然后路由到正确的上下文部分。
+   * 
+   * 差异化处理策略：
+   * - 核心任务/输出规范：直接拼接内容，去除任何标题或来源标注，确保指令纯粹、直接。
+   * - 背景信息：保留标题包装，帮助 AI 区分不同的参考资料来源。
+   * 
    * @param title 文档的标题。
    * @param content 文档的主体内容。
    * @param type 文档的意图类型，决定其在最终提示中的角色。
@@ -83,16 +87,19 @@ export class ContextBuilder {
     type: "core_task" | "specification" | "background_info"
   ): this {
     if (content) {
-      const formattedDocument = `--- 来自用户文档: ${title} ---\n${content}`;
       switch (type) {
         case "core_task":
-          this.withCoreTask(formattedDocument);
+          // 任务是指令，直接拼接内容，避免“来自文档”等包装词造成困惑
+          this.withCoreTask(content);
           break;
         case "specification":
-          this.withSpecification(formattedDocument);
+          // 规范也是指令，直接拼接
+          this.withSpecification(content);
           break;
         case "background_info":
         default:
+          // 背景信息保留来源标注，作为参考资料提供
+          const formattedDocument = `--- 参考资料: ${title} ---\n${content}`;
           this.withBackgroundInfo(formattedDocument);
           break;
       }
