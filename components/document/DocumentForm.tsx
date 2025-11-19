@@ -234,6 +234,7 @@ export const DocumentForm = ({
             onContentChange={handleContentChange}
             placeholder={`输入"/"打开菜单`}
             editable={!disabled}
+            documentId={documentId}
           />
         )}
       </section>

@@ -13,12 +13,14 @@ import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import './tiptap-editor.css';
+import { useMarkdownSync } from '@/hooks/useMarkdownSync';
 
 interface TiptapEditorProps {
   content: string;
   onContentChange: (content: string) => void;
   placeholder?: string;
   editable?: boolean;
+  documentId?: string;
 }
 
 /**
@@ -49,7 +51,8 @@ export const TiptapEditor = ({
   content, 
   onContentChange, 
   placeholder,
-  editable = true
+  editable = true,
+  documentId
 }: TiptapEditorProps) => {
 
   // 浮动菜单的key,用更新key的方式来强制刷新 菜单的显示,用来处理中文输入 shouldShow 不执行的问题
@@ -110,6 +113,9 @@ export const TiptapEditor = ({
       onContentChange(jsonString);
     },
   });
+
+  // 使用惰性同步 Hook：在空闲时将内容同步为 Markdown
+  useMarkdownSync(documentId, editor);
 
   // 当外部content变化时，更新编辑器内容
   useEffect(() => {

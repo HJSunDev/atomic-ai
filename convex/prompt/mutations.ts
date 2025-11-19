@@ -248,6 +248,51 @@ export const updateDocumentContent = mutation({
 
 
 /**
+ * 更新文档内容的 Markdown 缓存
+ * 
+ * 此接口用于"懒惰更新"文档的 Markdown 视图，服务于 AI 上下文构建。
+ * 
+ * 设计特性：
+ * 1. 低频调用：仅在用户停止输入一段时间后，或离开文档时调用
+ * 2. 弱一致性：不要求与 content (JSON) 实时强一致，但最终一致
+ * 3. 服务端只读：构建 prompt 时直接读取 contentMarkdown，避免 JSON->MD 的开销和 DOM 依赖
+ */
+export const updateDocumentContentMarkdown = mutation({
+  args: {
+    documentId: v.id("documents"),
+    contentMarkdown: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    const document = await ctx.db.get(args.documentId);
+    if (!document) throw new Error("目标文档不存在");
+    if (document.userId !== userId) throw new Error("无权更新此文档");
+
+    const contentBlock = await ctx.db
+      .query("blocks")
+      .withIndex("by_documentId_type", (q) => 
+        q.eq("documentId", args.documentId).eq("type", "text")
+      )
+      .first();
+
+    if (!contentBlock) {
+      throw new Error("文档内容块不存在");
+    }
+
+    // 如果新旧 Markdown 内容一致，直接返回，避免无效写入
+    if (contentBlock.contentMarkdown === args.contentMarkdown) {
+      return { success: true, updated: false } as const;
+    }
+
+    await ctx.db.patch(contentBlock._id, { contentMarkdown: args.contentMarkdown });
+    return { success: true, updated: true } as const;
+  },
+});
+
+
+/**
  * 归档文档（软删除）
  * 
  * 归档后的文档不会出现在文档列表中，但数据仍保留在数据库中，因为：
