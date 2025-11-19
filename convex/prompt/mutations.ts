@@ -547,6 +547,7 @@ export const finalizeStreamingContent = mutation({
   args: {
     documentId: v.id("documents"),
     jsonContent: v.string(),
+    markdownContent: v.optional(v.string()),
   },
   handler: async (ctx, args) => {
     const userId = (await ctx.auth.getUserIdentity())?.subject;
@@ -568,8 +569,10 @@ export const finalizeStreamingContent = mutation({
     }
 
     // 原子更新：保存最终内容，保留 streamingMarkdown 用于调试
+    // 同时更新 contentMarkdown，AI 生成的结果是 Markdown
     await ctx.db.patch(contentBlock._id, { 
       content: args.jsonContent,
+      contentMarkdown: args.markdownContent,
       // streamingMarkdown: "", // 保留用于调试
       isStreaming: false,
     });

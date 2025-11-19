@@ -82,6 +82,10 @@ export const promptSchema = {
     // 文本内容（Tiptap JSON 格式字符串）。为内容块时，有值；为引用块时，为空
     // 用于：用户手动编辑的内容、AI 生成完成后转换的内容
     content: v.optional(v.string()),
+    // 文档内容的 Markdown 缓存（惰性更新）
+    // 用于：AI 上下文构建、Markdown 预览等只读场景
+    // 策略：仅在写操作结束时（防抖+空闲）更新，不保证与 content 实时一致，但保证最终一致
+    contentMarkdown: v.optional(v.string()),
     // AI 流式生成的临时内容（Markdown 格式字符串）
     // 仅在 AI 生成过程中使用，用于前端实时渲染，生成完成后会转换为 JSON 格式存入 content 字段
     streamingMarkdown: v.optional(v.string()),

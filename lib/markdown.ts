@@ -113,6 +113,7 @@ const createTolerantSerializer = (strict: boolean = false): MarkdownSerializer =
 };
 
 /**
+ * 已废弃：使用 jsonToMarkdownV2 替代
  * 将 Tiptap JSON 格式的文档内容转换为 Markdown 字符串
  * 
  * 使用场景：从数据库取出 JSON 格式数据，处理为 MD 内容

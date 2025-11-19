@@ -88,9 +88,11 @@ export const DocumentForm = ({
         // 【必需】调用 finalizeStreamingContent 保存到数据库
         // 作用：1) 持久化 content；2) 设置 isStreaming=false（updateContentMutation 做不到）
         // 与 setContent 的关系：setContent 更新本地状态消除闪烁，此处确保数据持久化
+        // 3. 同时持久化 Markdown，用于服务端上下文构建
         finalizeStreamingContent({
           documentId: documentId as Id<"documents">,
           jsonContent: jsonString,
+          markdownContent: streamingMarkdown,
         })
           .then(() => {
             console.log('AI 生成内容已成功转换并保存');
