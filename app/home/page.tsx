@@ -4,7 +4,7 @@ import { useSidebarMenuStore, MenuItemId } from "@/store";
 import { ReactNode, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { ChatModule} from "./_chat/ChatModule";
-import { PromptStudioModule } from "./_prompt-studio/PromptStudioModule";
+import { AiCreationStudio } from "./_ai-creation/AiCreationStudio";
 import { HomeModule } from "./_home/HomeModule";
 import { useManageAiContext } from "@/hooks/use-manage-ai-context";
 import { AiContext } from "@/store/home/use-ai-context-store";
@@ -25,7 +25,7 @@ const MenuPlaceholder = ({ title, description }: PlaceholderProps) => (
 // 定义菜单模块到AI上下文的映射关系
 const MENU_TO_AI_CONTEXT: Record<string, AiContext | null> = {
   "home": { id: "home-module", type: "home", showCatalyst: true, catalystPlacement: 'global' },
-  "prompt-studio": { id: "prompt-studio-module", type: "prompt-studio", showCatalyst: false, catalystPlacement: 'global' },
+  "ai-creation": { id: "ai-creation-module", type: "ai-creation", showCatalyst: false, catalystPlacement: 'global' },
   "chat": { id: "chat-module", type: "chat", showCatalyst: false, catalystPlacement: 'global' },
   "discovery": { id: "discovery-module", type: "discovery", showCatalyst: false, catalystPlacement: 'global' },
   "documents": { id: "documents-module", type: "documents", showCatalyst: false, catalystPlacement: 'global' },
@@ -62,7 +62,7 @@ export default function DashboardPage() {
     // 主页模块
     "home": <HomeModule />,
     // 智创模块使用独立组件
-    "prompt-studio": <PromptStudioModule />,
+    "ai-creation": <AiCreationStudio />,
     // 聊天模块使用独立组件
     "chat": <ChatModule />,
     // 发现模块

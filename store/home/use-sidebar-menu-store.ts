@@ -4,7 +4,7 @@ import { persist } from "zustand/middleware";
 // 定义菜单项类型
 export type MenuItemId = 
   | "home"
-  | "prompt-studio" 
+  | "ai-creation" 
   | "chat"
   | "discovery"
   | "settings" 
@@ -22,7 +22,7 @@ export interface MenuItemMetadata {
 // 菜单项元数据配置
 export const MENU_ITEMS_CONFIG: Record<MenuItemId, MenuItemMetadata> = {
   "home": { id: "home" },
-  "prompt-studio": { id: "prompt-studio" },
+  "ai-creation": { id: "ai-creation" },
   "chat": { id: "chat" },
   "discovery": { id: "discovery" },
   "documents": { id: "documents" },

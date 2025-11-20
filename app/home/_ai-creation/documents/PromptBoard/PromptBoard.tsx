@@ -31,7 +31,7 @@ import {
 // 引入 uuid 用于生成唯一 id
 import { v4 as uuidv4 } from 'uuid';
 // 导入预览面板组件
-import { PromptPreviewPanel } from './PromptPreviewPanel';
+import { PromptPreviewPanel } from '../PromptPreviewPanel';
 // 导入 toast 提示
 import { toast } from 'sonner';
 // 导入新手指引组件

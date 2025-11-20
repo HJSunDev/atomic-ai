@@ -1,14 +1,15 @@
 "use client";
 
 import { useCallback } from "react";
-import { AiCreationInput, type CreationInputPayload } from "./_components/AiCreationInput";
-import { DocumentCreationView } from "./_components/DocumentCreationView";
+import { AiCreationInput, type CreationInputPayload } from "./platform/AiCreationInput";
+// 文档模块视图：从 documents 目录引入
+import { DocumentCreationView } from "./documents/DocumentCreationView";
 
 import { useGenerationOrchestrator } from "@/services/prompt/generationOrchestrator";
 import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 
 /**
- * 智创模块主入口 (PromptStudioModule)
+ * 智创模块主入口 (AiCreationStudio)
  * 
  * 职责：
  * 1. 作为 AI 创作场景的统一入口容器 (Shell)
@@ -16,7 +17,7 @@ import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
  * 3. 管理和分发业务逻辑 (Orchestrator Dispatch)
  * 4. 动态渲染下方的业务视图 (DocumentCreationView / WebCreationView 等)
  */
-export const PromptStudioModule = () => {
+export const AiCreationStudio = () => {
   // 引入文档生成编排器
   // TODO: 未来这里可以引入网页生成、图片生成等其他编排器
   const { startGeneration } = useGenerationOrchestrator();

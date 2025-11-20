@@ -19,7 +19,7 @@ export interface AiContext {
   /**
    * 上下文的类型，用于区分不同的业务场景。
    * 这是未来AI助手根据不同场景提供不同功能的基础。
-   * @example 'home', 'document', 'prompt-studio'
+   * @example 'home', 'document', 'ai-creation'
    */
   type: string; 
   

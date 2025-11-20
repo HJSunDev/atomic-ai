@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect, useRef } from 'react';
 import { X, MoreHorizontal, GripVertical, Loader2 } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import type { GridItem } from './types';
+import type { GridItem } from './PromptBoard/types';
 import {
   DndContext,
   closestCenter,
