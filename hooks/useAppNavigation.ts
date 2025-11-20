@@ -18,12 +18,22 @@ export const useAppNavigation = () => {
   // 文档状态：用于在从独立路由返回主页前确保状态清理
   const closeDocument = useDocumentStore((state) => state.close);
 
-  // 统一菜单导航：在非 /home 时执行返回主页导航
+  // 统一菜单导航：处理不同类型的菜单跳转
   const navigateToMenu = useCallback((menuId: MenuItemId) => {
-    // 先更新菜单状态，便于 /home 页面按 activeMenuId 渲染对应模块
+    // 1. 更新菜单状态（高亮）
     setActiveMenu(menuId);
 
-    // 当当前路径不是 /home 时，需要导航回主页
+    // 2. 特殊路由处理
+    if (menuId === "factory") {
+      // 工坊是独立路由，直接跳转
+      if (!pathname.startsWith("/home/factory")) {
+        router.push("/home/factory");
+      }
+      return;
+    }
+
+    // 3. 常规主页模块处理 (home, ai-creation, chat 等)
+    // 这些模块实际上是在 /home 路由下通过条件渲染显示的
     if (pathname !== "/home") {
       // 关闭可能残留的文档打开状态，避免状态与UI不一致
       closeDocument();
@@ -38,5 +48,3 @@ export const useAppNavigation = () => {
     isInHomePage: pathname === "/home",
   };
 };
-
-

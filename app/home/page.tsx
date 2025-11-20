@@ -76,6 +76,15 @@ export default function DashboardPage() {
   };
 
   // 确定要渲染的模块和对应的菜单ID (处理 fallback 情况)
+  // 注意：对于独立路由的模块（如 factory），这里不应该回退到 home，而是应该渲染空/Loading，等待路由跳转
+  const isStandaloneRoute = ["factory"].includes(activeMenuId);
+  
+  if (isStandaloneRoute) {
+    // 如果是独立路由，渲染一个空白容器，或者透明Loading
+    // 避免 fallback 到 "home" 导致的一瞬间闪烁
+    return <div className="h-full w-full bg-background/50 animate-pulse" />;
+  }
+
   const effectiveMenuId = activeMenuId in menuContentMap ? activeMenuId : "home";
   // 获取当前要渲染的模块内容
   const currentContent = menuContentMap[effectiveMenuId];

@@ -6,6 +6,7 @@ export type MenuItemId =
   | "home"
   | "ai-creation" 
   | "chat"
+  | "factory"
   | "discovery"
   | "settings" 
   | "profile" 
@@ -24,6 +25,7 @@ export const MENU_ITEMS_CONFIG: Record<MenuItemId, MenuItemMetadata> = {
   "home": { id: "home" },
   "ai-creation": { id: "ai-creation" },
   "chat": { id: "chat" },
+  "factory": { id: "factory" },
   "discovery": { id: "discovery" },
   "documents": { id: "documents" },
   "knowledge-base": { id: "knowledge-base" },

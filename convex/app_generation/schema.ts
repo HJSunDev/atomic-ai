@@ -19,7 +19,6 @@ export const appGenerationSchema = {
     visitCount: v.optional(v.number()), // 访问次数 (预留)
   })
     .index("by_user", ["userId"])
-    .index("by_creation_time", ["creationTime"])
     // 新增索引：用于查询公开已发布的应用，按发布时间倒序
     .index("by_published", ["isPublished", "publishedAt"]),
 

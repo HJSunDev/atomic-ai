@@ -13,6 +13,7 @@ import {
   History,
   MessageSquare,
   Compass,
+  AppWindow,
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -311,6 +312,54 @@ export function Sidebar() {
               <span>聊天</span>
             </div>
           )}
+
+          {/* 工坊 (App Factory) */}
+          {collapsed ? (
+            <div
+              className={cn(
+                "flex flex-col items-center py-2 group cursor-pointer",
+                activeMenuId === "factory" && "rounded-lg"
+              )}
+              onClick={() => handleMenuClick("factory")}
+            >
+              <div className={cn(
+                "h-9 w-9 flex items-center justify-center rounded-full transition-colors",
+                activeMenuId === "factory" 
+                  ? "bg-[#F1F0EF] dark:bg-[#27272A]" 
+                  : "group-hover:bg-[#ECEDEE]/50 dark:group-hover:bg-[#27272A]/70"
+              )}>
+                <AppWindow className={cn(
+                  "h-[1.125rem] w-[1.125rem]",
+                  activeMenuId === "factory"
+                    ? "text-[rgb(95,94,91)] dark:text-gray-200"
+                    : "text-gray-600 dark:text-gray-400 dark:group-hover:text-gray-300"
+                )} />
+              </div>
+              <span className={cn(
+                "text-[0.6875rem] mt-1",
+                activeMenuId === "factory" && "text-[rgb(95,94,91)] dark:text-gray-200 font-medium"
+              )}>工坊</span>
+            </div>
+          ) : (
+            <div
+              className={cn(
+                "w-full flex items-center rounded-lg px-2.5 py-2 text-sm font-medium transition-colors cursor-pointer",
+                activeMenuId === "factory"
+                  ? "bg-[#F1F0EF] text-[rgb(95,94,91)] dark:bg-[#27272A] dark:text-gray-200"
+                  : "hover:bg-[#ECEDEE]/50 dark:hover:bg-[#27272A]/70 text-[rgb(95,94,91)] dark:text-gray-300"
+              )}
+              onClick={() => handleMenuClick("factory")}
+            >
+              <AppWindow className={cn(
+                "h-[1rem] w-[1rem] mr-3",
+                activeMenuId === "factory"
+                  ? "text-[rgb(95,94,91)] dark:text-gray-200"
+                  : "text-gray-600 dark:text-gray-400"
+              )} />
+              <span>工坊</span>
+            </div>
+          )}
+
           
           {/* 发现 */}
           {collapsed ? (

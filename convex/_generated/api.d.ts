@@ -16,6 +16,8 @@ import type * as _lib_envUtils from "../_lib/envUtils.js";
 import type * as _lib_models from "../_lib/models.js";
 import type * as _lib_taskUtils from "../_lib/taskUtils.js";
 import type * as _lib_timeUtils from "../_lib/timeUtils.js";
+import type * as app_generation_mutations from "../app_generation/mutations.js";
+import type * as app_generation_queries from "../app_generation/queries.js";
 import type * as chat_action from "../chat/action.js";
 import type * as chat_mutations from "../chat/mutations.js";
 import type * as chat_queries from "../chat/queries.js";
@@ -54,6 +56,8 @@ declare const fullApi: ApiFromModules<{
   "_lib/models": typeof _lib_models;
   "_lib/taskUtils": typeof _lib_taskUtils;
   "_lib/timeUtils": typeof _lib_timeUtils;
+  "app_generation/mutations": typeof app_generation_mutations;
+  "app_generation/queries": typeof app_generation_queries;
   "chat/action": typeof chat_action;
   "chat/mutations": typeof chat_mutations;
   "chat/queries": typeof chat_queries;
