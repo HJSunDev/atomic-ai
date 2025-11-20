@@ -2,6 +2,7 @@ import { defineSchema, defineTable } from "convex/server";
 import { chatSchema } from "./chat/schema";
 import { promptSchema } from "./prompt/schema";
 import { userModelPreferencesSchema } from "./userModelPreferences/schema";
+import { appGenerationSchema } from "./app_generation/schema";
 
 export default defineSchema({
   // 合并chat模块的 schema
@@ -12,4 +13,8 @@ export default defineSchema({
 
   // 合并userModelPreferences模块的 schema
   ...userModelPreferencesSchema,
-}); 
+
+  // 合并app_generation模块的 schema
+  ...appGenerationSchema,
+});
+ 
