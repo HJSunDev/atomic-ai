@@ -1,7 +1,5 @@
 "use client";
 
-import { useEffect } from "react";
-import { useSidebarMenuStore } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Plus, AppWindow } from "lucide-react";
 import Link from "next/link";
@@ -10,15 +8,9 @@ import { api } from "@/convex/_generated/api";
 import { useRouter } from "next/navigation";
 
 export default function FactoryListPage() {
-  const { setActiveMenu } = useSidebarMenuStore();
   const router = useRouter();
   const createApp = useMutation(api.app_generation.mutations.createApp);
   
-  // 同步侧边栏状态
-  useEffect(() => {
-    setActiveMenu("factory"); 
-  }, [setActiveMenu]);
-
   // 获取应用列表
   const apps = useQuery(api.app_generation.queries.listApps);
 

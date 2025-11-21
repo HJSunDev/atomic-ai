@@ -11,6 +11,7 @@ import { useHasMounted } from "@/hooks/use-has-mounted";
 import { ClientOnly } from "@/components/client-only";
 import { DocumentViewer } from "@/components/document/DocumentViewer";
 import { useAiContextStore } from "@/store/home/use-ai-context-store";
+import { useMenuRouteSync } from "@/hooks/use-menu-route-sync";
 
 // 一个用于调试AI上下文堆栈的独立组件
 const AiContextStackDebugger = () => {
@@ -49,6 +50,9 @@ interface DashboardLayoutProps {
 export default function DashboardLayout({ children }: DashboardLayoutProps) {
   // 检测组件是否已在客户端挂载
   const hasMounted = useHasMounted();
+  
+  // 启用路由与菜单状态的自动同步
+  useMenuRouteSync();
   
   // 使用全局状态管理中的AI面板状态和方法
   const { showAiPanel, setAiPanelVisibility } = useAiPanelStore();

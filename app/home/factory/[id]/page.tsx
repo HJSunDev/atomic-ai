@@ -1,7 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
-import { useSidebarMenuStore } from "@/store";
+import { useMemo } from "react";
 import { useParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
 import { useManageAiContext } from "@/hooks/use-manage-ai-context";
@@ -46,12 +45,6 @@ const PreviewPanel = ({ appId, code }: { appId: Id<"apps">, code?: string }) => 
 export default function FactoryEditorPage() {
   const params = useParams();
   const appId = params.id as Id<"apps">; // 注意这里是 params.id，因为文件夹叫 [id]
-  const { setActiveMenu } = useSidebarMenuStore();
-
-  // 1. 保持 Sidebar 选中状态
-  useEffect(() => {
-    setActiveMenu("factory");
-  }, [setActiveMenu]);
 
   // 2. 注册 AI 上下文
   // 使用 useMemo 避免对象引用变化导致的无限重渲染
