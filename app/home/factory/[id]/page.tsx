@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
 import { useManageAiContext } from "@/hooks/use-manage-ai-context";
@@ -15,22 +15,23 @@ export default function FactoryEditorPage() {
   const params = useParams();
   const appId = params.id as Id<"apps">; 
 
+  // 本地状态管理生成的代码（模拟模式）
+  const [generatedCode, setGeneratedCode] = useState<string | undefined>(undefined);
+
   // 2. 注册 AI 上下文
   const aiContext = useMemo(() => ({
     id: `factory-editor-${appId}`,
     type: "factory" as const, 
     showCatalyst: false, 
     catalystPlacement: 'global' as const
-    // TODO: Add system instructions specific to app generation here if needed
   }), [appId]);
 
   useManageAiContext(aiContext);
 
-  // 3. 获取应用详情
+  // 3. 获取应用详情（暂时使用 mock 数据，如果查询失败）
   const app = useQuery(api.app_generation.queries.getApp, { appId });
 
-  // 为了演示效果，即使没有 app 也可以先显示 UI (或者显示 Loading)
-  // 这里我们假设 app 加载中显示 Loading，加载失败显示错误，成功则显示编辑器
+  // 模拟模式：即使没有后端数据也能运行
   if (app === undefined) {
       return (
         <div className="h-screen flex flex-col items-center justify-center space-y-4">
@@ -40,9 +41,13 @@ export default function FactoryEditorPage() {
       );
   }
 
-  if (app === null) {
-      return <div className="h-screen flex items-center justify-center">应用不存在或无权访问</div>;
-  }
+  // 如果后端数据不存在，使用模拟数据
+  const appData = app || {
+    name: "演示应用",
+    description: "前端模拟模式",
+    v: 0,
+    latestCode: undefined,
+  };
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
@@ -54,11 +59,11 @@ export default function FactoryEditorPage() {
             </div>
             <div>
                 <div className="flex items-center gap-2">
-                    <h2 className="font-semibold text-sm">{app.name}</h2>
-                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full border">v{app.v}.0</span>
+                    <h2 className="font-semibold text-sm">{appData.name}</h2>
+                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full border">v{appData.v}.0</span>
                 </div>
                 <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">
-                    {app.description || "无描述"}
+                    {appData.description || "无描述"}
                 </p>
             </div>
         </div>
@@ -76,14 +81,20 @@ export default function FactoryEditorPage() {
             
             {/* 左侧：AI 交互区 */}
             <ResizablePanel defaultSize={25} minSize={20} maxSize={40} className="border-r z-10 bg-background">
-                <EditorChatPanel appId={appId} />
+                <EditorChatPanel 
+                  appId={appId} 
+                  onCodeGenerated={(code) => setGeneratedCode(code)}
+                />
             </ResizablePanel>
             
             <ResizableHandle className="w-[1px] bg-border" />
             
             {/* 右侧：预览与代码区 */}
             <ResizablePanel defaultSize={75}>
-                <PreviewPanel appId={appId} code={app.latestCode} />
+                <PreviewPanel 
+                  appId={appId} 
+                  code={generatedCode || appData.latestCode} 
+                />
             </ResizablePanel>
             
         </ResizablePanelGroup>
