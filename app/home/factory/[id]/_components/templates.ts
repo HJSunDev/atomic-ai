@@ -446,87 +446,56 @@ export function buildSandpackFiles(generatedCode: string): SandpackFiles {
  * 默认的空白模板（当还没有生成任何代码时使用）
  */
 export const EMPTY_TEMPLATE = `import React, { useState } from 'react';
-import { motion, useMotionValue } from 'framer-motion';
-import { Sparkles, Code2, Palette, Zap, Terminal, LayoutTemplate, MousePointer2, Command, Box, Check } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Sparkles, Code2, Zap, ArrowRight, Check, Terminal, Copy, Command } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ------------------------------------------
-// 鼠标跟随聚光灯卡片组件
+// 设计系统组件 - Bento Grid 风格
 // ------------------------------------------
-function SpotlightCard({ children, className = "", spotlightColor = "rgba(124, 58, 237, 0.15)" }) {
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
 
-  function handleMouseMove({ currentTarget, clientX, clientY }) {
-    const { left, top } = currentTarget.getBoundingClientRect();
-    mouseX.set(clientX - left);
-    mouseY.set(clientY - top);
-  }
-
+function BentoCard({ children, className, delay = 0 }: { children: React.ReactNode; className?: string; delay?: number }) {
   return (
-    <div
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
       className={cn(
-        "group relative border border-slate-200 bg-white overflow-hidden rounded-xl",
+        "relative overflow-hidden bg-white rounded-3xl border border-slate-100 shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-8",
+        "hover:shadow-[0_8px_30px_rgb(0,0,0,0.08)] transition-shadow duration-500",
         className
       )}
-      onMouseMove={handleMouseMove}
     >
-      <motion.div
-        className="pointer-events-none absolute -inset-px opacity-0 transition duration-300 group-hover:opacity-100"
-        style={{
-          background: useMotionValue(
-            \`radial-gradient(600px circle at \${mouseX}px \${mouseY}px, \${spotlightColor}, transparent 80%)\`
-          )
-        }}
-      />
-      <div className="relative h-full">
-        {children}
-      </div>
-    </div>
+      {children}
+    </motion.div>
   );
 }
 
-// ------------------------------------------
-// 动态背景组件
-// ------------------------------------------
-function AnimatedBackground() {
+function PromptChip({ text, index, onCopy, copiedIndex }: { text: string; index: number; onCopy: (t: string, i: number) => void; copiedIndex: number | null }) {
+  const isCopied = copiedIndex === index;
+  
   return (
-    <div className="absolute inset-0 overflow-hidden pointer-events-none">
-      {/* 极简网格 */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
-      
-      {/* 柔和光晕 */}
-      <div className="absolute -left-[10%] top-[20%] w-[40vw] h-[40vw] rounded-full bg-purple-200/30 blur-[120px] mix-blend-multiply animate-blob" />
-      <div className="absolute -right-[10%] top-[10%] w-[40vw] h-[40vw] rounded-full bg-blue-200/30 blur-[120px] mix-blend-multiply animate-blob animation-delay-2000" />
-      
-      {/* 漂浮图标 */}
-      {[
-        { Icon: Code2, color: "text-blue-400", left: "10%", top: "20%", delay: 0 },
-        { Icon: Palette, color: "text-purple-400", left: "85%", top: "15%", delay: 1.5 },
-        { Icon: Box, color: "text-pink-400", left: "15%", top: "80%", delay: 3 },
-        { Icon: Zap, color: "text-yellow-400", left: "80%", top: "75%", delay: 4.5 },
-      ].map((item, i) => (
-        <motion.div
-          key={i}
-          className={\`absolute \${item.color} opacity-20\`}
-          style={{ left: item.left, top: item.top }}
-          animate={{
-            y: [0, -20, 0],
-            opacity: [0.2, 0.5, 0.2],
-            rotate: [0, 10, 0],
-          }}
-          transition={{
-            duration: 8 + i,
-            repeat: Infinity,
-            ease: "easeInOut",
-            delay: item.delay,
-          }}
-        >
-          <item.Icon size={48} strokeWidth={1.5} />
-        </motion.div>
-      ))}
-    </div>
+    <motion.button
+      whileHover={{ scale: 1.02, backgroundColor: "rgba(241, 245, 249, 1)" }}
+      whileTap={{ scale: 0.98 }}
+      onClick={() => onCopy(text, index)}
+      className={cn(
+        "group flex items-center justify-between w-full p-4 text-left rounded-xl border transition-all duration-200",
+        isCopied 
+          ? "bg-slate-900 border-slate-900 text-slate-50" 
+          : "bg-slate-50/50 border-slate-100 text-slate-600 hover:border-slate-300"
+      )}
+    >
+      <span className={cn("text-sm font-medium truncate pr-4", "text-slate-700")}>
+        {text}
+      </span>
+      <div className={cn(
+        "flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200",
+        isCopied ? "bg-slate-800 text-slate-50" : "bg-white text-slate-400 opacity-0 group-hover:opacity-100 shadow-sm"
+      )}>
+        {isCopied ? <Check size={12} strokeWidth={3} /> : <Copy size={12} />}
+      </div>
+    </motion.button>
   );
 }
 
@@ -534,38 +503,39 @@ function AnimatedBackground() {
 // 主页面
 // ------------------------------------------
 export default function GeneratedApp() {
-  const [activeCard, setActiveCard] = useState<number | null>(null);
   const [copiedIndex, setCopiedIndex] = useState<number | null>(null);
 
   const handleCopy = (text: string, index: number) => {
-    navigator.clipboard.writeText(text);
-    setCopiedIndex(index);
-    setTimeout(() => setCopiedIndex(null), 2000);
-  };
-
-  const features = [
-    { 
-      title: "智能生成", 
-      desc: "自然语言转 UI", 
-      icon: Sparkles, 
-      color: "text-purple-600", 
-      bg: "bg-purple-100" 
-    },
-    { 
-      title: "优雅代码", 
-      desc: "生产级 React 组件", 
-      icon: Code2, 
-      color: "text-blue-600", 
-      bg: "bg-blue-100" 
-    },
-    { 
-      title: "即时预览", 
-      desc: "毫秒级实时渲染", 
-      icon: Zap, 
-      color: "text-amber-600", 
-      bg: "bg-amber-100" 
+    try {
+      // 尝试使用现代 Clipboard API
+      navigator.clipboard.writeText(text).then(() => {
+        setCopiedIndex(index);
+        setTimeout(() => setCopiedIndex(null), 2000);
+      }).catch(() => {
+        // 降级方案：使用传统的 execCommand
+        const textArea = document.createElement("textarea");
+        textArea.value = text;
+        textArea.style.position = "fixed";
+        textArea.style.left = "-9999px";
+        textArea.style.top = "0";
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        
+        try {
+          document.execCommand('copy');
+          setCopiedIndex(index);
+          setTimeout(() => setCopiedIndex(null), 2000);
+        } catch (err) {
+          console.error('Fallback: Oops, unable to copy', err);
+        }
+        
+        document.body.removeChild(textArea);
+      });
+    } catch (err) {
+      console.error('Copy failed', err);
     }
-  ];
+  };
 
   const suggestions = [
     "设计一个 SaaS 仪表盘，包含数据概览和侧边栏",
@@ -575,162 +545,99 @@ export default function GeneratedApp() {
   ];
 
   return (
-    <div className="min-h-screen w-full bg-slate-50/50 flex items-center justify-center relative font-sans text-slate-900 overflow-hidden p-6">
+    <div className="min-h-screen w-full bg-[#FAFAFA] flex items-center justify-center p-6 font-sans text-slate-900 relative overflow-hidden">
+      {/* 响应式设置 */}
       <style>{\`
-        @keyframes blob {
-          0% { transform: translate(0px, 0px) scale(1); }
-          33% { transform: translate(30px, -50px) scale(1.1); }
-          66% { transform: translate(-20px, 20px) scale(0.9); }
-          100% { transform: translate(0px, 0px) scale(1); }
-        }
-        .animate-blob {
-          animation: blob 7s infinite;
-        }
-        .animation-delay-2000 {
-          animation-delay: 2s;
+        html { font-size: 14px; }
+        @media screen and (min-width: 375px) {
+          html { font-size: clamp(14px, calc(16 * (100vw / 1440)), 18px); }
         }
       \`}</style>
-      <AnimatedBackground />
 
-      <div className="w-full max-w-6xl grid lg:grid-cols-2 gap-16 relative z-10 items-center">
-        
-        {/* 左侧：文案与引导 */}
-        <motion.div 
-          initial={{ opacity: 0, x: -30 }}
-          animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="space-y-10"
-        >
-          <div className="space-y-6">
-            <motion.div 
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 text-slate-600 text-sm font-medium shadow-sm"
-            >
-              <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-              <span>AI 引擎就绪</span>
-            </motion.div>
+      {/* 极简背景纹理 - 噪点 + 细微网格 */}
+      <div className="absolute inset-0 pointer-events-none">
+        <div className="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 brightness-100 contrast-150 mix-blend-multiply"></div>
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#00000008_1px,transparent_1px),linear-gradient(to_bottom,#00000008_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]"></div>
+      </div>
 
-            <h1 className="text-5xl sm:text-6xl font-bold tracking-tight leading-[1.1]">
-              构建未来，<br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-600 to-blue-600">
-                只需一句话
-              </span>
-            </h1>
-            
-            <p className="text-xl text-slate-500 leading-relaxed max-w-xl">
-              告别繁琐的样板代码。描述你的想法，AI 将为你生成包含完整设计、逻辑和交互的 React 应用。
-            </p>
-          </div>
-
-          {/* 推荐指令区 */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 text-sm font-semibold text-slate-400 uppercase tracking-wider">
-              <Terminal className="w-4 h-4" />
-              <span>尝试输入</span>
-            </div>
-            <div className="flex flex-col gap-3">
-              {suggestions.map((text, i) => (
-                <motion.div
-                  key={i}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.5 + i * 0.1 }}
-                  onClick={() => handleCopy(text, i)}
-                >
-                  <div className="group flex items-center gap-3 p-3 rounded-lg bg-white border border-slate-200 text-slate-600 hover:border-purple-300 hover:shadow-md transition-all cursor-pointer relative overflow-hidden">
-                    <div className="absolute inset-0 bg-purple-50 opacity-0 group-hover:opacity-100 transition-opacity" />
-                    
-                    <div className="relative z-10 w-6 h-6 rounded-md bg-slate-100 flex items-center justify-center group-hover:bg-purple-100 transition-colors">
-                      {copiedIndex === i ? (
-                        <Check className="w-3 h-3 text-green-600" />
-                      ) : (
-                        <Command className="w-3 h-3 text-slate-400 group-hover:text-purple-600" />
-                      )}
-                    </div>
-                    
-                    <span className="relative z-10 text-sm group-hover:text-slate-900">{text}</span>
-                    
-                    <div className="relative z-10 ml-auto transition-all duration-300">
-                      {copiedIndex === i ? (
-                        <span className="text-xs text-green-600 font-medium px-2 py-1 rounded-full bg-green-50">已复制</span>
-                      ) : (
-                        <span className="text-xs text-purple-600 font-medium opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all inline-block">点击复制</span>
-                      )}
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-
-        {/* 右侧：视觉展示 */}
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.8, delay: 0.2 }}
-          className="hidden lg:block relative"
-        >
-          <div className="absolute inset-0 bg-gradient-to-tr from-purple-500/10 to-blue-500/10 rounded-3xl blur-3xl" />
+      <div className="w-full max-w-6xl relative z-10">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 h-full">
           
-          <div className="grid gap-5 relative">
-            {features.map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ x: 50, opacity: 0 }}
-                animate={{ x: 0, opacity: 1 }}
-                transition={{ delay: 0.4 + i * 0.15 }}
-                onHoverStart={() => setActiveCard(i)}
-                onHoverEnd={() => setActiveCard(null)}
-                style={{ 
-                  zIndex: activeCard === i ? 20 : 10 - i,
-                }}
-                className="relative"
-              >
-                <SpotlightCard className={cn(
-                  "p-6 transition-all duration-500 ease-out",
-                  activeCard !== null && activeCard !== i ? "scale-95 opacity-60 blur-[1px]" : "hover:scale-105 hover:shadow-xl"
-                )}>
-                  <div className="flex items-start gap-5">
-                    <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center shrink-0", feature.bg)}>
-                      <feature.icon className={cn("w-7 h-7", feature.color)} />
-                    </div>
-                    <div className="space-y-1">
-                      <h3 className="text-lg font-bold text-slate-900">{feature.title}</h3>
-                      <p className="text-slate-500">{feature.desc}</p>
-                    </div>
-                    <div className="ml-auto self-center w-8 h-8 rounded-full bg-slate-50 flex items-center justify-center text-slate-300 group-hover:bg-purple-100 group-hover:text-purple-600 transition-colors">
-                      <Sparkles className="w-4 h-4" />
-                    </div>
-                  </div>
-                </SpotlightCard>
-              </motion.div>
-            ))}
+          {/* 区域 1: 核心标题 (占 8 列) */}
+          <BentoCard className="lg:col-span-8 flex flex-col justify-between min-h-[320px] lg:min-h-[400px] bg-gradient-to-br from-white to-slate-50/50">
+            <div className="space-y-6 max-w-2xl relative z-10">
+              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-slate-900 text-white text-xs font-bold tracking-wide uppercase">
+                <Sparkles className="w-3 h-3 text-yellow-300" />
+                <span>AI Native</span>
+              </div>
+              <h1 className="text-5xl sm:text-6xl font-bold tracking-tighter text-slate-900 leading-[1.1]">
+                Design at the <br/>
+                <span className="text-slate-400">speed of thought.</span>
+              </h1>
+              <p className="text-lg text-slate-500 leading-relaxed max-w-md font-medium">
+                描述你的创意，剩下的交给我们。<br/>
+                从概念到产品，只需一瞬。
+              </p>
+            </div>
+            
+            {/* 装饰性图形 - 抽象的构建过程 */}
+            <div className="absolute right-0 bottom-0 opacity-10 pointer-events-none">
+               <svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <circle cx="300" cy="300" r="150" stroke="currentColor" strokeWidth="40" />
+                <circle cx="300" cy="300" r="100" stroke="currentColor" strokeWidth="40" opacity="0.5"/>
+              </svg>
+            </div>
+          </BentoCard>
 
-            {/* 底部代码装饰 */}
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 1 }}
-              className="absolute -bottom-12 -right-8 bg-slate-900 rounded-xl p-4 shadow-2xl border border-slate-800 w-64 rotate-[-5deg] z-30 hidden xl:block"
-            >
-              <div className="flex gap-1.5 mb-3">
-                <div className="w-2.5 h-2.5 rounded-full bg-red-500" />
-                <div className="w-2.5 h-2.5 rounded-full bg-yellow-500" />
-                <div className="w-2.5 h-2.5 rounded-full bg-green-500" />
+          {/* 区域 2: 特性展示 (占 4 列，垂直排列) */}
+          <div className="lg:col-span-4 flex flex-col gap-6">
+            <BentoCard delay={0.1} className="flex-1 flex flex-col justify-center items-start space-y-4 bg-slate-900 text-white border-slate-800">
+              <div className="w-12 h-12 rounded-2xl bg-slate-800 flex items-center justify-center mb-2">
+                <Code2 className="w-6 h-6 text-blue-400" />
               </div>
-              <div className="space-y-1.5">
-                <div className="h-2 w-3/4 bg-slate-700 rounded opacity-50" />
-                <div className="h-2 w-1/2 bg-slate-700 rounded opacity-50" />
-                <div className="h-2 w-full bg-purple-500/50 rounded" />
-                <div className="h-2 w-5/6 bg-slate-700 rounded opacity-50" />
+              <div>
+                <h3 className="text-xl font-bold">Clean Code</h3>
+                <p className="text-slate-400 text-sm mt-1">Tailwind + Motion + React</p>
               </div>
-            </motion.div>
+            </BentoCard>
+
+            <BentoCard delay={0.2} className="flex-1 flex flex-col justify-center items-start space-y-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center mb-2">
+                <Zap className="w-6 h-6 text-amber-500" fill="currentColor" />
+              </div>
+              <div>
+                <h3 className="text-xl font-bold text-slate-900">Instant UI</h3>
+                <p className="text-slate-500 text-sm mt-1">毫秒级实时预览渲染</p>
+              </div>
+            </BentoCard>
           </div>
-        </motion.div>
 
+          {/* 区域 3: 指令交互区 (占 12 列) */}
+          <BentoCard delay={0.3} className="lg:col-span-12 bg-white">
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-8">
+              <div className="shrink-0 space-y-2 md:w-64">
+                <div className="flex items-center gap-2 text-slate-400">
+                  <Terminal className="w-5 h-5" />
+                  <span className="text-xs font-bold uppercase tracking-widest">Start Here</span>
+                </div>
+                <h3 className="text-2xl font-bold text-slate-900">尝试一下</h3>
+              </div>
+
+              <div className="flex-1 w-full grid sm:grid-cols-2 gap-4">
+                {suggestions.map((text, i) => (
+                  <PromptChip 
+                    key={i} 
+                    text={text} 
+                    index={i} 
+                    onCopy={handleCopy} 
+                    copiedIndex={copiedIndex} 
+                  />
+                ))}
+              </div>
+            </div>
+          </BentoCard>
+
+        </div>
       </div>
     </div>
   );

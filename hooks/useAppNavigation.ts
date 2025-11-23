@@ -20,25 +20,30 @@ export const useAppNavigation = () => {
 
   // 统一菜单导航：处理不同类型的菜单跳转
   const navigateToMenu = useCallback((menuId: MenuItemId) => {
-    // 1. 更新菜单状态（高亮）
-    setActiveMenu(menuId);
-
-    // 2. 特殊路由处理
+    // 1. 独立路由处理 (Standalone Routes)
+    // 工坊等模块拥有独立的路由路径 /home/factory
     if (menuId === "factory") {
-      // 工坊是独立路由，直接跳转
+      // 立即更新状态，因为接下来的路由跳转是明确的
+      setActiveMenu(menuId);
       if (!pathname.startsWith("/home/factory")) {
         router.push("/home/factory");
       }
       return;
     }
 
-    // 3. 常规主页模块处理 (home, ai-creation, chat 等)
-    // 这些模块实际上是在 /home 路由下通过条件渲染显示的
-    if (pathname !== "/home") {
-      // 关闭可能残留的文档打开状态，避免状态与UI不一致
+    // 2. SPA 模块处理 (渲染在 /home 路由下的组件)
+    if (pathname === "/home") {
+      // 2.1 如果已经在主页，这是单纯的模块切换（SPA 模式）
+      // 直接修改状态，不需要触碰路由，保持 URL 纯净
+      setActiveMenu(menuId);
+    } else {
+      // 2.2 如果是从独立路由 (如 /home/factory) 返回主页
+      // 需要一种机制告诉 /home 页面我们想去哪个模块
+      // 使用 "一次性指令" (Query Param) 来传递这个意图
+      // 目标页面收到指令后会同步状态并立即清除参数
+      
       closeDocument();
-      // 返回主页以触发内容区域的逻辑渲染
-      router.push("/home");
+      router.push(`/home?module=${menuId}`);
     }
   }, [pathname, router, setActiveMenu, closeDocument]);
 
