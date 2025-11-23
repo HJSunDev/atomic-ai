@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { Eye, Smartphone, Monitor, Tablet, Code2 } from "lucide-react";
 import {
@@ -14,6 +14,9 @@ import {
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { buildSandpackFiles, EMPTY_TEMPLATE } from "./templates";
+import { HTMLPreviewPanel } from "./html/HTMLPreviewPanel";
+import { AppTypeSwitcher } from "./AppTypeSwitcher";
+import type { AppType } from "../types";
 
 export const DEFAULT_DEPENDENCIES = {
   "lucide-react": "latest",
@@ -24,10 +27,50 @@ export const DEFAULT_DEPENDENCIES = {
   "framer-motion": "latest",
 };
 
-export const PreviewPanel = ({ appId, code }: { appId: Id<"apps">, code?: string }) => {
+interface PreviewPanelProps {
+  appId: Id<"apps">;
+  code?: string;
+  appType?: AppType;
+  onAppTypeChange?: (type: AppType) => void;
+}
+
+export const PreviewPanel = ({ appId, code, appType: externalAppType, onAppTypeChange }: PreviewPanelProps) => {
+  const [appType, setAppType] = useState<AppType>(externalAppType || "react");
+  const prevExternalAppType = useRef(externalAppType);
+
+  // 同步外部传入的 appType 变化
+  useEffect(() => {
+    if (externalAppType !== undefined && externalAppType !== prevExternalAppType.current) {
+      setAppType(externalAppType);
+      prevExternalAppType.current = externalAppType;
+    }
+  }, [externalAppType]);
+
+  // 处理 appType 切换
+  const handleAppTypeChange = (type: AppType) => {
+    setAppType(type);
+    onAppTypeChange?.(type);
+  };
   const [viewMode, setViewMode] = useState<'preview' | 'code' | 'split'>('split');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
+  // 如果是 HTML 模式，使用 HTMLPreviewPanel 组件
+  if (appType === "html") {
+    return (
+      <div className="h-full flex flex-col">
+        {/* 顶部模式切换 */}
+        <div className="h-12 border-b bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0">
+          <AppTypeSwitcher value={appType} onChange={handleAppTypeChange} />
+        </div>
+        {/* HTML 预览面板 */}
+        <div className="flex-1 overflow-hidden">
+          <HTMLPreviewPanel appId={appId} code={code} />
+        </div>
+      </div>
+    );
+  }
+
+  // React 模式：使用 Sandpack
   // 使用 Shell & Slot 架构构建文件系统
   // 如果没有代码，使用空白模板；否则使用生成的代码
   const activeCode = code || EMPTY_TEMPLATE;
@@ -35,6 +78,11 @@ export const PreviewPanel = ({ appId, code }: { appId: Id<"apps">, code?: string
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950">
+      {/* 顶部模式切换 */}
+      <div className="h-12 border-b bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0">
+        <AppTypeSwitcher value={appType} onChange={handleAppTypeChange} />
+      </div>
+
       {/* Toolbar */}
       <header className="h-10 border-b bg-white dark:bg-slate-900 flex items-center justify-between px-3 shrink-0">
         <div className="flex items-center gap-1 bg-muted/50 p-0.5 rounded-md">

@@ -10,6 +10,7 @@ import { api } from "@/convex/_generated/api";
 import { Loader2, Play, Code2 } from "lucide-react";
 import { EditorChatPanel } from "./_components/EditorChatPanel";
 import { PreviewPanel } from "./_components/PreviewPanel";
+import { AppType } from "./types";
 
 export default function FactoryEditorPage() {
   const params = useParams();
@@ -17,6 +18,16 @@ export default function FactoryEditorPage() {
 
   // 本地状态管理生成的代码（模拟模式）
   const [generatedCode, setGeneratedCode] = useState<string | undefined>(undefined);
+  // 本地状态管理应用类型（模拟模式，默认 html）
+  const [appType, setAppType] = useState<AppType>("html");
+
+  // 处理模式切换：切换模式时清空之前生成的代码（因为 React 和 HTML 代码格式不兼容）
+  const handleAppTypeChange = (newType: AppType) => {
+    if (newType !== appType) {
+      setAppType(newType);
+      setGeneratedCode(undefined); // 清空之前生成的代码
+    }
+  };
 
   // 2. 注册 AI 上下文
   const aiContext = useMemo(() => ({
@@ -82,7 +93,8 @@ export default function FactoryEditorPage() {
             {/* 左侧：AI 交互区 */}
             <ResizablePanel defaultSize={25} minSize={20} maxSize={40} className="border-r z-10 bg-background">
                 <EditorChatPanel 
-                  appId={appId} 
+                  appId={appId}
+                  appType={appType}
                   onCodeGenerated={(code) => setGeneratedCode(code)}
                 />
             </ResizablePanel>
@@ -92,8 +104,10 @@ export default function FactoryEditorPage() {
             {/* 右侧：预览与代码区 */}
             <ResizablePanel defaultSize={75}>
                 <PreviewPanel 
-                  appId={appId} 
-                  code={generatedCode || appData.latestCode} 
+                  appId={appId}
+                  code={generatedCode || appData.latestCode}
+                  appType={appType}
+                  onAppTypeChange={handleAppTypeChange}
                 />
             </ResizablePanel>
             

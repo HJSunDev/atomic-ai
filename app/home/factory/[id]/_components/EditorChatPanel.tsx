@@ -2,16 +2,17 @@
 
 import { useState } from "react";
 import { Id } from "@/convex/_generated/dataModel";
-import { Button } from "@/components/ui/button";
 import { CheckSquare2, Users, BarChart3 } from "lucide-react";
 import { mockGenerateCode } from "./mock-ai-generator";
+import { AppType } from "../types";
 
 interface EditorChatPanelProps {
   appId: Id<"apps">;
+  appType: AppType;
   onCodeGenerated?: (code: string) => void;
 }
 
-const TEMPLATES = [
+const REACT_TEMPLATES = [
   {
     id: "task",
     name: "任务管理看板",
@@ -35,12 +36,25 @@ const TEMPLATES = [
   },
 ];
 
-export const EditorChatPanel = ({ appId, onCodeGenerated }: EditorChatPanelProps) => {
+export const EditorChatPanel = ({ appId, appType, onCodeGenerated }: EditorChatPanelProps) => {
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
 
-  const handleTemplateClick = (template: typeof TEMPLATES[0]) => {
+  // HTML 模式下不显示模板列表
+  if (appType === "html") {
+    return (
+      <div className="h-full bg-background flex flex-col items-center justify-center p-6">
+        <div className="text-center space-y-2 max-w-sm">
+          <p className="text-sm text-muted-foreground">
+            HTML 模式下，请在右侧预览区域查看空白模板
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  const handleTemplateClick = (template: typeof REACT_TEMPLATES[0]) => {
     setActiveTemplate(template.id);
-    const result = mockGenerateCode(template.prompt);
+    const result = mockGenerateCode(template.prompt, appType);
     if (onCodeGenerated && result.code) {
       onCodeGenerated(result.code);
     }
@@ -50,12 +64,12 @@ export const EditorChatPanel = ({ appId, onCodeGenerated }: EditorChatPanelProps
     <div className="h-full bg-background flex flex-col">
       {/* Header */}
       <div className="h-10 flex items-center px-4 border-b font-medium text-sm text-muted-foreground shrink-0">
-        模板选择
+        React 模板
       </div>
 
       {/* Templates List */}
       <div className="flex-1 p-4 overflow-auto space-y-3">
-        {TEMPLATES.map((template) => {
+        {REACT_TEMPLATES.map((template) => {
           const Icon = template.icon;
           const isActive = activeTemplate === template.id;
           

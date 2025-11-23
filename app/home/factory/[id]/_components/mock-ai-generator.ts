@@ -3,13 +3,15 @@
  * 用于前端演示，无需后端支持
  */
 
+import type { AppType } from "../types";
+
 interface GenerateResult {
   code: string;
   message: string;
 }
 
-// 预定义的模板库，根据关键词匹配
-const TEMPLATES: Record<string, GenerateResult> = {
+// React 模式的模板库
+const REACT_TEMPLATES: Record<string, GenerateResult> = {
   "任务管理": {
     code: `import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -444,11 +446,20 @@ export default function GeneratedApp() {
 };
 
 /**
- * 根据模板 key 返回对应的代码
- * @param templateKey 模板标识："任务管理" | "数据统计" | "用户管理"
+ * 根据模板 key 和应用类型返回对应的代码
+ * @param templateKey 模板标识
+ * @param appType 应用类型："react" | "html"
  */
-export function mockGenerateCode(templateKey: string): GenerateResult {
-  // 直接通过 key 访问模板，如果不存在则返回第一个模板
-  return TEMPLATES[templateKey] || TEMPLATES['任务管理'];
+export function mockGenerateCode(templateKey: string, appType: AppType = "react"): GenerateResult {
+  // HTML 模式不再支持 mock 代码生成
+  if (appType === "html") {
+    return {
+      code: "",
+      message: "HTML 模式不支持模板生成，请使用空白模板"
+    };
+  }
+  
+  const fallbackKey = "任务管理";
+  return REACT_TEMPLATES[templateKey] || REACT_TEMPLATES[fallbackKey];
 }
 
