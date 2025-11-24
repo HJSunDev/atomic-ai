@@ -491,17 +491,17 @@ function PromptChip({ text, index, onCopy, copiedIndex }: { text: string; index:
       whileTap={{ scale: 0.98 }}
       onClick={() => onCopy(text, index)}
       className={cn(
-        "group flex items-center justify-between w-full p-4 text-left rounded-xl border transition-all duration-200",
+        "group flex items-center justify-between w-full p-4 text-left rounded-xl border transition-all duration-200 min-w-0",
         isCopied 
           ? "bg-slate-900 border-slate-900 text-slate-50" 
           : "bg-slate-50/50 border-slate-100 text-slate-600 hover:border-slate-300"
       )}
     >
-      <span className={cn("text-sm font-medium truncate pr-4", "text-slate-700")}>
+      <span className={cn("text-sm font-medium truncate pr-4 min-w-0 flex-1", "text-slate-700")}>
         {text}
       </span>
       <div className={cn(
-        "flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200",
+        "flex items-center justify-center w-6 h-6 rounded-full transition-all duration-200 shrink-0",
         isCopied ? "bg-slate-800 text-slate-50" : "bg-white text-slate-400 opacity-0 group-hover:opacity-100 shadow-sm"
       )}>
         {isCopied ? <Check size={12} strokeWidth={3} /> : <Copy size={12} />}
@@ -634,7 +634,7 @@ export default function GeneratedApp() {
                 <h3 className="text-2xl font-bold text-slate-900">尝试一下</h3>
               </div>
 
-              <div className="flex-1 w-full grid sm:grid-cols-2 gap-4">
+              <div className="flex-1 w-full grid sm:grid-cols-2 gap-4 min-w-0">
                 {suggestions.map((text, i) => (
                   <PromptChip 
                     key={i} 

@@ -5,6 +5,8 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { cn } from "@/lib/utils";
 import { HTML_EMPTY_TEMPLATE } from "./templates-html";
+import { CodeEditor } from "../common/CodeEditor";
+import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
 interface HTMLPreviewPanelProps {
   appId: Id<"apps">;
@@ -14,28 +16,31 @@ interface HTMLPreviewPanelProps {
 export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
   const [viewMode, setViewMode] = useState<'preview' | 'code' | 'split'>('split');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
+
+  // iframe 实例引用
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
-  const activeCode = code || HTML_EMPTY_TEMPLATE;
+  // 本地代码状态，支持编辑，若外部代码为空则使用空模板
+  const [internalCode, setInternalCode] = useState(code || HTML_EMPTY_TEMPLATE);
 
-  // 当代码更新时，刷新 iframe
+  // 当外部代码(AI生成)发生实质性变化时，更新本地状态
+  // 这是一个“派生状态”模式，通常不推荐，但在此场景下是必要的：
+  // 因为我们需要允许用户在本地修改代码，同时也需要接收 AI 的流式更新。
+  // 只有当外部传入的 code 真的变化且不为空时，才覆盖用户的本地修改。
   useEffect(() => {
-    const updateIframe = () => {
-      if (iframeRef.current && (viewMode === 'preview' || viewMode === 'split')) {
-        const iframe = iframeRef.current;
-        const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (iframeDoc) {
-          iframeDoc.open();
-          iframeDoc.write(activeCode);
-          iframeDoc.close();
-        }
-      }
-    };
+    if (code !== undefined && code !== internalCode) {
+      setInternalCode(code);
+    }
+    // 注意：这里只依赖 code，不依赖 internalCode，避免循环更新
+    // 这里的逻辑是：External Source of Truth (AI) -> Local State
+  }, [code]);
 
-    // 稍微延迟以确保 DOM 已渲染
-    const timer = setTimeout(updateIframe, 0);
-    return () => clearTimeout(timer);
-  }, [activeCode, viewMode]);
+  // 使用本地状态作为当前活跃代码
+  const activeCode = internalCode;
+
+  // 防抖处理：延迟更新 iframe 以避免频繁刷新导致闪烁
+  const debouncedCode = useDebouncedValue(activeCode, 1000);
+
 
   const handleDownload = () => {
     const blob = new Blob([activeCode], { type: 'text/html;charset=utf-8' });
@@ -92,16 +97,20 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
           className="w-full h-full border-none"
           title="HTML Preview"
           sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
+          srcDoc={debouncedCode}
         />
       </div>
     </div>
   );
 
   const renderCode = () => (
-    <div className="h-full overflow-auto bg-slate-900 text-slate-100">
-      <pre className="p-4 text-sm font-mono leading-relaxed">
-        <code>{activeCode}</code>
-      </pre>
+    <div className="h-full overflow-hidden bg-background border-l dark:border-slate-800">
+      <CodeEditor 
+        value={activeCode} 
+        onChange={(val) => setInternalCode(val || "")}
+        language="html"
+        showLineNumbers={true}
+      />
     </div>
   );
 
@@ -236,7 +245,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
       </header>
 
       {/* 主内容区 */}
-      <main className="flex-1 overflow-hidden relative">
+      <article className="flex-1 overflow-hidden relative">
         {viewMode === 'preview' && renderPreview()}
         
         {viewMode === 'code' && renderCode()}
@@ -252,7 +261,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
             </ResizablePanel>
           </ResizablePanelGroup>
         )}
-      </main>
+      </article>
     </div>
   );
 };
