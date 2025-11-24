@@ -123,7 +123,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
           <button 
             onClick={() => setViewMode('preview')}
             className={cn(
-              "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all", 
+              "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all cursor-pointer", 
               viewMode === 'preview' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -133,7 +133,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
           <button 
             onClick={() => setViewMode('split')}
             className={cn(
-              "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all", 
+              "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all cursor-pointer", 
               viewMode === 'split' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -143,7 +143,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
           <button 
             onClick={() => setViewMode('code')}
             className={cn(
-              "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all", 
+              "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all cursor-pointer", 
               viewMode === 'code' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
             )}
           >
@@ -162,7 +162,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
                   <button
                     onClick={() => setPreviewDevice('desktop')}
                     className={cn(
-                      "p-1.5 rounded hover:bg-muted transition-colors",
+                      "p-1.5 rounded hover:bg-muted transition-colors cursor-pointer",
                       previewDevice === 'desktop' && "text-primary bg-primary/10"
                     )}
                   >
@@ -179,7 +179,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
                   <button
                     onClick={() => setPreviewDevice('tablet')}
                     className={cn(
-                      "p-1.5 rounded hover:bg-muted transition-colors",
+                      "p-1.5 rounded hover:bg-muted transition-colors cursor-pointer",
                       previewDevice === 'tablet' && "text-primary bg-primary/10"
                     )}
                   >
@@ -196,7 +196,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
                   <button
                     onClick={() => setPreviewDevice('mobile')}
                     className={cn(
-                      "p-1.5 rounded hover:bg-muted transition-colors",
+                      "p-1.5 rounded hover:bg-muted transition-colors cursor-pointer",
                       previewDevice === 'mobile' && "text-primary bg-primary/10"
                     )}
                   >
@@ -216,7 +216,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleOpenInNewTab}
-                  className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                  className="p-1.5 rounded hover:bg-muted transition-colors text-muted-foreground hover:text-foreground cursor-pointer"
                 >
                   <ExternalLink className="w-4 h-4" />
                 </button>
@@ -230,7 +230,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
               <TooltipTrigger asChild>
                 <button
                   onClick={handleDownload}
-                  className="p-1.5 rounded hover:bg-primary/10 transition-colors text-primary hover:text-primary-dark flex items-center gap-1.5"
+                  className="p-1.5 rounded hover:bg-primary/10 transition-colors text-primary hover:text-primary-dark flex items-center gap-1.5 cursor-pointer"
                 >
                   <Download className="w-4 h-4" />
                   <span className="text-xs font-medium">下载 HTML</span>

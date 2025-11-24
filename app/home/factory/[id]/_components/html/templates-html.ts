@@ -802,3 +802,212 @@ export const HTML_GENERATION_PROMPT = `你是一个专业的 Web 开发专家，
 现在，根据用户的需求生成对应的 HTML 页面。`;
 
 
+/**
+ * HTML AI 生成提示词（增强版 - 包含环境上下文）
+ * 适用于需要调用 Tailwind/React 等高级能力的场景
+ */
+export const HTML_GENERATION_PROMPT_ADVANCED = `You are an expert Frontend Developer tasked with generating a high-quality, self-contained HTML micro-application.
+
+### 1. The Environment (Strict Constraints)
+You are running inside a pre-configured HTML shell.
+- **DO NOT** output <html>, <head>, or <body> tags.
+- **DO NOT** load external scripts via URL unless absolutely necessary. Use the provided Import Map.
+- **DO NOT** use alert(), confirm(), or prompt(). Use custom UI instead.
+
+### 2. Available Tools (Already Loaded)
+- **Tailwind CSS**: Available globally. Use for all styling.
+- **Flowbite**: Available globally. Use for interactive UI (modals, tooltips, navbars) via data attributes (e.g., data-dropdown-toggle).
+- **Phosphor Icons**: Use <i class="ph ph-house"></i>. Do NOT use FontAwesome.
+- **AOS Animation**: Add data-aos="fade-up" to elements for simple entrance animations.
+
+### 3. Import Map (For React & Logic)
+You have an ES Module Import Map set up. You can import these libraries directly by name:
+- react, react-dom/client
+- framer-motion (for complex React animations)
+- canvas-confetti (for celebration effects)
+- chart.js/auto (for charts)
+- three (for 3D scenes)
+- lucide-react (React icons)
+
+### 4. Implementation Strategy
+Choose the best approach based on the user's request:
+
+**Option A: Vanilla JS (Preferred for static/simple interactive apps)**
+- Use document.querySelector and addEventListener.
+- Wrap your script in <script> tags.
+- Use data-aos for animations.
+
+**Option B: React (Preferred for complex state/calculators/games)**
+- Structure:
+  \`\`\`html
+  <div id="root"></div>
+  <script type="module">
+    import React, { useState, useEffect } from 'react';
+    import { createRoot } from 'react-dom/client';
+    import confetti from 'canvas-confetti';
+
+    function App() {
+      return <div className="p-4 bg-white rounded-xl shadow-lg">Hello React</div>;
+    }
+
+    const root = createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+  \`\`\`
+
+### 5. Design System Rules
+- **Modern UI**: Use rounded corners (rounded-xl), soft shadows (shadow-lg), and ample padding (p-6).
+- **Colors**: Use the primary color scale (e.g., bg-primary-600, text-primary-500) to match the brand.
+- **Typography**: Use prose prose-slate wrapper for long text content.
+
+### 6. Output Format
+- Return **ONLY** the raw HTML content (divs, styles, scripts) to be injected into the body.
+- **DO NOT** wrap the output in markdown code blocks (like \`\`\`html).
+- Ensure all JavaScript is properly enclosed in <script> tags.
+- Handle potential errors in your code using try-catch blocks to prevent crashing the app.
+`;
+
+interface TemplateOptions {
+  title?: string;
+  code: string; // AI 返回的内容
+  theme?: 'light' | 'dark';
+}
+
+/**
+ * 生成包含现代化技术栈（Tailwind, React, Framer Motion 等）的微应用 HTML
+ * 
+ * @description
+ * 这个函数将 AI 生成的代码片段（通常是 HTML/CSS/JS）包装成一个完整的、
+ * 预配置了现代前端基础设施的 HTML 文档。这使得 AI 生成的代码可以立即拥有
+ * 只有在复杂构建环境中才有的能力。
+ */
+export const generateMicroAppHtml = ({ title = "AI Micro App", code, theme = "light" }: TemplateOptions) => {
+  // 1. 安全清洗：移除可能存在的 Markdown 代码块标记
+  const cleanCode = code.replace(/```html/g, '').replace(/```/g, '').trim();
+
+  return `
+<!DOCTYPE html>
+<html lang="en" class="${theme}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${title}</title>
+  
+  <!-- === 1. 字体系统 === -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+  <!-- === 2. 核心样式: Tailwind CSS v3.4 + Typography === -->
+  <script src="https://cdn.tailwindcss.com?plugins=typography,forms"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], mono: ['JetBrains Mono', 'monospace'] },
+          colors: {
+            primary: {"50":"#eff6ff","100":"#dbeafe","200":"#bfdbfe","300":"#93c5fd","400":"#60a5fa","500":"#3b82f6","600":"#2563eb","700":"#1d4ed8","800":"#1e40af","900":"#1e3a8a"}
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- === 3. Import Maps (按需加载的神器) === -->
+  <!-- 只有当 AI 写了 import ... from 'react' 时，浏览器才会下载这些库 -->
+  <script type="importmap">
+  {
+    "imports": {
+      "react": "https://esm.sh/react@18.2.0",
+      "react-dom/client": "https://esm.sh/react-dom@18.2.0/client",
+      "framer-motion": "https://esm.sh/framer-motion@10.16.4",
+      "canvas-confetti": "https://esm.sh/canvas-confetti@1.6.0",
+      "chart.js/auto": "https://esm.sh/chart.js@4.4.0/auto",
+      "three": "https://esm.sh/three@0.160.0",
+      "lucide-react": "https://esm.sh/lucide-react@0.294.0"
+    }
+  }
+  </script>
+
+  <!-- === 4. 全局工具库 (总是可用) === -->
+  <!-- 图标库: Phosphor Icons -->
+  <script src="https://unpkg.com/@phosphor-icons/web"></script>
+  <!-- 动画库: AOS -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <!-- UI组件库: Flowbite -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.css" rel="stylesheet" />
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    /* 滚动条美化 */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+    .dark ::-webkit-scrollbar-thumb { background: #4b5563; }
+    
+    /* Loading 遮罩 */
+    #global-loader {
+      position: fixed; inset: 0; z-index: 9999;
+      background: ${theme === 'dark' ? '#111827' : '#ffffff'};
+      display: flex; justify-content: center; align-items: center;
+      transition: opacity 0.5s ease;
+    }
+    .loader-spin {
+      width: 40px; height: 40px; border: 3px solid rgba(59,130,246,0.3);
+      border-radius: 50%; border-top-color: #3b82f6;
+      animation: spin 1s linear infinite;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+
+  <!-- 错误捕获 (防止白屏) -->
+  <script>
+    window.onerror = function(msg, url, line, col, error) {
+      const errBox = document.getElementById('error-box');
+      if(errBox) {
+        errBox.style.display = 'block';
+        errBox.textContent = 'Runtime Error: ' + msg;
+      }
+      // 移除 loading 以便用户看到错误
+      const loader = document.getElementById('global-loader');
+      if(loader) loader.style.display = 'none';
+      return false;
+    };
+  </script>
+</head>
+<body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen relative">
+  <!-- Loading -->
+  <div id="global-loader"><div class="loader-spin"></div></div>
+
+  <!-- 错误提示框 (默认隐藏) -->
+  <div id="error-box" class="hidden fixed bottom-4 right-4 max-w-sm bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded z-50 text-sm font-mono shadow-lg"></div>
+
+  <!-- === AI 内容注入区 === -->
+  <div id="app-root" class="opacity-0 transition-opacity duration-700 p-4 md:p-6 lg:p-8">
+    ${cleanCode}
+  </div>
+
+  <!-- === 底部依赖 === -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/flowbite/2.3.0/flowbite.min.js"></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+  <!-- 初始化脚本 -->
+  <script>
+    window.addEventListener('load', () => {
+      // 1. 移除 Loading
+      const loader = document.getElementById('global-loader');
+      const root = document.getElementById('app-root');
+      if (loader) {
+        loader.style.opacity = '0';
+        setTimeout(() => loader.remove(), 500);
+      }
+      if (root) root.classList.remove('opacity-0');
+
+      // 2. 初始化 AOS
+      AOS.init({ duration: 800, once: true });
+    });
+  </script>
+</body>
+</html>
+  `;
+};

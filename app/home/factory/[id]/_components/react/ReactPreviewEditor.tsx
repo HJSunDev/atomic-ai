@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Eye, Smartphone, Monitor, Tablet, Code2 } from "lucide-react";
+import { Eye, Smartphone, Monitor, Tablet, Code2, Columns2 } from "lucide-react";
 import {
   SandpackProvider,
   SandpackLayout,
@@ -34,7 +34,7 @@ export const ReactPreviewEditor = ({ code }: ReactPreviewEditorProps) => {
             <button 
                 onClick={() => setViewMode('preview')}
                 className={cn(
-                    "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all", 
+                    "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all cursor-pointer", 
                     viewMode === 'preview' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 )}
             >
@@ -44,22 +44,22 @@ export const ReactPreviewEditor = ({ code }: ReactPreviewEditorProps) => {
             <button 
                 onClick={() => setViewMode('split')}
                 className={cn(
-                    "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all", 
+                    "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all cursor-pointer", 
                     viewMode === 'split' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 )}
             >
-                <Monitor className="w-3.5 h-3.5" />
+                <Columns2 className="w-3.5 h-3.5" />
                 分屏
             </button>
             <button 
                 onClick={() => setViewMode('code')}
                 className={cn(
-                    "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all", 
+                    "px-2 py-1 text-xs rounded-sm flex items-center gap-1.5 transition-all cursor-pointer", 
                     viewMode === 'code' ? "bg-white shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
                 )}
             >
                 <Code2 className="w-3.5 h-3.5" />
-                代码
+                源码
             </button>
         </div>
 
@@ -71,7 +71,7 @@ export const ReactPreviewEditor = ({ code }: ReactPreviewEditorProps) => {
                   <button
                     onClick={() => setPreviewDevice("desktop")}
                     className={cn(
-                      "p-1.5 rounded hover:bg-muted transition-colors",
+                      "p-1.5 rounded hover:bg-muted transition-colors cursor-pointer",
                       previewDevice === "desktop" && "text-primary bg-primary/10"
                     )}
                   >
@@ -87,7 +87,7 @@ export const ReactPreviewEditor = ({ code }: ReactPreviewEditorProps) => {
                   <button
                     onClick={() => setPreviewDevice("tablet")}
                     className={cn(
-                      "p-1.5 rounded hover:bg-muted transition-colors",
+                      "p-1.5 rounded hover:bg-muted transition-colors cursor-pointer",
                       previewDevice === "tablet" && "text-primary bg-primary/10"
                     )}
                   >
@@ -103,7 +103,7 @@ export const ReactPreviewEditor = ({ code }: ReactPreviewEditorProps) => {
                   <button
                     onClick={() => setPreviewDevice("mobile")}
                     className={cn(
-                      "p-1.5 rounded hover:bg-muted transition-colors",
+                      "p-1.5 rounded hover:bg-muted transition-colors cursor-pointer",
                       previewDevice === "mobile" && "text-primary bg-primary/10"
                     )}
                   >
