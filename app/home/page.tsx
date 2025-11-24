@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { ChatModule} from "./_chat/ChatModule";
 import { AiCreationStudio } from "./_ai-creation/AiCreationStudio";
 import { HomeModule } from "./_home/HomeModule";
-import { useManageAiContext } from "@/hooks/use-manage-ai-context";
+import { useManageAiContext } from "@/hooks/useAiContext";
 import { AiContext } from "@/store/home/use-ai-context-store";
 
 // 菜单占位内容组件

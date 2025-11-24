@@ -208,6 +208,7 @@ export const HTML_EMPTY_TEMPLATE = `<!DOCTYPE html>
       flex: 1;
       display: grid;
       gap: 1rem;
+      min-width: 0; /* 关键修复：允许 grid item 收缩，防止 overflow */
     }
     @media (min-width: 640px) {
       .suggestions-grid { grid-template-columns: repeat(2, 1fr); }
@@ -230,6 +231,7 @@ export const HTML_EMPTY_TEMPLATE = `<!DOCTYPE html>
       transition: all 0.2s;
       text-align: left;
       font-family: inherit;
+      min-width: 0; /* 关键修复：允许 flex item 收缩 */
     }
 
     .chip:hover {
@@ -250,6 +252,8 @@ export const HTML_EMPTY_TEMPLATE = `<!DOCTYPE html>
       text-overflow: ellipsis;
       padding-right: 1rem;
       color: #334155; /* text-slate-700 */
+      flex: 1; /* 关键修复：占据剩余空间 */
+      min-width: 0; /* 关键修复：允许文本截断生效 */
     }
     .chip.copied .chip-text { color: var(--slate-50); }
 
@@ -265,6 +269,7 @@ export const HTML_EMPTY_TEMPLATE = `<!DOCTYPE html>
       opacity: 0;
       transition: all 0.2s;
       box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+      flex-shrink: 0; /* 关键修复：防止图标被挤压 */
     }
     
     .chip:hover .copy-icon-wrapper { opacity: 1; }

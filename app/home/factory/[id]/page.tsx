@@ -3,13 +3,12 @@
 import { useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
-import { useManageAiContext } from "@/hooks/use-manage-ai-context";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Loader2, Play, Code2 } from "lucide-react";
-import { EditorChatPanel } from "./_components/EditorChatPanel";
-import { PreviewPanel } from "./_components/PreviewPanel";
+import { FactoryChatPanel } from "./_components/FactoryChatPanel";
+import { FactoryPreviewEditor } from "./_components/FactoryPreviewEditor";
 import { AppType } from "./types";
 
 export default function FactoryEditorPage() {
@@ -28,16 +27,6 @@ export default function FactoryEditorPage() {
       setGeneratedCode(undefined); // 清空之前生成的代码
     }
   };
-
-  // 2. 注册 AI 上下文
-  const aiContext = useMemo(() => ({
-    id: `factory-editor-${appId}`,
-    type: "factory" as const, 
-    showCatalyst: false, 
-    catalystPlacement: 'global' as const
-  }), [appId]);
-
-  useManageAiContext(aiContext);
 
   // 3. 获取应用详情（暂时使用 mock 数据，如果查询失败）
   const app = useQuery(api.app_generation.queries.getApp, { appId });
@@ -87,12 +76,12 @@ export default function FactoryEditorPage() {
       </header>
 
       {/* 主工作区 */}
-      <main className="flex-1 overflow-hidden relative">
+      <article className="flex-1 overflow-hidden relative">
         <ResizablePanelGroup direction="horizontal" className="h-full">
             
             {/* 左侧：AI 交互区 */}
-            <ResizablePanel defaultSize={25} minSize={20} maxSize={40} className="border-r z-10 bg-background">
-                <EditorChatPanel 
+            <ResizablePanel defaultSize={22} minSize={20} maxSize={40} className="border-r z-10 bg-background">
+                <FactoryChatPanel 
                   appId={appId}
                   appType={appType}
                   onCodeGenerated={(code) => setGeneratedCode(code)}
@@ -102,8 +91,8 @@ export default function FactoryEditorPage() {
             <ResizableHandle className="w-[1px] bg-border" />
             
             {/* 右侧：预览与代码区 */}
-            <ResizablePanel defaultSize={75}>
-                <PreviewPanel 
+            <ResizablePanel defaultSize={78}>
+                <FactoryPreviewEditor 
                   appId={appId}
                   code={generatedCode || appData.latestCode}
                   appType={appType}
@@ -112,7 +101,7 @@ export default function FactoryEditorPage() {
             </ResizablePanel>
             
         </ResizablePanelGroup>
-      </main>
+      </article>
     </div>
   );
 }

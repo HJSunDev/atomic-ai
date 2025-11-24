@@ -6,7 +6,7 @@ import { CheckSquare2, Users, BarChart3 } from "lucide-react";
 import { mockGenerateCode } from "./mock-ai-generator";
 import { AppType } from "../types";
 
-interface EditorChatPanelProps {
+interface FactoryChatPanelProps {
   appId: Id<"apps">;
   appType: AppType;
   onCodeGenerated?: (code: string) => void;
@@ -36,7 +36,7 @@ const REACT_TEMPLATES = [
   },
 ];
 
-export const EditorChatPanel = ({ appId, appType, onCodeGenerated }: EditorChatPanelProps) => {
+export const FactoryChatPanel = ({ appId, appType, onCodeGenerated }: FactoryChatPanelProps) => {
   const [activeTemplate, setActiveTemplate] = useState<string | null>(null);
 
   // HTML 模式下不显示模板列表

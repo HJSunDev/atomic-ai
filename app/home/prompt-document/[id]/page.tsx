@@ -3,7 +3,7 @@
 import { useRouter, useSearchParams, useParams } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import { DocumentContent } from "@/components/document/DocumentContent";
-import { useManageAiContext } from "@/hooks/use-manage-ai-context";
+import { useManageAiContext } from "@/hooks/useAiContext";
 import { AiContext } from "@/store/home/use-ai-context-store";
 import { useAiPanelStore } from "@/store";
 

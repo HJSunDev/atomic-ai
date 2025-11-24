@@ -7,6 +7,17 @@
  * 3. 预置依赖：常用组件和工具库已经准备好，AI 直接引用即可
  */
 
+// ==================== 0. 默认依赖 ====================
+
+export const DEFAULT_DEPENDENCIES = {
+  "lucide-react": "latest",
+  "clsx": "latest",
+  "tailwind-merge": "latest",
+  "date-fns": "latest",
+  "recharts": "latest",
+  "framer-motion": "latest",
+};
+
 // ==================== 1. 工具函数层 ====================
 
 export const UTILS_CODE = `import { clsx, type ClassValue } from "clsx";
@@ -643,4 +654,3 @@ export default function GeneratedApp() {
   );
 }
 `;
-
