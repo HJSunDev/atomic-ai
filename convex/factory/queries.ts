@@ -1,7 +1,7 @@
 import { v } from "convex/values";
 import { query } from "../_generated/server";
 
-// 获取当前用户的所有应用列表
+// 获取应用列表
 export const listApps = query({
   args: {},
   handler: async (ctx) => {
@@ -22,7 +22,7 @@ export const listApps = query({
   },
 });
 
-// 获取单个应用的详情
+// 获取应用详情
 export const getApp = query({
   args: { appId: v.id("apps") },
   handler: async (ctx, args) => {
