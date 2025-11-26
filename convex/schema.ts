@@ -14,7 +14,7 @@ export default defineSchema({
   // 合并userModelPreferences模块的 schema
   ...userModelPreferencesSchema,
 
-  // 合并app_generation模块的 schema
+  // 合并factory模块的 schema
   ...appGenerationSchema,
 });
  

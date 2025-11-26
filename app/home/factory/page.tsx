@@ -9,10 +9,10 @@ import { useRouter } from "next/navigation";
 
 export default function FactoryListPage() {
   const router = useRouter();
-  const createApp = useMutation(api.app_generation.mutations.createApp);
+  const createApp = useMutation(api.factory.mutations.createApp);
   
   // 获取应用列表
-  const apps = useQuery(api.app_generation.queries.listApps);
+  const apps = useQuery(api.factory.queries.listApps);
 
   const handleCreateNew = async () => {
     // 临时：直接创建一个空的，实际应该弹窗输入Prompt

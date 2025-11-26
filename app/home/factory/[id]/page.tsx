@@ -29,7 +29,7 @@ export default function FactoryEditorPage() {
   };
 
   // 3. 获取应用详情（暂时使用 mock 数据，如果查询失败）
-  const app = useQuery(api.app_generation.queries.getApp, { appId });
+  const app = useQuery(api.factory.queries.getApp, { appId });
 
   // 模拟模式：即使没有后端数据也能运行
   if (app === undefined) {
@@ -84,7 +84,7 @@ export default function FactoryEditorPage() {
                 <FactoryChatPanel 
                   appId={appId}
                   appType={appType}
-                  onCodeGenerated={(code) => setGeneratedCode(code)}
+                  onCodeGenerated={(code, versionId) => setGeneratedCode(code)}
                 />
             </ResizablePanel>
             
