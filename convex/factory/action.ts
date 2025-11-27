@@ -21,7 +21,7 @@ import {
   getAppCurrentVersion,
   markMessageStreamingComplete,
   updateAppMessageContent,
-} from "../_lib/factoryUtils";
+} from "./factoryUtils";
 
 /**
  * 工坊模块：流式生成微应用代码（统一接口）
@@ -203,10 +203,11 @@ The user will provide instructions to modify this code. Please generate the COMP
         newVersion
       );
 
-      // 16. 关联消息与代码版本
+      // 16. 关联消息与代码版本（同时写入版本号，避免前端查询时 Join）
       await ctx.runMutation(internal.factory.mutations.linkMessageToVersion, {
         messageId: assistantMessageId,
         versionId,
+        version: newVersion,
       });
 
       // 17. 更新应用的最新代码和版本号

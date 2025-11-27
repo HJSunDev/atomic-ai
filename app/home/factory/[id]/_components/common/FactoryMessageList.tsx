@@ -12,6 +12,7 @@ interface FactoryMessageListProps {
   emptyState?: React.ReactNode;
   streamingMessageId?: Id<"app_messages"> | null;
   isMessagesLoading?: boolean;
+  onVersionClick?: (versionId: Id<"app_versions">) => void; // 点击版本标签时的回调
 }
 
 /**
@@ -86,6 +87,7 @@ export function FactoryMessageList({
   emptyState,
   streamingMessageId,
   isMessagesLoading,
+  onVersionClick,
 }: FactoryMessageListProps) {
   
   if (isMessagesLoading) {
@@ -129,10 +131,14 @@ export function FactoryMessageList({
                   </div>
                   <span className="text-sm font-medium">AI 工坊</span>
                   {message.relatedCodeId && (
-                    <span className="text-xs bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-blue-800 dark:text-blue-200 flex items-center gap-1">
-                      <Code2 className="w-3 h-3" />
-                      已生成代码
-                    </span>
+                    <button
+                      onClick={() => onVersionClick?.(message.relatedCodeId!)}
+                      className="text-xs bg-blue-100 dark:bg-blue-900 px-2.5 py-1 rounded-md text-blue-800 dark:text-blue-200 flex items-center gap-1.5 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors cursor-pointer border border-blue-200 dark:border-blue-700"
+                      title={`点击查看代码版本 v${message.relatedCodeVersion || '?'}`}
+                    >
+                      <Code2 className="w-3.5 h-3.5" />
+                      <span className="font-medium">v{message.relatedCodeVersion || '?'}</span>
+                    </button>
                   )}
                 </div>
 

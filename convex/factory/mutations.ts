@@ -134,10 +134,12 @@ export const linkMessageToVersion = internalMutation({
   args: {
     messageId: v.id("app_messages"),
     versionId: v.id("app_versions"),
+    version: v.number(), // 版本号（冗余字段，避免前端查询时 Join）
   },
   handler: async (ctx, args) => {
     await ctx.db.patch(args.messageId, {
       relatedCodeId: args.versionId,
+      relatedCodeVersion: args.version,
     });
   },
 });

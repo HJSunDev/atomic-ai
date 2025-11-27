@@ -28,6 +28,7 @@ export const appGenerationSchema = {
     role: v.union(v.literal("user"), v.literal("assistant"), v.literal("system")),
     content: v.string(), // 消息内容
     relatedCodeId: v.optional(v.id("app_versions")), // 该消息关联生成的代码版本ID
+    relatedCodeVersion: v.optional(v.number()), // 冗余字段：关联代码的版本号，避免查询时 Join
     isStreaming: v.optional(v.boolean()), // 是否正在流式传输中
   }).index("by_app", ["appId"]),
 

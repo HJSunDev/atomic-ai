@@ -17,6 +17,7 @@ export interface AppMessage {
   role: "user" | "assistant" | "system";
   content: string;
   relatedCodeId?: Id<"app_versions">;
+  relatedCodeVersion?: number; // 关联的代码版本号（冗余字段，避免 Join 查询）
   isStreaming?: boolean;
   _creationTime: number;
 }
