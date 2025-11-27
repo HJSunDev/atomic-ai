@@ -35,7 +35,7 @@ export function FactoryEmptyState({ appType }: FactoryEmptyStateProps) {
 
         <div className="space-y-2">
           <h2 className="text-xl font-semibold text-gray-900 dark:text-gray-100">
-            开始创建你的 {appType === "html" ? "HTML" : "React"} 应用
+            开始创建你的 {appType === "html" ? "HTML" : "HTML"} 应用
           </h2>
           <p className="text-sm text-gray-600 dark:text-gray-400">
             描述你想要的功能，AI 将为你生成完整的代码

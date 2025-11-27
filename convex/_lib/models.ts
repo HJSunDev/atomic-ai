@@ -18,15 +18,11 @@ interface ModelConfig {
 export type ProviderType = 'openrouter';
 
 // ===================================================================
-// 推荐的最大输出 tokens（按业务场景/模型家族设定基准值）
-// 说明：输出长度应为“可用且稳健”的安全值，以保证生成完整性并避免触发服务端硬性限制。
-// - 生成应用/代码：优先完整性，尽量接近长输出能力但保守留余量
-// - 生成文档：平衡成本与效果，8k 为常见上限的稳妥值
+// 推荐的最大输出 tokens（按业务场景设定）
 // ===================================================================
 
-// 针对“生成文档”的通用设置（平衡效果与成本）
-const GENERAL_PAID_MODEL_MAX_DOC_OUTPUT = 8192; // 常见付费通用模型的稳定输出长度
-const FREE_MODEL_BASELINE_MAX_OUTPUT = 4096; // 免费模型通常限制更严，统一基线
+const GENERAL_PAID_MODEL_MAX_DOC_OUTPUT = 16384; // 付费模型：16k tokens
+const FREE_MODEL_BASELINE_MAX_OUTPUT = 8192; // 免费模型：8k tokens
 
 // 按服务商分类的模型列表
 export const MODELS_BY_PROVIDER: Record<ProviderType, {

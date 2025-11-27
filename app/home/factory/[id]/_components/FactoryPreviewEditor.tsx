@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Id } from "@/convex/_generated/dataModel";
 import { AppTypeSwitcher } from "./common/AppTypeSwitcher";
-import type { AppType } from "../types";
+import type { AppType } from "./common/types";
 import { ReactPreviewEditor } from "./react/ReactPreviewEditor";
 import { HTMLPreviewPanel } from "./html/HTMLPreviewPanel";
 

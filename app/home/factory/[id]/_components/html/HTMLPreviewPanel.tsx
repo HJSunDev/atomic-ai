@@ -4,7 +4,7 @@ import { Eye, Code2, Download, ExternalLink, Smartphone, Monitor, Tablet, Column
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { cn } from "@/lib/utils";
-import { HTML_EMPTY_TEMPLATE } from "./templates-html";
+import { HTML_EMPTY_TEMPLATE, generateMicroAppHtml } from "./templates-html";
 import { CodeEditor } from "../common/CodeEditor";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 
@@ -40,10 +40,25 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
 
   // 防抖处理：延迟更新 iframe 以避免频繁刷新导致闪烁
   const debouncedCode = useDebouncedValue(activeCode, 1000);
-
+  
+  // 生成完整的 HTML 用于预览和导出
+  // 只有当代码变化时才重新生成，避免不必要的计算
+  // 注意：编辑器中显示的是原始代码(internalCode)，预览中使用的是包装后的完整HTML
+  const fullHtml = generateMicroAppHtml({ 
+    title: "AI Micro App", 
+    code: debouncedCode,
+    theme: 'light' // 这里后续可以接入主题切换
+  });
 
   const handleDownload = () => {
-    const blob = new Blob([activeCode], { type: 'text/html;charset=utf-8' });
+    // 下载时重新生成基于当前即时代码(非防抖)的完整HTML
+    const currentFullHtml = generateMicroAppHtml({
+      title: "AI Micro App",
+      code: activeCode,
+      theme: 'light'
+    });
+    
+    const blob = new Blob([currentFullHtml], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
     link.href = url;
@@ -55,10 +70,15 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
   };
 
   const handleOpenInNewTab = () => {
-    const blob = new Blob([activeCode], { type: 'text/html;charset=utf-8' });
+    const currentFullHtml = generateMicroAppHtml({
+      title: "AI Micro App",
+      code: activeCode,
+      theme: 'light'
+    });
+
+    const blob = new Blob([currentFullHtml], { type: 'text/html;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     window.open(url, '_blank');
-    // 注意：URL 不会立即撤销，因为新窗口需要使用它
     setTimeout(() => URL.revokeObjectURL(url), 100);
   };
 
@@ -97,7 +117,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
           className="w-full h-full border-none"
           title="HTML Preview"
           sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
-          srcDoc={debouncedCode}
+          srcDoc={fullHtml}
         />
       </div>
     </div>

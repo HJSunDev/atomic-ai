@@ -26,6 +26,8 @@ export const FactoryChatPanel = ({
   appType,
   onCodeGenerated,
 }: FactoryChatPanelProps) => {
+
+
   return (
     <FactoryChatCore
       appId={appId}
@@ -41,7 +43,7 @@ export const FactoryChatPanel = ({
         handleSendMessage,
       }) => (
         <div className="h-full bg-background flex flex-col">
-          <div className="flex-1 overflow-y-auto">
+          <section className="flex-1 overflow-y-auto">
             <FactoryMessageList
               messages={messages}
               messagesEndRef={messagesEndRef}
@@ -49,14 +51,14 @@ export const FactoryChatPanel = ({
               streamingMessageId={streamingMessageId}
               isMessagesLoading={isMessagesLoading}
             />
-          </div>
+          </section>
 
-          <div className="shrink-0 relative">
+          <section className="shrink-0 relative">
             <FactoryChatInput
               onSendMessage={handleSendMessage}
               isGenerating={isGenerating}
             />
-          </div>
+          </section>
         </div>
       )}
     </FactoryChatCore>

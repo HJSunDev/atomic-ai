@@ -6,11 +6,15 @@ import { Id } from "@/convex/_generated/dataModel";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { Loader2, Play, Code2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { FactoryChatPanel } from "./_components/FactoryChatPanel";
 import { FactoryPreviewEditor } from "./_components/FactoryPreviewEditor";
-import { AppType } from "./types";
+import { FactoryHeader } from "./_components/FactoryHeader";
+import { AppType } from "./_components/common/types";
 
+
+
+// 工坊应用-工作台
 export default function FactoryEditorPage() {
   const params = useParams();
   const appId = params.id as Id<"apps">; 
@@ -52,28 +56,15 @@ export default function FactoryEditorPage() {
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       {/* 顶部导航栏 */}
-      <header className="h-14 border-b flex items-center px-4 justify-between shrink-0 bg-white dark:bg-slate-950 z-10">
-        <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-primary/10 rounded-md flex items-center justify-center text-primary">
-                <Code2 className="w-5 h-5" />
-            </div>
-            <div>
-                <div className="flex items-center gap-2">
-                    <h2 className="font-semibold text-sm">{appData.name}</h2>
-                    <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-full border">v{appData.v}.0</span>
-                </div>
-                <p className="text-[10px] text-muted-foreground truncate max-w-[200px]">
-                    {appData.description || "无描述"}
-                </p>
-            </div>
-        </div>
-        <div className="flex items-center gap-2">
-             <button className="text-xs flex items-center gap-1 px-3 py-1.5 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
-                <Play className="w-3 h-3" />
-                发布应用
-             </button>
-        </div>
-      </header>
+      <FactoryHeader 
+        title={appData.name}
+        description={appData.description}
+        version={appData.v}
+        onPublish={() => {
+          // TODO: 实现发布逻辑
+          console.log("发布应用");
+        }}
+      />
 
       {/* 主工作区 */}
       <article className="flex-1 overflow-hidden relative">

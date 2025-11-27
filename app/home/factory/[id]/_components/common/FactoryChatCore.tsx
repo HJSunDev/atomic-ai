@@ -36,7 +36,7 @@ export interface FactoryChatCoreProps {
  */
 export interface FactoryChatRenderProps {
   messages: AppMessage[];
-  isGenerating: boolean;
+  isGenerating: boolean; // 对外暴露的状态，包含发送中或流式传输中
   isMessagesLoading: boolean;
   streamingMessageId: Id<"app_messages"> | null;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
@@ -51,6 +51,7 @@ export interface FactoryChatRenderProps {
  * - 适配 Factory 数据模型（apps/app_messages/app_versions）
  * - 管理代码生成的流式传输状态
  * - 通过回调通知父组件代码生成完成
+ * - 状态管理优化：区分 "请求发送中(isSending)" 和 "流式生成中(streamingMessage)"
  */
 export function FactoryChatCore({
   appId,
@@ -61,45 +62,51 @@ export function FactoryChatCore({
   const { isSignedIn } = useUser();
   const { selectedModel, userApiKey } = useChatStore();
 
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [streamingMessageId, setStreamingMessageId] = useState<Id<"app_messages"> | null>(null);
+  // isSending: 仅表示API请求正在发送中，未收到响应
+  // 一旦收到响应（或失败），此状态即结束
+  const [isSending, setIsSending] = useState(false);
 
+  // 用于自动滚动到消息列表底部，确保用户始终看到最新消息
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const streamGenerateApp = useAction(api.factory.action.streamGenerateApp);
 
+  // 未登录用户不应访问消息数据，使用 "skip" 跳过查询以避免不必要的请求
   const messages = useQuery(
     api.factory.queries.getAppMessages,
     isSignedIn ? { appId } : "skip"
   );
 
+  // Convex 查询在加载过程中返回 undefined，需要区分"未登录"和"加载中"两种状态
   const isMessagesLoading = !!(isSignedIn && messages === undefined);
 
-  useEffect(() => {
-    if (!streamingMessageId || !messages) return;
+  // 直接从消息列表中查找正在流式传输的消息
+  // 这是 Single Source of Truth，不需要维护额外的本地状态
+  const streamingMessage = messages?.find((m) => m.isStreaming === true);
+  const streamingMessageId = streamingMessage?._id || null;
 
-    const streamingMessage = messages.find((m) => m._id === streamingMessageId);
+  // 综合状态：是否正在生成（发送中 或 流式传输中）
+  const isGenerating = isSending || !!streamingMessageId;
 
-    if (streamingMessage && !streamingMessage.isStreaming) {
-      setStreamingMessageId(null);
-    }
-  }, [messages, streamingMessageId]);
-
+  // 使用平滑滚动提供更好的用户体验，避免突兀的跳转
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // 每当消息列表更新时自动滚动到底部，确保新消息（包括流式消息）始终可见
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
   const handleSendMessage = async (prompt: string) => {
     const trimmedPrompt = prompt.trim();
-    if (!trimmedPrompt || isGenerating || !isSignedIn || streamingMessageId) {
+    // 多重防护：空消息、正在生成、未登录、流式传输中都不允许发送新消息
+    // 这些检查防止了无效提交和并发请求导致的竞态条件
+    if (!trimmedPrompt || isGenerating || !isSignedIn) {
       return;
     }
 
-    setIsGenerating(true);
+    setIsSending(true);
 
     try {
       const result = await streamGenerateApp({
@@ -107,9 +114,11 @@ export function FactoryChatCore({
         userPrompt: trimmedPrompt,
         appType,
         modelId: selectedModel,
+        // 将空字符串转换为 undefined，避免后端接收到空字符串而非未定义值
         userApiKey: userApiKey || undefined,
       });
 
+      // 仅在成功生成代码时触发 回调，允许父组件执行后续操作（如预览、保存等）
       if (result.success && result.code && result.versionId) {
         onCodeGenerated?.(result.code, result.versionId);
       } else if (!result.success && result.error) {
@@ -118,7 +127,9 @@ export function FactoryChatCore({
     } catch (error) {
       console.error("发送消息失败:", error);
     } finally {
-      setIsGenerating(false);
+      // API 请求结束，后续可能还有流式传输（由 Convex 订阅更新 UI），
+      // 或者请求失败。无论如何，这里释放发送锁。
+      setIsSending(false);
     }
   };
 
@@ -133,5 +144,3 @@ export function FactoryChatCore({
 
   return <>{children(renderProps)}</>;
 }
-
-

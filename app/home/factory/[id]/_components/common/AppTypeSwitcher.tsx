@@ -1,6 +1,6 @@
 import { Code2, FileCode } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { AppType } from "../../types";
+import { AppType } from "./types";
 
 interface AppTypeSwitcherProps {
   value: AppType;

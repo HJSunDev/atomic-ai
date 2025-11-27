@@ -163,7 +163,7 @@ export function FactoryChatInput({
               disabled={isGenerating}
             />
 
-            <div className="bg-white dark:bg-[#202020] pb-[2px] px-3 flex items-center justify-end border-gray-100 dark:border-gray-700">
+            <aside className="bg-white dark:bg-[#202020] pb-[2px] px-3 flex items-center justify-end border-gray-100 dark:border-gray-700">
               <div className="flex items-center">
                 {!isMaximized && (
                   <Tooltip>
@@ -203,12 +203,12 @@ export function FactoryChatInput({
                   )}
                 </button>
               </div>
-            </div>
+            </aside>
           </div>
 
-          <div className="px-3 py-2.5 bg-[#f9fafb] dark:bg-[#1b1b1d] border-t border-gray-100 dark:border-gray-800 rounded-b-md flex items-center gap-1">
+          <footer className="px-3 py-2.5 bg-[#f9fafb] dark:bg-[#1b1b1d] border-t border-gray-100 dark:border-gray-800 rounded-b-md flex items-center gap-1">
             <ModelSelector />
-          </div>
+          </footer>
         </div>
       </div>
     </>
