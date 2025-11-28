@@ -42,7 +42,7 @@ export const FactoryPreviewEditor = ({ appId, code, appType: externalAppType, on
         {appType === "html" ? (
           <HTMLPreviewPanel appId={appId} code={code} />
         ) : (
-          <ReactPreviewEditor code={code} />
+          <ReactPreviewEditor code={''} />
         )}
       </div>
     </div>

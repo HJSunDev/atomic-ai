@@ -2,7 +2,8 @@
 
 import { Editor, OnMount } from "@monaco-editor/react";
 import { useTheme } from "next-themes";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
+import { emmetHTML } from "emmet-monaco-es";
 
 interface CodeEditorProps {
   value: string;
@@ -24,11 +25,21 @@ export const CodeEditor = ({
   showLineNumbers = true,
   theme: forcedTheme = 'dark'
 }: CodeEditorProps) => {
+
   const { theme: systemTheme } = useTheme();
   const [mounted, setMounted] = useState(false);
 
+  // 全局标记，避免重复配置 TypeScript/JavaScript 语言服务
+  const emmetDisposableRef = useRef<any>(null);
+
   useEffect(() => {
     setMounted(true);
+    
+    return () => {
+      if (emmetDisposableRef.current) {
+        emmetDisposableRef.current();
+      }
+    };
   }, []);
 
   // 确定最终主题：如果 forcedTheme 是 system，则使用 next-themes 的值，否则使用强制值
@@ -38,6 +49,14 @@ export const CodeEditor = ({
   const handleEditorDidMount: OnMount = (editor, monaco) => {
     // 可以在这里进行额外的编辑器配置
     // 例如注册快捷键等
+    
+    // 启用 Emmet 支持 (仅针对 HTML)
+    if (language === 'html') {
+      // 避免重复注册
+      if (!emmetDisposableRef.current) {
+        emmetDisposableRef.current = emmetHTML(monaco, ['html']);
+      }
+    }
   };
 
   if (!mounted) {

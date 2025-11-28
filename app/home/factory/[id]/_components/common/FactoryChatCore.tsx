@@ -113,7 +113,8 @@ export function FactoryChatCore({
       const result = await streamGenerateApp({
         appId,
         userPrompt: trimmedPrompt,
-        appType,
+        // 第一阶段先支持 html 模式
+        appType: "html",
         modelId: selectedModel,
         // 将空字符串转换为 undefined，避免后端接收到空字符串而非未定义值
         userApiKey: userApiKey || undefined,

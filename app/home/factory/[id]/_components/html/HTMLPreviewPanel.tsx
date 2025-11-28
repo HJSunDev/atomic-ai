@@ -98,6 +98,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
     }
   };
 
+  // 左侧预览区域
   const renderPreview = () => (
     <div className="h-full flex items-center justify-center bg-gray-100/50 dark:bg-slate-950/50 overflow-auto">
       <div
@@ -123,6 +124,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
     </div>
   );
 
+  // 右侧代码编辑区
   const renderCode = () => (
     <div className="h-full overflow-hidden bg-background border-l dark:border-slate-800">
       <CodeEditor 
