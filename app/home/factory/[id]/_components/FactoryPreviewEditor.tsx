@@ -7,12 +7,13 @@ import { HTMLPreviewPanel } from "./html/HTMLPreviewPanel";
 
 interface FactoryPreviewEditorProps {
   appId: Id<"apps">;
-  code?: string;
+  // 其用途是"覆盖"而非"主要数据源"
+  activeCodeOverride?: string;
   appType?: AppType;
   onAppTypeChange?: (type: AppType) => void;
 }
 
-export const FactoryPreviewEditor = ({ appId, code, appType: externalAppType, onAppTypeChange }: FactoryPreviewEditorProps) => {
+export const FactoryPreviewEditor = ({ appId, activeCodeOverride, appType: externalAppType, onAppTypeChange }: FactoryPreviewEditorProps) => {
   const [appType, setAppType] = useState<AppType>(externalAppType || "react");
   const prevExternalAppType = useRef(externalAppType);
 
@@ -40,7 +41,8 @@ export const FactoryPreviewEditor = ({ appId, code, appType: externalAppType, on
       {/* 编辑器主体 */}
       <div className="flex-1 overflow-hidden relative">
         {appType === "html" ? (
-          <HTMLPreviewPanel appId={appId} code={code} />
+          // 将 override 传给 HTMLPreviewPanel
+          <HTMLPreviewPanel appId={appId} activeCodeOverride={activeCodeOverride} />
         ) : (
           <ReactPreviewEditor code={''} />
         )}

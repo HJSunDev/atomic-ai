@@ -1,52 +1,50 @@
 import { useState, useRef, useEffect } from "react";
 import { Id } from "@/convex/_generated/dataModel";
-import { Eye, Code2, Download, ExternalLink, Smartphone, Monitor, Tablet, Columns2 } from "lucide-react";
+import { Eye, Code2, Download, ExternalLink, Smartphone, Monitor, Tablet, Columns2, Loader2, Cloud } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { cn } from "@/lib/utils";
 import { HTML_EMPTY_TEMPLATE, generateMicroAppHtml } from "./templates-html";
 import { CodeEditor } from "../common/CodeEditor";
-import { useDebouncedValue } from "@/hooks/use-debounced-value";
+import { useAutoSaveAppCode } from "@/hooks/useAutoSaveAppCode";
 
 interface HTMLPreviewPanelProps {
   appId: Id<"apps">;
-  code?: string;
+  // 重命名为 override，明确其用途
+  activeCodeOverride?: string;
 }
 
-export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
+export const HTMLPreviewPanel = ({ appId, activeCodeOverride }: HTMLPreviewPanelProps) => {
   const [viewMode, setViewMode] = useState<'preview' | 'code' | 'split'>('split');
   const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
 
   // iframe 实例引用
   const iframeRef = useRef<HTMLIFrameElement>(null);
   
-  // 本地代码状态，支持编辑，若外部代码为空则使用空模板
-  const [internalCode, setInternalCode] = useState(code || HTML_EMPTY_TEMPLATE);
+  // 使用自动保存 Hook 管理代码状态
+  // code: 实时代码（用于编辑器绑定，无延迟）
+  // debouncedCode: 稳定代码（用于预览渲染，有1000ms延迟）
+  const { code, debouncedCode, setCode, setCodeWithoutSave, isSaving } = useAutoSaveAppCode(appId);
 
-  // 当外部代码(AI生成)发生实质性变化时，更新本地状态
-  // 这是一个“派生状态”模式，通常不推荐，但在此场景下是必要的：
-  // 因为我们需要允许用户在本地修改代码，同时也需要接收 AI 的流式更新。
-  // 只有当外部传入的 code 真的变化且不为空时，才覆盖用户的本地修改。
+  // 当外部传入的 override (历史版本查看) 发生变化时，强制更新本地状态
+  // 注意：这里使用 setCodeWithoutSave，因为我们是在"查看"旧版本，不应立即触发"保存"
+  // 只有当用户在旧版本基础上开始编辑时，才会触发 setCode -> useAutoSaveAppCode 的 save 逻辑
+  const prevOverride = useRef<string | undefined>(activeCodeOverride);
   useEffect(() => {
-    if (code !== undefined && code !== internalCode) {
-      setInternalCode(code);
+    if (activeCodeOverride !== undefined && activeCodeOverride !== prevOverride.current) {
+      setCodeWithoutSave(activeCodeOverride);
+      prevOverride.current = activeCodeOverride;
     }
-    // 注意：这里只依赖 code，不依赖 internalCode，避免循环更新
-    // 这里的逻辑是：External Source of Truth (AI) -> Local State
-  }, [code]);
+  }, [activeCodeOverride, setCodeWithoutSave]);
 
-  // 使用本地状态作为当前活跃代码
-  const activeCode = internalCode;
-
-  // 防抖处理：延迟更新 iframe 以避免频繁刷新导致闪烁
-  const debouncedCode = useDebouncedValue(activeCode, 1000);
+  // 使用本地状态作为当前活跃代码（如果为空则使用空模板）
+  const activeCode = code || HTML_EMPTY_TEMPLATE;
   
   // 生成完整的 HTML 用于预览和导出
-  // 只有当代码变化时才重新生成，避免不必要的计算
-  // 注意：编辑器中显示的是原始代码(internalCode)，预览中使用的是包装后的完整HTML
+  // 只有当稳定代码变化时才重新生成，避免频繁重绘 iframe
   const fullHtml = generateMicroAppHtml({ 
     title: "AI Micro App", 
-    code: debouncedCode,
+    code: debouncedCode || HTML_EMPTY_TEMPLATE, // 使用 Hook 返回的稳定值
     theme: 'light' // 这里后续可以接入主题切换
   });
 
@@ -129,7 +127,7 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
     <div className="h-full overflow-hidden bg-background border-l dark:border-slate-800">
       <CodeEditor 
         value={activeCode} 
-        onChange={(val) => setInternalCode(val || "")}
+        onChange={(val) => {console.log("代码编辑器变化触发："); setCode(val || "")}}
         language="html"
         showLineNumbers={true}
       />
@@ -176,6 +174,21 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
 
         {/* 右侧：设备切换 + 操作按钮 */}
         <div className="flex items-center gap-2">
+          {/* 保存状态 - Notion 风格 */}
+          <div className="flex items-center mr-2 h-full">
+            {isSaving ? (
+              <div className="flex items-center gap-1.5 text-muted-foreground animate-in fade-in duration-300">
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                <span className="text-xs text-muted-foreground/80 font-medium">保存中...</span>
+              </div>
+            ) : (
+              <div className="flex items-center gap-1.5 text-muted-foreground/30 animate-in fade-in duration-300">
+                <Cloud className="w-3.5 h-3.5" />
+                <span className="text-xs font-medium">已保存</span>
+              </div>
+            )}
+          </div>
+
           {/* 设备切换（仅预览模式显示） */}
           {(viewMode === 'preview' || viewMode === 'split') && (
             <div className="flex items-center gap-1 border-l pl-3 ml-1">
@@ -287,5 +300,6 @@ export const HTMLPreviewPanel = ({ appId, code }: HTMLPreviewPanelProps) => {
     </div>
   );
 };
+
 
 

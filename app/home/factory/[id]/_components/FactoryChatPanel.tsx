@@ -11,7 +11,7 @@ import { CodeVersionDialog } from "./common/CodeVersionDialog";
 interface FactoryChatPanelProps {
   appId: Id<"apps">;
   appType: "html" | "react";
-  onCodeGenerated?: (code: string, versionId: Id<"app_versions">) => void;
+  onCodeGenerated?: (code: string, versionId: Id<"app_versions">, isHistoryView?: boolean) => void;
 }
 
 /**
@@ -39,7 +39,8 @@ export const FactoryChatPanel = ({
 
   // 处理加载版本代码
   const handleLoadVersion = (code: string, versionId: Id<"app_versions">) => {
-    onCodeGenerated?.(code, versionId);
+    // 这里是显式加载历史版本，所以 isHistoryView = true
+    onCodeGenerated?.(code, versionId, true);
   };
 
   return (
@@ -89,4 +90,3 @@ export const FactoryChatPanel = ({
     </>
   );
 };
-

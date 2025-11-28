@@ -82,6 +82,40 @@ export const publishApp = mutation({
   },
 });
 
+
+// 手动保存代码（用于用户编辑后的自动保存，不增加版本号）
+export const saveAppCode = mutation({
+  args: {
+    appId: v.id("apps"),
+    code: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("未授权操作：请先登录");
+    }
+    const userId = identity.subject;
+
+    const app = await ctx.db.get(args.appId);
+    if (!app) {
+      throw new Error("应用不存在");
+    }
+    if (app.userId !== userId) {
+      throw new Error("无权操作此应用");
+    }
+    if (app.isArchived) {
+      throw new Error("应用已归档，无法编辑");
+    }
+
+    // 只有当代码真的发生变化时才更新
+    if (app.latestCode !== args.code) {
+      await ctx.db.patch(args.appId, {
+        latestCode: args.code,
+      });
+    }
+  },
+});
+
 // ============= 内部 Mutations (供 Action 调用) =============
 
 // 创建消息

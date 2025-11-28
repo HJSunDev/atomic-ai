@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
@@ -19,23 +19,36 @@ export default function FactoryEditorPage() {
   const params = useParams();
   const appId = params.id as Id<"apps">; 
 
-  // 本地状态管理生成的代码（模拟模式）
-  const [generatedCode, setGeneratedCode] = useState<string | undefined>(undefined);
-  // 本地状态管理应用类型（模拟模式，默认 html）
+  // 仅用于"历史版本预览"的代码覆盖
+  // 正常流式生成时，此状态应为 undefined，让子组件直接从 DB 读取最新代码
+  const [previewVersionCode, setPreviewVersionCode] = useState<string | undefined>(undefined);
+  
   const [appType, setAppType] = useState<AppType>("html");
 
   // 处理模式切换：切换模式时清空之前生成的代码（因为 React 和 HTML 代码格式不兼容）
   const handleAppTypeChange = (newType: AppType) => {
     if (newType !== appType) {
       setAppType(newType);
-      setGeneratedCode(undefined); // 清空之前生成的代码
+      setPreviewVersionCode(undefined);
     }
   };
 
-  // 3. 获取应用详情（暂时使用 mock 数据，如果查询失败）
+  // 处理代码生成/加载事件
+  // code: 代码内容
+  // isHistoryView: 是否是查看历史版本（如果是新生成，则为 false）
+  const handleCodeEvent = (code: string, versionId: Id<"app_versions">, isHistoryView: boolean = false) => {
+    if (isHistoryView) {
+      // 查看历史版本：强制覆盖编辑器内容
+      setPreviewVersionCode(code);
+    } else {
+      // 新生成：清空覆盖状态，让编辑器自动同步 DB 的 latestCode
+      setPreviewVersionCode(undefined);
+    }
+  };
+
+  // 3. 获取应用详情 (仅用于 Header 显示，不传给 Editor)
   const app = useQuery(api.factory.queries.getApp, { appId });
 
-  // 模拟模式：即使没有后端数据也能运行
   if (app === undefined) {
       return (
         <div className="h-screen flex flex-col items-center justify-center space-y-4">
@@ -45,21 +58,22 @@ export default function FactoryEditorPage() {
       );
   }
 
-  // 如果后端数据不存在，使用模拟数据
-  const appData = app || {
-    name: "演示应用",
-    description: "前端模拟模式",
-    v: 0,
-    latestCode: undefined,
-  };
+  // 如果 app 真的为 null (例如权限不足或不存在)，显示错误或重定向
+  if (app === null) {
+    return (
+      <div className="h-screen flex flex-col items-center justify-center space-y-4">
+        <p className="text-muted-foreground">无法加载应用，可能已被删除或无权访问。</p>
+      </div>
+    );
+  }
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       {/* 顶部导航栏 */}
       <FactoryHeader 
-        title={appData.name}
-        description={appData.description}
-        version={appData.v}
+        title={app.name}
+        description={app.description}
+        version={app.v}
         onPublish={() => {
           // TODO: 实现发布逻辑
           console.log("发布应用");
@@ -75,7 +89,11 @@ export default function FactoryEditorPage() {
                 <FactoryChatPanel 
                   appId={appId}
                   appType={appType}
-                  onCodeGenerated={(code, versionId) => setGeneratedCode(code)}
+                  // 传递回调：区分是"新生成"还是"查看历史"
+                  // 注意：FactoryChatPanel 目前的 onCodeGenerated 主要用于"查看历史"或者"生成完成提示"
+                  // 我们需要约定：如果是点击历史记录，视为 isHistoryView=true
+                  // 如果是流式生成结束，视为 isHistoryView=false
+                  onCodeGenerated={(code, versionId, isHistoryView) => handleCodeEvent(code, versionId, isHistoryView)}
                 />
             </ResizablePanel>
             
@@ -85,7 +103,8 @@ export default function FactoryEditorPage() {
             <ResizablePanel defaultSize={78}>
                 <FactoryPreviewEditor 
                   appId={appId}
-                  code={generatedCode || appData.latestCode}
+                  // 关键修改：只传递需要强制覆盖的代码，否则传 undefined
+                  activeCodeOverride={previewVersionCode}
                   appType={appType}
                   onAppTypeChange={handleAppTypeChange}
                 />

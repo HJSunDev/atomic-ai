@@ -28,7 +28,8 @@ export interface AppMessage {
 export interface FactoryChatCoreProps {
   appId: Id<"apps">;
   appType: "html" | "react";
-  onCodeGenerated?: (code: string, versionId: Id<"app_versions">) => void;
+  // 增加 isHistoryView 参数，用于区分新生成和历史查看
+  onCodeGenerated?: (code: string, versionId: Id<"app_versions">, isHistoryView?: boolean) => void;
   children: (props: FactoryChatRenderProps) => React.ReactNode;
 }
 
@@ -122,7 +123,8 @@ export function FactoryChatCore({
 
       // 仅在成功生成代码时触发 回调，允许父组件执行后续操作（如预览、保存等）
       if (result.success && result.code && result.versionId) {
-        onCodeGenerated?.(result.code, result.versionId);
+        // 这里是新生成代码，所以 isHistoryView = false (默认)
+        onCodeGenerated?.(result.code, result.versionId, false);
       } else if (!result.success && result.error) {
         console.error("代码生成失败:", result.error);
       }
