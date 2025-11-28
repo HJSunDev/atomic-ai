@@ -1,9 +1,11 @@
-import React from "react";
-import { Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Bot, Clock } from "lucide-react";
+import React, { useState } from "react";
+import { Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Clock, Globe, ChevronRight, Loader2, ExternalLink } from "lucide-react";
 import { Message, MessageStreamingEffects } from "./AiChatCore";
 import { Id } from "@/convex/_generated/dataModel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageRenderer, type MessagePart } from "./MessageRenderer";
+import { FaceIcon } from "@/components/ai-assistant/FaceIcon";
+import { cn } from "@/lib/utils";
 
 interface MessageListProps {
   messages: Message[];
@@ -267,71 +269,108 @@ function transformMessageContent(
 
 // 为了增强可读性，这里为 Agent 步骤渲染提供一个帮助函数
 function StepsPanel({ steps }: { steps: NonNullable<Message["steps"]> }) {
-  // 将步骤状态转换为用户可读的文案
-  const statusLabel = (status: string) => {
-    if (status === "started") return "正在搜索...";
-    if (status === "in_progress") return "检索中...";
-    if (status === "completed") return "已找到资料";
-    if (status === "failed") return "搜索失败";
-    return status;
-  };
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  // 计算状态
+  const isSearching = steps.some(s => s.status === 'in_progress' || s.status === 'started');
+  const failedStep = steps.find(s => s.status === 'failed');
+  
+  // 收集所有搜索结果
+  const allOutputs = steps.flatMap(s => s.output || []);
+  const totalResults = allOutputs.length;
+
+  // 概览文案
+  let summary = "准备搜索...";
+  if (isSearching) summary = "正在搜索互联网...";
+  else if (failedStep && totalResults === 0) summary = "搜索过程中遇到问题";
+  else if (totalResults > 0) summary = `已找到 ${totalResults} 个相关结果`;
+  else summary = "搜索完成";
 
   return (
-    <div className="mb-2 rounded-md border border-gray-200 dark:border-gray-700 bg-white/70 dark:bg-[#1F1F22]">
-      <div className="px-3 py-2 border-b border-gray-200 dark:border-gray-700 text-xs font-medium text-gray-600 dark:text-gray-300">
-        联网搜索
-      </div>
-      <div className="px-3 py-2 space-y-3">
-        {steps.map((step, idx) => {
-          // 处理错误信息转换
-          const errorDisplay = step.error ? transformToolError(step.error) : null;
-          
-          return (
-            <div key={idx} className="text-xs text-gray-600 dark:text-gray-300">
-              <div className="mb-1">
-                <span className="font-medium">{statusLabel(step.status)}</span>
-                {step.type && <span className="ml-2 text-gray-500">({step.type})</span>}
-                {/* 显示转换后的友好错误信息 */}
-                {errorDisplay && (
-                  <div className="mt-1.5 space-y-1">
-                    <div className="text-red-500">{errorDisplay.message}</div>
-                    {errorDisplay.suggestion && (
-                      <div className="text-amber-600 dark:text-amber-400">
-                        💡 {errorDisplay.suggestion}
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-              {/* 当有输出结果时，展示链接列表 */}
-              {Array.isArray(step.output) && step.output.length > 0 && (
-                <ul className="list-disc ml-5 space-y-1">
-                  {step.output.map((res, i) => (
-                    <li key={i} className="leading-snug">
-                      <a
-                        href={res.url}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="underline text-blue-600 dark:text-blue-400 hover:opacity-80"
-                      >
-                        {res.title}
-                      </a>
-                      {typeof res.score === "number" && (
-                        <span className="ml-2 text-[11px] text-gray-500">score: {res.score.toFixed(2)}</span>
-                      )}
-                      {res.content && (
-                        <div className="text-[11px] text-gray-500 mt-0.5 line-clamp-2">
-                          {res.content}
-                        </div>
-                      )}
-                    </li>
-                  ))}
-                </ul>
+    <div className="my-2 rounded-md bg-muted/50 border border-transparent hover:bg-muted/70 transition-colors group/callout">
+       {/* Summary Row (Click to toggle) */}
+       <div
+          className="flex items-center gap-2 px-3 py-2 cursor-pointer select-none"
+          onClick={() => setIsExpanded(!isExpanded)}
+       >
+          <div className={cn(
+            "transition-transform duration-200 text-muted-foreground/70 group-hover/callout:text-muted-foreground", 
+            isExpanded && "rotate-90"
+          )}>
+             <ChevronRight className="w-4 h-4" />
+          </div>
+          <div className="flex items-center gap-2 flex-1 overflow-hidden">
+              {/* Icon based on state */}
+              {isSearching ? (
+                <Loader2 className="w-4 h-4 animate-spin text-blue-500"/> 
+              ) : (
+                <Globe className="w-4 h-4 text-muted-foreground/70 group-hover/callout:text-blue-500/80 transition-colors"/>
               )}
-            </div>
-          );
-        })}
-      </div>
+              <span className="text-sm text-foreground/80 truncate font-medium">{summary}</span>
+          </div>
+       </div>
+
+       {/* Expanded Content */}
+       {isExpanded && (
+          <div className="px-3 pb-3 pl-9 space-y-3 animate-in slide-in-from-top-1 fade-in duration-200">
+             
+             {/* 错误提示 (如果有) */}
+             {steps.map((step, idx) => {
+               const errorDisplay = step.error ? transformToolError(step.error) : null;
+               if (!errorDisplay) return null;
+               return (
+                 <div key={`err-${idx}`} className="text-xs p-2 rounded bg-red-50 dark:bg-red-950/20 text-red-600 dark:text-red-400 border border-red-100 dark:border-red-900/30 mb-2">
+                    <div className="font-medium">{errorDisplay.message}</div>
+                    {errorDisplay.suggestion && <div className="mt-1 opacity-80">💡 {errorDisplay.suggestion}</div>}
+                 </div>
+               );
+             })}
+
+             {/* 结果列表 */}
+             {totalResults > 0 ? (
+               <div className="space-y-1">
+                 {allOutputs.map((res, i) => (
+                   <a
+                     key={i}
+                     href={res.url}
+                     target="_blank"
+                     rel="noreferrer"
+                     className="flex items-start gap-2 p-1.5 rounded-md hover:bg-muted/80 transition-colors group/item no-underline"
+                   >
+                     <div className="mt-0.5 flex-shrink-0 text-muted-foreground/50 group-hover/item:text-blue-500/70">
+                       <ExternalLink className="w-3.5 h-3.5" />
+                     </div>
+                     <div className="flex-1 min-w-0">
+                       <div className="text-sm text-foreground/90 truncate font-medium group-hover/item:text-blue-600 dark:group-hover/item:text-blue-400 group-hover/item:underline decoration-blue-500/30 underline-offset-2">
+                         {res.title}
+                       </div>
+                       <div className="text-xs text-muted-foreground/60 truncate mt-0.5 font-mono">
+                         {(() => {
+                           try {
+                             return new URL(res.url).hostname;
+                           } catch {
+                             return res.url;
+                           }
+                         })()}
+                       </div>
+                       {res.content && (
+                         <div className="text-xs text-muted-foreground/70 mt-1 line-clamp-2 leading-relaxed border-l-2 border-muted pl-2">
+                           {res.content}
+                         </div>
+                       )}
+                     </div>
+                   </a>
+                 ))}
+               </div>
+             ) : (
+               !isSearching && (
+                 <div className="text-xs text-muted-foreground py-2 italic">
+                   暂无具体搜索结果
+                 </div>
+               )
+             )}
+          </div>
+       )}
     </div>
   );
 }
@@ -400,8 +439,9 @@ export function MessageList({
               <div className="w-full">
                 {/* AI信息栏 */}
                 <div className="flex items-center gap-2 mb-1.5">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-white" />
+                  {/* 仅添加 ring-1 ring-black/5 dark:ring-white/10 */}
+                  <div className="w-7 h-7 rounded-full bg-transparent flex-shrink-0 flex items-center justify-center overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
+                    <FaceIcon className="w-6 h-6 text-gray-800 dark:text-gray-200" />
                   </div>
                   <span className="text-sm font-medium">OmniAid</span>
                   {message.metadata?.aiModel && (

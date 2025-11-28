@@ -2,6 +2,11 @@ import React from "react";
 import Link from "next/link";
 import { ChevronLeft, Code2, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface FactoryHeaderProps {
   title: string;
@@ -20,17 +25,24 @@ export function FactoryHeader({
     <header className="h-14 border-b flex items-center px-4 justify-between shrink-0 bg-white dark:bg-slate-950 z-10">
       <div className="flex items-center">
         {/* 返回工坊 (面包屑层级 1) */}
-        <Button
-          variant="ghost"
-          size="sm"
-          className="h-8 gap-1 text-muted-foreground hover:text-foreground px-2"
-          asChild
-        >
-          <Link href="/home/factory" title="返回工坊列表">
-            <ChevronLeft className="w-4 h-4" />
-            <span className="font-medium text-sm">工坊</span>
-          </Link>
-        </Button>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button
+              variant="ghost"
+              size="sm"
+              className="h-8 gap-1 text-muted-foreground hover:text-foreground px-2"
+              asChild
+            >
+              <Link href="/home/factory">
+                <ChevronLeft className="w-4 h-4" />
+                <span className="font-medium text-sm">工坊</span>
+              </Link>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>返回工坊列表</p>
+          </TooltipContent>
+        </Tooltip>
 
         {/* 分隔符 */}
         <span className="mx-2 text-muted-foreground/20 text-lg font-light">/</span>

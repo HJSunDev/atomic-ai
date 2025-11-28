@@ -34,9 +34,9 @@ export const FactoryPreviewEditor = ({ appId, activeCodeOverride, appType: exter
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950">
       {/* 顶部模式切换 */}
-      <div className="h-12 border-b bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0">
+      <header className="h-12 border-b bg-white dark:bg-slate-900 flex items-center justify-between px-4 shrink-0">
         <AppTypeSwitcher value={appType} onChange={handleAppTypeChange} />
-      </div>
+      </header>
 
       {/* 编辑器主体 */}
       <div className="flex-1 overflow-hidden relative">

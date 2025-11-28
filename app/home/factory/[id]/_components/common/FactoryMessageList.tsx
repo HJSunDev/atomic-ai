@@ -1,10 +1,17 @@
 import React from "react";
-import { Bot, Code2, Clock } from "lucide-react";
+import { Code2, Clock, GitCommitHorizontal } from "lucide-react";
 import { AppMessage } from "./FactoryChatCore";
 import { Id } from "@/convex/_generated/dataModel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageRenderer, type MessagePart } from "@/components/ai-chat/MessageRenderer";
 import { ThinkingCursor, TypingCursor } from "@/components/custom";
+import { cn } from "@/lib/utils";
+import { FaceIcon } from "@/components/ai-assistant/FaceIcon";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface FactoryMessageListProps {
   messages: AppMessage[];
@@ -126,19 +133,31 @@ export function FactoryMessageList({
             <section className="flex flex-col">
               <div className="w-full">
                 <div className="flex items-center gap-2 mb-1.5">
-                  <div className="w-7 h-7 rounded-full bg-gradient-to-br from-blue-500 to-purple-600 flex-shrink-0 flex items-center justify-center">
-                    <Bot className="w-4 h-4 text-white" />
+                  <div className="w-7 h-7 rounded-full bg-transparent flex-shrink-0 flex items-center justify-center overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
+                    <FaceIcon className="w-6 h-6 text-gray-800 dark:text-gray-200" />
                   </div>
-                  <span className="text-sm font-medium">AI 工坊</span>
+                  <span className="text-sm font-medium text-foreground/80">AI 工坊</span>
                   {message.relatedCodeId && (
-                    <button
-                      onClick={() => onVersionClick?.(message.relatedCodeId!)}
-                      className="text-xs bg-blue-100 dark:bg-blue-900 px-2.5 py-1 rounded-md text-blue-800 dark:text-blue-200 flex items-center gap-1.5 hover:bg-blue-200 dark:hover:bg-blue-800 transition-colors cursor-pointer border border-blue-200 dark:border-blue-700"
-                      title={`点击查看代码版本 v${message.relatedCodeVersion || '?'}`}
-                    >
-                      <Code2 className="w-3.5 h-3.5" />
-                      <span className="font-medium">v{message.relatedCodeVersion || '?'}</span>
-                    </button>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <button
+                          onClick={() => onVersionClick?.(message.relatedCodeId!)}
+                          className={cn(
+                            "group/version flex items-center gap-1.5 px-2 py-0.5 ml-1 rounded-md transition-all",
+                            "bg-muted/40 hover:bg-muted text-muted-foreground hover:text-primary",
+                            "cursor-pointer select-none"
+                          )}
+                        >
+                          <GitCommitHorizontal className="w-3.5 h-3.5 opacity-60 group-hover/version:opacity-100 transition-opacity" />
+                          <span className="text-xs font-mono opacity-80 group-hover/version:opacity-100">
+                            v{message.relatedCodeVersion || '?'}
+                          </span>
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>查看代码快照 v{message.relatedCodeVersion || '?'}</p>
+                      </TooltipContent>
+                    </Tooltip>
                   )}
                 </div>
 

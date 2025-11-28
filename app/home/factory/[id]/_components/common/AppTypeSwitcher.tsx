@@ -1,4 +1,4 @@
-import { Code2, FileCode } from "lucide-react";
+import { Code2, FileCode, Construction } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { AppType } from "./types";
 
@@ -29,12 +29,21 @@ export const AppTypeSwitcher = ({ value, onChange, className }: AppTypeSwitcherP
         className={cn(
           "flex items-center gap-2 px-3 py-1.5 rounded-md text-xs font-medium transition-all cursor-pointer",
           value === "react"
-            ? "bg-white dark:bg-slate-800 shadow-sm text-foreground"
+            ? "bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400 shadow-sm ring-1 ring-amber-200 dark:ring-amber-800"
             : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
         )}
       >
-        <Code2 className="w-3.5 h-3.5" />
-        <span>React 应用</span>
+        {value === "react" ? (
+          <>
+            <Construction className="w-3.5 h-3.5" />
+            <span>React 维护中</span>
+          </>
+        ) : (
+          <>
+            <Code2 className="w-3.5 h-3.5" />
+            <span>React 应用</span>
+          </>
+        )}
       </button>
     </div>
   );
