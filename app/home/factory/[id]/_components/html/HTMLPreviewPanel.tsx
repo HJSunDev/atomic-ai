@@ -5,8 +5,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
 import { cn } from "@/lib/utils";
 import { HTML_EMPTY_TEMPLATE, generateMicroAppHtml } from "./templates-html";
-import { CodeEditor } from "../common/CodeEditor";
 import { useAutoSaveAppCode } from "@/hooks/useAutoSaveAppCode";
+
+// 子组件
+import { HTMLCodeEditor } from "./components/HTMLCodeEditor";
+import { HTMLPreviewRenderer, PreviewDevice } from "./components/HTMLPreviewRenderer";
 
 interface HTMLPreviewPanelProps {
   appId: Id<"apps">;
@@ -15,12 +18,10 @@ interface HTMLPreviewPanelProps {
 }
 
 export const HTMLPreviewPanel = ({ appId, activeCodeOverride }: HTMLPreviewPanelProps) => {
-  const [viewMode, setViewMode] = useState<'preview' | 'code' | 'split'>('split');
-  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'tablet' | 'mobile'>('desktop');
-
-  // iframe 实例引用
-  const iframeRef = useRef<HTMLIFrameElement>(null);
   
+  const [viewMode, setViewMode] = useState<'preview' | 'code' | 'split'>('split');
+  const [previewDevice, setPreviewDevice] = useState<PreviewDevice>('desktop');
+
   // 使用自动保存 Hook 管理代码状态
   // code: 实时代码（用于编辑器绑定，无延迟）
   // debouncedCode: 稳定代码（用于预览渲染，有1000ms延迟）
@@ -79,60 +80,6 @@ export const HTMLPreviewPanel = ({ appId, activeCodeOverride }: HTMLPreviewPanel
     window.open(url, '_blank');
     setTimeout(() => URL.revokeObjectURL(url), 100);
   };
-
-  const getDeviceWidth = () => {
-    switch (previewDevice) {
-      case 'mobile': return '375px';
-      case 'tablet': return '768px';
-      case 'desktop': return '100%';
-    }
-  };
-
-  const getDeviceHeight = () => {
-    switch (previewDevice) {
-      case 'mobile': return 'calc(100% - 2rem)';
-      case 'tablet': return 'calc(100% - 2rem)';
-      case 'desktop': return '100%';
-    }
-  };
-
-  // 左侧预览区域
-  const renderPreview = () => (
-    <div className="h-full flex items-center justify-center bg-gray-100/50 dark:bg-slate-950/50 overflow-auto">
-      <div
-        className={cn(
-          "transition-all duration-300 bg-white shadow-lg border h-full",
-          previewDevice === 'desktop' && "w-full h-full border-none",
-          previewDevice === 'tablet' && "w-[768px] my-4 rounded-lg border-gray-200 dark:border-gray-800",
-          previewDevice === 'mobile' && "w-[375px] my-4 rounded-[2rem] border-4 border-gray-800 dark:border-gray-700 overflow-hidden"
-        )}
-        style={{
-          width: getDeviceWidth(),
-          height: getDeviceHeight(),
-        }}
-      >
-        <iframe
-          ref={iframeRef}
-          className="w-full h-full border-none"
-          title="HTML Preview"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
-          srcDoc={fullHtml}
-        />
-      </div>
-    </div>
-  );
-
-  // 右侧代码编辑区
-  const renderCode = () => (
-    <div className="h-full overflow-hidden bg-background border-l dark:border-slate-800">
-      <CodeEditor 
-        value={activeCode} 
-        onChange={(val) => {console.log("代码编辑器变化触发："); setCode(val || "")}}
-        language="html"
-        showLineNumbers={true}
-      />
-    </div>
-  );
 
   return (
     <div className="h-full flex flex-col bg-slate-50 dark:bg-slate-950">
@@ -281,25 +228,37 @@ export const HTMLPreviewPanel = ({ appId, activeCodeOverride }: HTMLPreviewPanel
 
       {/* 主内容区 */}
       <article className="flex-1 overflow-hidden relative">
-        {viewMode === 'preview' && renderPreview()}
-        
-        {viewMode === 'code' && renderCode()}
-        
+
         {viewMode === 'split' && (
           <ResizablePanelGroup direction="horizontal" className="h-full">
+
             <ResizablePanel defaultSize={50} minSize={30}>
-              {renderPreview()}
+              <HTMLPreviewRenderer html={fullHtml} device={previewDevice} />
             </ResizablePanel>
+
             <ResizableHandle withHandle />
+
             <ResizablePanel defaultSize={50} minSize={30}>
-              {renderCode()}
+              <HTMLCodeEditor 
+                code={activeCode} 
+                onChange={setCode}
+              />
             </ResizablePanel>
+            
           </ResizablePanelGroup>
+        )}
+
+        {viewMode === 'preview' && (
+          <HTMLPreviewRenderer html={fullHtml} device={previewDevice} />
+        )}
+        
+        {viewMode === 'code' && (
+          <HTMLCodeEditor 
+            code={activeCode} 
+            onChange={setCode}
+          />
         )}
       </article>
     </div>
   );
 };
-
-
-

@@ -17,13 +17,7 @@ interface FactoryChatInputProps {
 }
 
 /**
- * FactoryChatInput - Factory 工坊输入框组件
- * 
- * 设计要点：
- * - 简化版的 ChatInput，移除不需要的功能
- * - 保留核心功能：输入、发送、放大、模型选择
- * - 支持放大模式以便输入长文本
- * - 集成模型选择器
+ * FactoryChatInput - Factory 工坊输入区组件
  */
 export function FactoryChatInput({
   onSendMessage,

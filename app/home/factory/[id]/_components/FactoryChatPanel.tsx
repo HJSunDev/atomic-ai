@@ -16,12 +16,6 @@ interface FactoryChatPanelProps {
 
 /**
  * FactoryChatPanel - Factory 工坊聊天面板主容器
- * 
- * 设计理念：
- * - 整合所有子组件，提供统一的聊天界面
- * - 使用 FactoryChatCore 管理状态和业务逻辑
- * - 采用 Render Props 模式实现组件组合
- * - 响应式布局，适配不同屏幕尺寸
  */
 export const FactoryChatPanel = ({
   appId,
@@ -31,7 +25,7 @@ export const FactoryChatPanel = ({
   const [selectedVersionId, setSelectedVersionId] = useState<Id<"app_versions"> | null>(null);
   const [isVersionDialogOpen, setIsVersionDialogOpen] = useState(false);
 
-  // 处理点击版本标签的回调
+  // 点击消息列表 版本号触发-查看预览版本代码
   const handleVersionClick = (versionId: Id<"app_versions">) => {
     setSelectedVersionId(versionId);
     setIsVersionDialogOpen(true);
@@ -58,7 +52,7 @@ export const FactoryChatPanel = ({
           messagesEndRef,
           handleSendMessage,
         }) => (
-          <div className="h-full bg-background flex flex-col">
+          <div className="h-full bg-background flex flex-col relative">
             <section className="flex-1 overflow-y-auto">
               <FactoryMessageList
                 messages={messages}
@@ -70,7 +64,7 @@ export const FactoryChatPanel = ({
               />
             </section>
 
-            <section className="shrink-0 relative">
+            <section className="shrink-0">
               <FactoryChatInput
                 onSendMessage={handleSendMessage}
                 isGenerating={isGenerating}

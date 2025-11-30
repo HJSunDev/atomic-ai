@@ -19,6 +19,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
+
+// 工坊主页-列表页
 export default function FactoryListPage() {
   const router = useRouter();
   const createApp = useMutation(api.factory.mutations.createApp);
@@ -87,7 +89,7 @@ export default function FactoryListPage() {
         </header>
 
         {/* Content Section */}
-        <main>
+        <section>
           {apps === undefined ? (
             // Loading State
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -103,7 +105,7 @@ export default function FactoryListPage() {
                </div>
                <div className="max-w-md space-y-2">
                   <h3 className="text-xl font-semibold text-foreground">暂无项目</h3>
-                  <p className="text-muted-foreground">你还没有创建任何应用。点击右上角的“新建项目”开始你的创造之旅吧。</p>
+                  <p className="text-muted-foreground">你还没有创建任何应用。点击“新建项目”开始你的创造之旅吧。</p>
                </div>
                <Button variant="outline" onClick={handleCreateNew} className="rounded-full">
                   立即创建
@@ -111,10 +113,10 @@ export default function FactoryListPage() {
             </div>
           ) : (
             // Grid List
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+            <article className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
                {filteredApps?.map((app) => (
                   <Link href={`/home/factory/${app._id}`} key={app._id} className="group outline-none">
-                     <article className="flex flex-col gap-3 p-2 -m-2 rounded-2xl hover:bg-muted/40 dark:hover:bg-muted/10 transition-all duration-200 cursor-pointer group-focus-visible:ring-2 ring-primary/20">
+                     <section className="flex flex-col gap-3 p-2 -m-2 rounded-2xl hover:bg-muted/40 dark:hover:bg-muted/10 transition-all duration-200 cursor-pointer group-focus-visible:ring-2 ring-primary/20">
                         {/* Preview Card */}
                         <div className="relative aspect-[16/10] rounded-xl bg-gradient-to-br from-muted/50 to-muted/10 border border-border/40 overflow-hidden shadow-sm group-hover:shadow-md group-hover:border-border/80 transition-all">
                            {/* Placeholder Pattern */}
@@ -198,12 +200,12 @@ export default function FactoryListPage() {
                               </div>
                            </div>
                         </div>
-                     </article>
+                     </section>
                   </Link>
                ))}
-            </div>
+            </article>
           )}
-        </main>
+        </section>
       </div>
     </div>
   );

@@ -123,7 +123,7 @@ export function FactoryChatCore({
 
       // 仅在成功生成代码时触发 回调，允许父组件执行后续操作（如预览、保存等）
       if (result.success && result.code && result.versionId) {
-        // 这里是新生成代码，所以 isHistoryView = false (默认)
+        // 这里是新生成代码，所以 isHistoryView = false ,内容的传递不重要，重要的是 false
         onCodeGenerated?.(result.code, result.versionId, false);
       } else if (!result.success && result.error) {
         console.error("代码生成失败:", result.error);

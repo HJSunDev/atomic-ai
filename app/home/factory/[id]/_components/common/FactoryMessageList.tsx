@@ -58,6 +58,24 @@ const MessagesSkeleton = () => (
 );
 
 /**
+ * 格式化时间戳为可读的时间格式
+ * 
+ * 设计原因：
+ * - 纯函数，不依赖组件状态或 props，应放在组件外部避免每次渲染重新创建
+ * - 提取到组件外部符合 React 最佳实践，减少不必要的函数创建开销
+ * - 对于大量消息列表，避免函数重复创建可以带来轻微的性能提升
+ * 
+ * @param timestamp Unix 时间戳（毫秒）
+ * @returns 格式化的时间字符串，格式为 "HH:mm"
+ */
+function formatTimestamp(timestamp: number): string {
+  return new Date(timestamp).toLocaleTimeString("zh-CN", {
+    hour: "2-digit",
+    minute: "2-digit",
+  });
+}
+
+/**
  * 流式传输效果组件
  * 根据消息内容显示思考光标或打字光标
  */
@@ -105,17 +123,10 @@ export function FactoryMessageList({
     return <>{emptyState}</>;
   }
 
-  const formatTimestamp = (timestamp: number) => {
-    return new Date(timestamp).toLocaleTimeString("zh-CN", {
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
-
   return (
     <article className="p-4">
       {messages.map((message, index) => (
-        <div key={message._id} className="group mb-6 last:mb-2">
+        <section key={message._id} className="group mb-6 last:mb-2">
           {message.role === "user" ? (
             <section className="flex flex-col items-end">
               <div className="w-3/4 bg-[#F1F2F3] dark:bg-[#2B2B2D] rounded-tl-lg rounded-tr-lg rounded-bl-lg p-4 ml-auto">
@@ -132,7 +143,7 @@ export function FactoryMessageList({
           ) : (
             <section className="flex flex-col">
               <div className="w-full">
-                <div className="flex items-center gap-2 mb-1.5">
+                <header className="flex items-center gap-2 mb-1.5">
                   <div className="w-7 h-7 rounded-full bg-transparent flex-shrink-0 flex items-center justify-center overflow-hidden ring-1 ring-black/5 dark:ring-white/10">
                     <FaceIcon className="w-6 h-6 text-gray-800 dark:text-gray-200" />
                   </div>
@@ -159,7 +170,7 @@ export function FactoryMessageList({
                       </TooltipContent>
                     </Tooltip>
                   )}
-                </div>
+                </header>
 
                 <div className="markdown-content">
                   <MessageRenderer
@@ -173,17 +184,17 @@ export function FactoryMessageList({
                 </div>
 
                 {!streamingMessageId && (
-                  <div className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
+                  <footer className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">
                     <span className="flex items-center gap-1">
                       <Clock className="w-3 h-3" />
                       {formatTimestamp(message._creationTime)}
                     </span>
-                  </div>
+                  </footer>
                 )}
               </div>
             </section>
           )}
-        </div>
+        </section>
       ))}
       <aside className="h-4" ref={messagesEndRef} />
     </article>

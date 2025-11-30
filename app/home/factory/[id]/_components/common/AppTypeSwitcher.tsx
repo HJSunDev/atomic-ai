@@ -9,6 +9,7 @@ interface AppTypeSwitcherProps {
 }
 
 export const AppTypeSwitcher = ({ value, onChange, className }: AppTypeSwitcherProps) => {
+  
   return (
     <div className={cn("flex items-center gap-2 bg-muted/30 p-1 rounded-lg", className)}>
       <button
@@ -45,39 +46,6 @@ export const AppTypeSwitcher = ({ value, onChange, className }: AppTypeSwitcherP
           </>
         )}
       </button>
-    </div>
-  );
-};
-
-interface AppTypeInfoBadgeProps {
-  type: AppType;
-  className?: string;
-}
-
-export const AppTypeInfoBadge = ({ type, className }: AppTypeInfoBadgeProps) => {
-  const config: Record<AppType, {
-    icon: typeof Code2;
-    label: string;
-    color: string;
-  }> = {
-    react: {
-      icon: Code2,
-      label: "React",
-      color: "text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800",
-    },
-    html: {
-      icon: FileCode,
-      label: "HTML",
-      color: "text-orange-600 dark:text-orange-400 bg-orange-50 dark:bg-orange-900/20 border-orange-200 dark:border-orange-800",
-    },
-  };
-
-  const { icon: Icon, label, color } = config[type];
-
-  return (
-    <div className={cn("inline-flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs font-medium", color, className)}>
-      <Icon className="w-3 h-3" />
-      <span>{label}</span>
     </div>
   );
 };
