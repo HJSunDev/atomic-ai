@@ -5,10 +5,12 @@ import { AiCreationInput, type CreationInputPayload } from "./platform/AiCreatio
 // 文档模块视图：从 documents 目录引入
 import { DocumentCreationView } from "./documents/DocumentCreationView";
 
-import { useGenerationOrchestrator } from "@/services/prompt/generationOrchestrator";
 import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 import { useIntentRouter } from "@/services/intent";
 import { IntentRoutingOverlay } from "./components/IntentRoutingOverlay";
+
+// 引入意图处理器
+import { useChatIntentHandler, useDocumentIntentHandler, useAppIntentHandler } from "./handlers";
 
 /**
  * 智创模块主入口 (AiCreationStudio)
@@ -21,10 +23,6 @@ import { IntentRoutingOverlay } from "./components/IntentRoutingOverlay";
  * 5. 执行意图识别，自动路由到 chat/document/app 模块
  */
 export const AiCreationStudio = () => {
-  // 引入文档生成编排器
-  // TODO: 未来这里可以引入网页生成、图片生成等其他编排器
-  const { startGeneration } = useGenerationOrchestrator();
-  
   // 引入意图识别和路由器
   const { 
     executeIntentRouting, 
@@ -32,6 +30,11 @@ export const AiCreationStudio = () => {
     intentResult, 
     resetStatus 
   } = useIntentRouter();
+
+  // 引入业务模块处理器
+  const { handleChatIntent } = useChatIntentHandler();
+  const { handleDocumentIntent, startGeneration } = useDocumentIntentHandler();
+  const { handleAppIntent } = useAppIntentHandler();
 
   /**
    * 处理 AI 创作输入的提交
@@ -52,22 +55,11 @@ export const AiCreationStudio = () => {
             webSearchEnabled: payload.webSearchEnabled,
             userApiKey: payload.userApiKey,
           },
-          // 自定义处理器
+          // 注入自定义处理器
           {
-            // Document 模块：直接在当前页面执行文档生成逻辑
-            document: async (intent, input) => {
-              console.log("[AiCreationStudio] 路由到 document 模块，开始生成...");
-              
-              const genResult = await startGeneration({
-                userPrompt: input.userPrompt,
-                modelId: input.modelId,
-                webSearchEnabled: input.webSearchEnabled,
-                userApiKey: input.userApiKey,
-                // 可以把意图识别的 summary 作为文档标题的参考（如果需要）
-              });
-              
-              return genResult.success ?? false;
-            }
+            chat: handleChatIntent,
+            document: handleDocumentIntent,
+            app: handleAppIntent,
           }
         );
 
@@ -87,7 +79,7 @@ export const AiCreationStudio = () => {
         return { success: fallbackResult.success ?? false };
       }
     },
-    [executeIntentRouting, startGeneration]
+    [executeIntentRouting, handleChatIntent, handleDocumentIntent, handleAppIntent, startGeneration]
   );
 
   return (
@@ -128,3 +120,4 @@ export const AiCreationStudio = () => {
     </main>
   );
 };
+
