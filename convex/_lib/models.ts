@@ -22,7 +22,7 @@ export type ProviderType = 'openrouter';
 // ===================================================================
 
 const GENERAL_PAID_MODEL_MAX_DOC_OUTPUT = 16384; // 付费模型：16k tokens
-const FREE_MODEL_BASELINE_MAX_OUTPUT = 8192; // 免费模型：8k tokens
+const FREE_MODEL_BASELINE_MAX_OUTPUT = 10000; // 免费模型：10k tokens
 
 // 按服务商分类的模型列表
 export const MODELS_BY_PROVIDER: Record<ProviderType, {

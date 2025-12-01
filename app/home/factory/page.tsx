@@ -78,7 +78,7 @@ export default function FactoryListPage() {
                    <Button 
                       onClick={handleCreateNew} 
                       size="lg" 
-                      className="rounded-md px-4 shadow-sm hover:shadow transition-all duration-200 bg-primary text-primary-foreground border border-primary/10 h-9 text-sm font-medium"
+                      className="rounded-md px-4 shadow-sm hover:shadow transition-all duration-200 bg-primary text-primary-foreground border border-primary/10 h-9 text-sm font-medium cursor-pointer"
                    >
                       <Plus className="w-4 h-4 mr-2" />
                       新建项目

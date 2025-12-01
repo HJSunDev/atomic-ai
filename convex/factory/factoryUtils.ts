@@ -43,21 +43,28 @@ Choose the best approach based on the user's request:
 
 **Option B: React (Preferred for complex state/calculators/games)**
 - Structure:
-  \`\`\`html
+  This is a React counter example.
+  :::artifact:::
   <div id="root"></div>
-  <script type="module">
+  <!-- Note: Use type="text/babel" for JSX support -->
+  <script type="text/babel" data-type="module">
     import React, { useState, useEffect } from 'react';
     import { createRoot } from 'react-dom/client';
     import confetti from 'canvas-confetti';
 
     function App() {
-      return <div className="p-4 bg-white rounded-xl shadow-lg">Hello React</div>;
+      return (
+        <div className="p-4 bg-white rounded-xl shadow-lg">
+          <h1 className="text-2xl font-bold text-primary-600">Hello React</h1>
+          <button className="btn">Click Me</button>
+        </div>
+      );
     }
 
     const root = createRoot(document.getElementById('root'));
-    root.render(React.createElement(App));
+    root.render(<App />);
   </script>
-  \`\`\`
+  :::artifact:::
 
 ### 5. Design System Rules
 - **Modern UI**: Use rounded corners (rounded-xl), soft shadows (shadow-lg), and ample padding (p-6).
@@ -81,25 +88,31 @@ Format: \`https://placehold.co/{width}x{height}?text={text}\`
 Design: <img src="https://loremflickr.com/800/400/nature" alt="Banner">
 Wireframe: <img src="https://placehold.co/300x200?text=Ad+Space" alt="Ad">
 
-### 8. Response Structure & Separation (CRITICAL)
-To enable the system to separate your conversational response from the executable code, you MUST follow this exact format:
+### 8. Response Format (CRITICAL)
+**Strict Rule**: Your response must strictly follow this sequence: **Chinese Explanation** -> **Opening \`:::artifact:::\`** -> **Raw Code** -> **Closing \`:::artifact:::\`**. (The closing delimiter is MANDATORY).
 
-1.  **Conversational Text (IN CHINESE)**: Start with a brief, friendly message explaining what you created or how to use it.
-    - **You MUST use Chinese for this part.**
-    - **DO NOT** mention technical details like Tailwind, Flowbite, AOS, Import Maps, or LoremFlickr. These are internal details.
-    - **Focus ONLY on features**: Tell the user what the app does (e.g., "这是一个为您生成的简历页面，包含联系表单和项目展示...").
-2.  **The Separator**: Output the exact delimiter string: \`:::artifact:::\`
-3.  **The Code**: Output the raw HTML/JS code.
-    - **DO NOT** wrap the code in markdown blocks (like \`\`\`html).
-    - Ensure all JavaScript is properly enclosed in <script> tags.
-    - Handle potential errors using try-catch blocks.
-4.  **The Separator**: End with the exact delimiter string: \`:::artifact:::\`
-
-**Example Output:**
-这是一个为您生成的房贷计算器。我使用了 React 来管理状态，并用 Chart.js 实现了可视化效果。
+**Example 1 (Vanilla JS):**
+这是一个为您生成的房贷计算器，界面简洁直观。
 :::artifact:::
 <div class="p-4 bg-white">...</div>
-<script type="module">...</script>
+<script>...</script>
+:::artifact:::
+
+**Example 2 (React):**
+这是一个使用 React 构建的待办事项应用，支持动态添加和删除。
+:::artifact:::
+<div id="root"></div>
+<script type="text/babel" data-type="module">
+  import React, { useState } from 'react';
+  import { createRoot } from 'react-dom/client';
+
+  function App() {
+    return <div className="p-4">Hello React</div>;
+  }
+
+  const root = createRoot(document.getElementById('root'));
+  root.render(<App />);
+</script>
 :::artifact:::`;
 
 /**

@@ -425,7 +425,133 @@ interface TemplateOptions {
  */
 export const generateMicroAppHtml = ({ title = "AI Micro App", code, theme = "light" }: TemplateOptions) => {
   // 1. 安全清洗：移除可能存在的 Markdown 代码块标记
-  const cleanCode = code.replace(/```html/g, '').replace(/```/g, '').trim();
+  let cleanCode = code.replace(/```html/g, '').replace(/```/g, '').trim();
+
+  // 2. 智能检测：是否为 React/Babel 模式
+  // 如果代码中明确包含 type="text/babel" 或者包含 React 关键字，则启用 Babel 模式
+  // 注意：为了兼容之前的逻辑，如果包含 type="module" 但没有显式指明，我们仍然尝试转换
+  const isReactMode = cleanCode.includes('type="text/babel"') || 
+                     cleanCode.includes('from \'react\'') || 
+                     cleanCode.includes('from "react"') ||
+                     cleanCode.includes('React.createElement');
+
+  // 3. 根据模式处理代码
+  if (isReactMode) {
+    // 3.1 自动修复：如果 AI 使用了 module 但忘记写 text/babel，帮它修正
+    if (!cleanCode.includes('type="text/babel"')) {
+      cleanCode = cleanCode.replace(
+        /<script type="module">/g, 
+        '<script type="text/babel" data-type="module">'
+      );
+    }
+
+    // 3.2 修复 JSX 中的模板字符串语法错误 (仅在 script 标签内)
+    // 修复转义的反引号 ` -> ` 和美元符号 $ -> $
+    cleanCode = cleanCode.replace(/(<script[^>]*>)([\s\S]*?)(<\/script>)/g, (match, scriptStart, scriptContent, scriptEnd) => {
+      const fixedContent = scriptContent
+        .replace(/\\`/g, '`')
+        .replace(/\\\$/g, '$');
+      return scriptStart + fixedContent + scriptEnd;
+    });
+  }
+
+  const processedCode = cleanCode;
+
+  // 4. 构建初始化脚本 (Bootloader)
+  // 根据模式选择不同的初始化策略
+  const bootloaderScript = isReactMode ? `
+    // React 模式初始化：需要等待 Babel 加载和编译
+    function initApp() {
+      try {
+        if (typeof Babel !== 'undefined') {
+          // 1. 触发编译
+          if (Babel.transformScriptTags) {
+            Babel.transformScriptTags();
+          } else {
+            // 备用编译方案
+            const babelScripts = document.querySelectorAll('script[type="text/babel"]');
+            babelScripts.forEach(script => {
+              try {
+                const isModule = script.hasAttribute('data-type') && script.getAttribute('data-type') === 'module';
+                const transformed = Babel.transform(script.innerHTML, {
+                  presets: ['react', ['env', { modules: false }]]
+                });
+                const newScript = document.createElement('script');
+                newScript.type = isModule ? 'module' : 'text/javascript';
+                newScript.textContent = transformed.code;
+                script.parentNode.replaceChild(newScript, script);
+              } catch (e) { console.warn('Transformation failed:', e); }
+            });
+          }
+        }
+        
+        // 2. 移除 Loading (给予 React 渲染缓冲时间)
+        setTimeout(() => {
+          const loader = document.getElementById('global-loader');
+          const root = document.getElementById('app-root');
+          if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 500); }
+          if (root) root.classList.remove('opacity-0');
+          if (typeof AOS !== 'undefined') AOS.init({ duration: 800, once: true });
+        }, 800);
+
+      } catch (error) {
+        console.error('App initialization error:', error);
+        document.getElementById('error-box').style.display = 'block';
+        document.getElementById('error-box').textContent = 'Init Error: ' + error.message;
+        document.getElementById('global-loader').style.display = 'none';
+      }
+    }
+
+    // 轮询等待 Babel
+    function waitForBabel() {
+      if (typeof Babel !== 'undefined') {
+        setTimeout(initApp, 100);
+      } else {
+        let attempts = 0;
+        const checkInterval = setInterval(() => {
+          attempts++;
+          if (typeof Babel !== 'undefined') {
+            clearInterval(checkInterval);
+            setTimeout(initApp, 100);
+          } else if (attempts >= 100) { // 5秒超时
+            clearInterval(checkInterval);
+            console.warn('Babel timeout, forcing init');
+            initApp();
+          }
+        }, 50);
+      }
+    }
+    
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', waitForBabel);
+    else waitForBabel();
+  ` : `
+    // 原生模式初始化：极速响应
+    // 不等待所有图片资源加载（load），只要 DOM 准备好（DOMContentLoaded）就显示
+    function showApp() {
+      const loader = document.getElementById('global-loader');
+      const root = document.getElementById('app-root');
+      
+      // 立即移除遮罩，不加延迟
+      if (loader) { 
+        loader.style.opacity = '0'; 
+        // 缩短移除时间，让交互更快可用
+        setTimeout(() => loader.remove(), 300); 
+      }
+      if (root) root.classList.remove('opacity-0');
+      
+      // AOS 可以在稍后初始化，不阻塞首屏显示
+      if (typeof AOS !== 'undefined') {
+        // 使用 requestAnimationFrame 确保在下一帧执行，避免阻塞主线程
+        requestAnimationFrame(() => AOS.init({ duration: 800, once: true }));
+      }
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', showApp);
+    } else {
+      showApp();
+    }
+  `;
 
   return `
 <!DOCTYPE html>
@@ -456,7 +582,10 @@ export const generateMicroAppHtml = ({ title = "AI Micro App", code, theme = "li
     }
   </script>
 
-  <!-- === 3. Import Maps (按需加载的神器) === -->
+  <!-- === 3. Babel (仅 React 模式加载) === -->
+  ${isReactMode ? '<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>' : ''}
+
+  <!-- === 4. Import Maps (按需加载的神器) === -->
   <!-- 只有当 AI 写了 import ... from 'react' 时，浏览器才会下载这些库 -->
   <script type="importmap">
   {
@@ -472,7 +601,7 @@ export const generateMicroAppHtml = ({ title = "AI Micro App", code, theme = "li
   }
   </script>
 
-  <!-- === 4. 全局工具库 (总是可用) === -->
+  <!-- === 5. 全局工具库 (总是可用) === -->
   <!-- 图标库: Phosphor Icons -->
   <script src="https://unpkg.com/@phosphor-icons/web"></script>
   <!-- 动画库: AOS -->
@@ -526,7 +655,7 @@ export const generateMicroAppHtml = ({ title = "AI Micro App", code, theme = "li
 
   <!-- === AI 内容注入区 === -->
   <div id="app-root" class="opacity-0 transition-opacity duration-700 p-4 md:p-6 lg:p-8">
-    ${cleanCode}
+    ${processedCode}
   </div>
 
   <!-- === 底部依赖 === -->
@@ -535,19 +664,7 @@ export const generateMicroAppHtml = ({ title = "AI Micro App", code, theme = "li
 
   <!-- 初始化脚本 -->
   <script>
-    window.addEventListener('load', () => {
-      // 1. 移除 Loading
-      const loader = document.getElementById('global-loader');
-      const root = document.getElementById('app-root');
-      if (loader) {
-        loader.style.opacity = '0';
-        setTimeout(() => loader.remove(), 500);
-      }
-      if (root) root.classList.remove('opacity-0');
-
-      // 2. 初始化 AOS
-      AOS.init({ duration: 800, once: true });
-    });
+    ${bootloaderScript}
   </script>
 </body>
 </html>
