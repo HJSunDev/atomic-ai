@@ -31,6 +31,7 @@ export const HTMLPreviewPanel = ({ appId, activeCodeOverride }: HTMLPreviewPanel
   // 注意：这里使用 setCodeWithoutSave，因为我们是在"查看"旧版本，不应立即触发"保存"
   // 只有当用户在旧版本基础上开始编辑时，才会触发 setCode -> useAutoSaveAppCode 的 save 逻辑
   const prevOverride = useRef<string | undefined>(activeCodeOverride);
+  
   useEffect(() => {
     if (activeCodeOverride !== undefined && activeCodeOverride !== prevOverride.current) {
       setCodeWithoutSave(activeCodeOverride);

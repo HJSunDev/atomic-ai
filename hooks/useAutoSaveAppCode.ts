@@ -7,22 +7,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { useDebouncedValue } from "./use-debounced-value";
 
 /**
- * 自定义 Hook：工坊应用代码自动保存
- * 
- * 核心功能：
- * 1. 加载应用数据并初始化本地代码状态
- * 2. 监听本地代码变化，自动防抖保存到服务器
- * 3. 区分 AI 流式更新和用户手动编辑
- * 
- * 数据流设计：
- * - 使用 serverCodeRef 存储服务器代码镜像（不触发重渲染）
- * - 初始化只在应用切换或服务端代码变化时执行
- * - 保存逻辑与 useQuery 解耦（避免闭环）
- * 
- * 性能优化：
- * - 代码变化防抖 700ms
- * - 前端对比值，避免无变化的请求
- * - 保存成功后立即更新 ref，避免重复保存
+ * 自定义 Hook：工坊应用代码自动保存 和 自动同步本地状态
  */
 export const useAutoSaveAppCode = (appId: string | null) => {
   // 本地编辑状态
@@ -31,13 +16,13 @@ export const useAutoSaveAppCode = (appId: string | null) => {
   // 代码保存状态
   const [isSaving, setIsSaving] = useState(false);
 
-  // 使用 ref 存储服务器代码镜像，用于对比（ref 变化不触发重渲染）
+  // 使用 ref 存储服务端代码镜像
   const serverCodeRef = useRef<string>("");
 
-  // 引用-应用初始化状态，值为null表示未初始化，数据初始化后为已初始化应用id
+  // 引用-应用初始化状态
   const initializedForAppRef = useRef<string | null>(null);
   
-  // 引用-标记初始化是否已完成（防抖值已稳定），防止初始化阶段执行更新接口
+  // 引用-标记初始化是否已完成
   const initializationCompleteRef = useRef<boolean>(false);
   
   // 引用-初始化完成计时器
@@ -53,73 +38,72 @@ export const useAutoSaveAppCode = (appId: string | null) => {
   const saveAppCodeMutation = useMutation(api.factory.mutations.saveAppCode);
 
   // 值防抖：代码内容
-  // 统一使用 1000ms，既用于自动保存，也用于 iframe 预览渲染，减少重绘
   const debouncedCode = useDebouncedValue(code, 1000);
 
-  // 数据初始化与 AI 流式同步统一入口
+  // 数据初始化与状态维护
   useEffect(() => {
-    // 服务端数据还未到达，不执行后续操作
-    if (!appData) {
-      return;
-    }
+
+    if (!appData) return;
 
     const serverCode = appData.latestCode || "";
-    
-    // 是否切换了新应用
     const isNewApp = initializedForAppRef.current !== appId;
-    
-    // 是否存在来自服务端的变更（例如 AI 流式更新）
     const hasRemoteChange = serverCodeRef.current !== serverCode;
 
-    // 仅在切换应用或检测到远程变更时同步
+    // 如果有新应用或远程变更
+    // 这一步只负责：更新数据 + 将状态置为“未完成”
     if (isNewApp || hasRemoteChange) {
-      // 先同步服务器镜像，作为比较基准
       serverCodeRef.current = serverCode;
-      
-      // 再更新本地 UI 状态（会触发防抖，但比较基准已同步，不会触发保存）
       setCode(serverCode);
-
-      // 记录已初始化的应用 id
+      
       if (isNewApp) {
         initializedForAppRef.current = appId;
       }
 
-      // 重置并延后开启"允许保存"的开关，避免将远程同步误判为用户输入
+      // 关键：只要数据变了触发setCode，就标记为“未完成”（锁住保存功能）
       initializationCompleteRef.current = false;
+    }
+
+    // 确保定时器存活
+    // 逻辑：只要 initializationCompleteRef 是 false，就必须确保有一个定时器在跑。
+    // 解释：这解决了 React Strict Mode 问题。即使第一次挂载的定时器被 cleanup 杀掉了，
+    // 第二次挂载时，虽然 isNewApp 为 false（跳过上面的 if），但这里 !initializationCompleteRef.current 依然为 true，
+    // 所以定时器会在这里“重生”。
+    if (!initializationCompleteRef.current) {
+      // 如果已经有定时器在跑，先清除它（重置倒计时）
       if (initCompletionTimerRef.current) {
         clearTimeout(initCompletionTimerRef.current);
       }
       
-      // 设置一个计时器，在防抖延迟（1000ms）结束后，标记初始化完成
+      // 启动/重启定时器
       initCompletionTimerRef.current = setTimeout(() => {
         initializationCompleteRef.current = true;
+        initCompletionTimerRef.current = null; // 跑完后清理引用
       }, 1100);
     }
 
+    // 清理函数
     return () => {
       if (initCompletionTimerRef.current) {
         clearTimeout(initCompletionTimerRef.current);
+        // 这里置空很重要，防止下次 render 误判
+        initCompletionTimerRef.current = null; 
       }
     };
   }, [appId, appData]);
 
-  // 当代码防抖值变化后，执行代码保存的副作用
+
+  // 依赖于 debouncedCode 变化，用于保存本地状态变更
+
   useEffect(() => {
-    // appId 不存在，或服务器数据还未加载，则不执行
-    if (!appId || serverCodeRef.current === null) {
-      return;
-    }
+    // 基础拦截
+    if (!appId || serverCodeRef.current === null) return;
 
-    // 防止初始化阶段的状态变化触发误保存：只有初始化完成后才允许保存
-    if (!initializationCompleteRef.current) {
-      return;
-    }
+    // 【安全拦截】这是由服务端变更导致的本地更新，不需要保存
+    if (!initializationCompleteRef.current) return;
 
+    // 检查是否有实质性变更
     const codeChanged = debouncedCode !== serverCodeRef.current;
-
-    if (!codeChanged) {
-      return;
-    }
+    if (!codeChanged) return;
 
     const saveCode = async () => {
       setIsSaving(true);
@@ -128,7 +112,7 @@ export const useAutoSaveAppCode = (appId: string | null) => {
           appId: appId as Id<"apps">,
           code: debouncedCode,
         });
-        
+
         // 保存成功后立即更新 ref，避免在 useQuery 回流前重复保存
         serverCodeRef.current = debouncedCode;
       } catch (error) {
@@ -148,15 +132,10 @@ export const useAutoSaveAppCode = (appId: string | null) => {
   };
 
   return {
-    // 本地实时编辑状态（用于绑定编辑器）
     code,
-    // 防抖后的稳定状态（用于 iframe 预览）
     debouncedCode,
-    
     setCode,
-    setCodeWithoutSave, // 用于 AI 生成完成时的同步，避免触发不必要的保存
-
-    // 加载和保存状态
+    setCodeWithoutSave,
     isLoading: appData === undefined && appId !== null,
     isSaving,
   };

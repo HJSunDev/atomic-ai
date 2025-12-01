@@ -15,7 +15,7 @@ export function ThemeProviderWrapper({ children }: ThemeProviderProps) {
   // 判断当前路径是否应该应用主题
   // 排除营销页（根路径 /）
   const shouldEnableTheme = pathname !== "/" && !pathname.startsWith("/?");
-  console.log('查看shouldEnableTheme', shouldEnableTheme)
+  // console.log('查看shouldEnableTheme', shouldEnableTheme)
 
   // 仅在客户端挂载后渲染内容
   useEffect(() => {
