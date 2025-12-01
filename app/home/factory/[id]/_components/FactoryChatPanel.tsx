@@ -57,7 +57,12 @@ export const FactoryChatPanel = ({
               <FactoryMessageList
                 messages={messages}
                 messagesEndRef={messagesEndRef}
-                emptyState={<FactoryEmptyState appType={appType} />}
+                emptyState={
+                  <FactoryEmptyState
+                    appType={appType}
+                    onSelect={handleSendMessage}
+                  />
+                }
                 streamingMessageId={streamingMessageId}
                 isMessagesLoading={isMessagesLoading}
                 onVersionClick={handleVersionClick}

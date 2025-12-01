@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { api } from "@/convex/_generated/api";
+import { useFactoryStore } from "@/store/home/useFactoryStore";
 import type { IntentHandler } from "@/services/intent/types";
 
 /**
@@ -18,6 +19,7 @@ import type { IntentHandler } from "@/services/intent/types";
 export const useAppIntentHandler = () => {
   const router = useRouter();
   const createApp = useMutation(api.factory.mutations.createApp);
+  const { setPendingPrompt } = useFactoryStore();
 
   const handleAppIntent: IntentHandler = useCallback(async (intent, input) => {
     console.log("[AppIntentHandler] 路由到 app/factory 模块，开始创建应用...");
@@ -30,7 +32,10 @@ export const useAppIntentHandler = () => {
         name: intent.summary || "未命名应用",
       });
       
-      // 2. 跳转到应用编辑页面（URL 路由）
+      // 2. 将用户输入保存到全局 Store，以便在跳转后自动填充到输入框
+      setPendingPrompt(input.userPrompt);
+      
+      // 3. 跳转到应用编辑页面（URL 路由）
       router.push(`/home/factory/${appId}`);
       
       // 注意：代码生成将在应用页面内由用户手动触发
@@ -41,7 +46,7 @@ export const useAppIntentHandler = () => {
       console.error("[AppIntentHandler] 处理失败:", error);
       return false;
     }
-  }, [createApp, router]);
+  }, [createApp, router, setPendingPrompt]);
 
   return { handleAppIntent };
 };

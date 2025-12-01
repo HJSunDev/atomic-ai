@@ -10,6 +10,7 @@ import {
 import { Send, Maximize2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModelSelector } from "@/components/ai-chat/ModelSelector";
+import { useFactoryStore } from "@/store/home/useFactoryStore";
 
 interface FactoryChatInputProps {
   onSendMessage: (prompt: string) => void;
@@ -28,6 +29,28 @@ export function FactoryChatInput({
   const [isMaximized, setIsMaximized] = useState(false);
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  
+  // 从全局 Store 获取待处理的 Prompt
+  const { pendingPrompt, setPendingPrompt } = useFactoryStore();
+
+  // 处理自动填充 Prompt
+  useEffect(() => {
+    if (pendingPrompt) {
+      setInputValue(pendingPrompt);
+      
+      // 延迟聚焦并移动光标到末尾，确保 UI 渲染完成
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          const len = textareaRef.current.value.length;
+          textareaRef.current.setSelectionRange(len, len);
+        }
+      }, 100);
+      
+      // 清除 Store 中的值，避免重复填充
+      setPendingPrompt(null);
+    }
+  }, [pendingPrompt, setPendingPrompt]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
