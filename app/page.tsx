@@ -6,6 +6,10 @@ import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTe
 import Link from "next/link";
 import { SignInButton, useUser, UserButton } from "@clerk/nextjs";
 import { ArrowRight, Minus, FileText, Zap, MessageSquare } from "lucide-react";
+import { PromptRealityCube } from "@/components/marketing/PromptRealityCube";
+import { AppBuilderPreview } from "@/components/marketing/AppBuilderPreview";
+import { NeuralChatPreview } from "@/components/marketing/NeuralChatPreview";
+import { LivingDocsPreview } from "@/components/marketing/LivingDocsPreview";
 
 /**
  * 沉浸式流体背景 (The Neural Field)
@@ -447,58 +451,12 @@ const GenesisSection = () => {
  */
 const DeconstructionSection = () => {
   return (
-    <section className="min-h-screen relative py-32 px-4 flex flex-col items-center justify-center">
-      <div className="max-w-4xl w-full">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
-          <div className="space-y-12">
-            <motion.div
-               initial={{ opacity: 0 }}
-               whileInView={{ opacity: 1 }}
-               viewport={{ margin: "-20%" }}
-            >
-              <span className="font-mono text-blue-400 text-xs tracking-widest mb-4 block">01. THE PROBLEM</span>
-              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
-                Chaos in<br/>Creation.
-              </h2>
-              <p className="text-white/50 text-lg leading-relaxed">
-                The modern workflow is broken. Fragments of intelligence scattered across isolated tools. We built a bridge over the void.
-              </p>
-            </motion.div>
-
-             <motion.div
-               initial={{ opacity: 0 }}
-               whileInView={{ opacity: 1 }}
-               viewport={{ margin: "-20%" }}
-               transition={{ delay: 0.2 }}
-            >
-              <span className="font-mono text-purple-400 text-xs tracking-widest mb-4 block">02. THE SOLUTION</span>
-              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
-                Atomic<br/>Structure.
-              </h2>
-              <p className="text-white/50 text-lg leading-relaxed">
-                Not just a generator. A synthesizer. Reality feeds the prompt. The prompt shapes reality. An infinite, self-improving loop of pure creation.
-              </p>
-            </motion.div>
+    <section className="h-screen relative flex flex-col items-center justify-center bg-white overflow-hidden">
+      <div className="w-full h-full flex items-center justify-center">
+          {/* 核心隐喻组件：Prompt Reality Cube */}
+          <div className="relative w-full h-full flex items-center justify-center">
+             <PromptRealityCube />
           </div>
-
-          {/* 抽象 3D 视觉展示 */}
-          <div className="relative h-[60vh] md:h-auto flex items-center justify-center perspective-1000">
-             <motion.div 
-                style={{ rotateX: 15, rotateY: -15, transformStyle: "preserve-3d" }}
-                animate={{ rotateY: [-15, 15, -15], rotateX: [15, 5, 15] }}
-                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
-                className="w-64 h-64 sm:w-80 sm:h-80 border border-white/20 relative bg-white/5 backdrop-blur-sm"
-             >
-                <div className="absolute inset-0 border border-white/10 translate-z-10 scale-90" />
-                <div className="absolute inset-0 border border-white/10 translate-z-20 scale-75" />
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 opacity-20 blur-xl translate-z-[-50px]" />
-                
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-mono text-xs tracking-widest mix-blend-difference">
-                  ATOMIC_CORE
-                </div>
-             </motion.div>
-          </div>
-        </div>
       </div>
     </section>
   );
@@ -532,39 +490,69 @@ const ManifestationSection = () => {
           </div>
 
           {/* Module 1: Chat */}
-          <div className="w-[85vw] sm:w-[45vw] aspect-[4/5] bg-[#111] border border-white/10 p-8 relative group hover:bg-[#151515] transition-colors shrink-0">
-             <div className="absolute top-8 right-8 font-mono text-xs text-white/30">01</div>
-             <div className="h-full flex flex-col justify-between">
-                <div className="w-12 h-12 bg-blue-500/20 rounded-full blur-xl group-hover:bg-blue-500/40 transition-all" />
-                <div>
-                  <h3 className="text-3xl font-bold text-white mb-4">Neural Chat</h3>
-                  <p className="text-white/60">More than text. A command center for your digital existence. Execute code, analyze data, invoke agents.</p>
+          <div className="w-[90vw] sm:w-[70vw] aspect-square sm:aspect-video bg-[#111] border border-white/10 relative group shrink-0 rounded-xl overflow-hidden">
+             <NeuralChatPreview />
+             
+             {/* Overlay Info */}
+             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none flex flex-col justify-end p-8">
+                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                  <div className="flex items-center gap-4 mb-2">
+                     <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center backdrop-blur-md border border-blue-500/30">
+                        <MessageSquare className="w-4 h-4 text-blue-400" />
+                     </div>
+                     <h3 className="text-2xl sm:text-3xl font-bold text-white">Neural Chat</h3>
+                  </div>
+                  <p className="text-white/60 max-w-lg text-sm sm:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                    More than text. A command center for your digital existence. Execute code, analyze data, invoke agents.
+                  </p>
                 </div>
              </div>
+             
+             <div className="absolute top-8 right-8 font-mono text-xs text-black/30 z-10 mix-blend-multiply">01</div>
           </div>
 
           {/* Module 2: Docs */}
-          <div className="w-[85vw] sm:w-[45vw] aspect-[4/5] bg-[#111] border border-white/10 p-8 relative group hover:bg-[#151515] transition-colors shrink-0">
-             <div className="absolute top-8 right-8 font-mono text-xs text-white/30">02</div>
-             <div className="h-full flex flex-col justify-between">
-                <div className="w-12 h-12 bg-purple-500/20 rounded-full blur-xl group-hover:bg-purple-500/40 transition-all" />
-                <div>
-                  <h3 className="text-3xl font-bold text-white mb-4">Living Docs</h3>
-                  <p className="text-white/60">Documents that breathe. Auto-generating, self-updating knowledge bases that evolve with your project.</p>
+          <div className="w-[90vw] sm:w-[70vw] aspect-square sm:aspect-video bg-[#111] border border-white/10 relative group shrink-0 rounded-xl overflow-hidden">
+             <LivingDocsPreview />
+             
+             {/* Overlay Info */}
+             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none flex flex-col justify-end p-8">
+                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                  <div className="flex items-center gap-4 mb-2">
+                     <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center backdrop-blur-md border border-purple-500/30">
+                        <FileText className="w-4 h-4 text-purple-400" />
+                     </div>
+                     <h3 className="text-2xl sm:text-3xl font-bold text-white">Living Docs</h3>
+                  </div>
+                  <p className="text-white/60 max-w-lg text-sm sm:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                    Documents that breathe. Auto-generating, self-updating knowledge bases that evolve with your project.
+                  </p>
                 </div>
              </div>
+
+             <div className="absolute top-8 right-8 font-mono text-xs text-black/30 z-10 mix-blend-multiply">02</div>
           </div>
 
           {/* Module 3: Apps */}
-          <div className="w-[85vw] sm:w-[45vw] aspect-[4/5] bg-[#111] border border-white/10 p-8 relative group hover:bg-[#151515] transition-colors shrink-0">
-             <div className="absolute top-8 right-8 font-mono text-xs text-white/30">03</div>
-             <div className="h-full flex flex-col justify-between">
-                <div className="w-12 h-12 bg-green-500/20 rounded-full blur-xl group-hover:bg-green-500/40 transition-all" />
-                <div>
-                  <h3 className="text-3xl font-bold text-white mb-4">App Forge</h3>
-                  <p className="text-white/60">Idea to deployment in seconds. Describe the functionality, and watch the code construct itself before your eyes.</p>
+          <div className="w-[90vw] sm:w-[70vw] aspect-square sm:aspect-video bg-[#111] border border-white/10 relative group shrink-0 rounded-xl overflow-hidden">
+             <AppBuilderPreview />
+             
+             {/* Overlay Info */}
+             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none flex flex-col justify-end p-8">
+                <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
+                  <div className="flex items-center gap-4 mb-2">
+                     <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center backdrop-blur-md border border-green-500/30">
+                        <Zap className="w-4 h-4 text-green-400" />
+                     </div>
+                     <h3 className="text-2xl sm:text-3xl font-bold text-white">App Forge</h3>
+                  </div>
+                  <p className="text-white/60 max-w-lg text-sm sm:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
+                    Idea to deployment in seconds. Describe the functionality, and watch the code construct itself before your eyes.
+                  </p>
                 </div>
              </div>
+             
+             <div className="absolute top-8 right-8 font-mono text-xs text-white/30 z-10">03</div>
           </div>
 
         </motion.div>

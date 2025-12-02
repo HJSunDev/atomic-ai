@@ -23,7 +23,7 @@ export const PromptRealityCube = () => {
   const rotateX = useTransform(scrollY, [0, 600], [20, 0]);
   const rotateY = useTransform(scrollY, [0, 600], [-20, 0]);
   const scale = useTransform(scrollY, [0, 600], [1, 0.8]);
-  const y = useTransform(scrollY, [0, 600], [0, 100]);
+  // Removed y transform that was causing vertical offset
 
   // 鼠标交互状态
   const mouseX = useMotionValue(0);
@@ -58,14 +58,13 @@ export const PromptRealityCube = () => {
   );
 
   return (
-    <div className="perspective-1000 w-full h-[600px] flex items-center justify-center relative bg-blue-50" onMouseMove={handleMouseMove}>
+    <div className="perspective-1000 w-full h-full flex items-center justify-center relative " onMouseMove={handleMouseMove}>
       <motion.div
         ref={ref}
         style={{
           rotateX: combinedRotateX,
           rotateY: combinedRotateY,
           scale,
-          y,
           transformStyle: "preserve-3d"
         }}
         className="relative w-64 h-64 md:w-80 md:h-80"
