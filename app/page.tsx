@@ -1,342 +1,520 @@
-"use client"
 
-import { Button } from "@/components/ui/button"
-import { Logo } from "@/components/ui/logo"
-import Link from "next/link"
-import { useUser } from "@clerk/nextjs"
-import { SignInButton, UserButton } from "@clerk/nextjs"
+"use client";
 
-export default function Home() {
-  const { isSignedIn } = useUser()
+import React, { useEffect, useRef, useState } from "react";
+import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion";
+import Link from "next/link";
+import { SignInButton, useUser, UserButton } from "@clerk/nextjs";
+import { ArrowRight, Minus } from "lucide-react";
+
+// ------------------------------------------------------------------
+// 1. 沉浸式流体背景 (The Neural Field)
+// 使用 HTML5 Canvas 实现高性能粒子流场
+// ------------------------------------------------------------------
+const NeuralField = () => {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    let w = (canvas.width = window.innerWidth);
+    let h = (canvas.height = window.innerHeight);
+    
+    const particles: Particle[] = [];
+    const particleCount = 100; // 粒子数量
+    
+    class Particle {
+      x: number;
+      y: number;
+      vx: number;
+      vy: number;
+      size: number;
+      
+      constructor() {
+        this.x = Math.random() * w;
+        this.y = Math.random() * h;
+        this.vx = (Math.random() - 0.5) * 0.5;
+        this.vy = (Math.random() - 0.5) * 0.5;
+        this.size = Math.random() * 2;
+      }
+      
+      update() {
+        this.x += this.vx;
+        this.y += this.vy;
+        
+        if (this.x < 0 || this.x > w) this.vx *= -1;
+        if (this.y < 0 || this.y > h) this.vy *= -1;
+      }
+      
+      draw() {
+        if (!ctx) return;
+        ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+    
+    for (let i = 0; i < particleCount; i++) {
+      particles.push(new Particle());
+    }
+    
+    const animate = () => {
+      ctx.clearRect(0, 0, w, h);
+      
+      // Draw connections
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.03)";
+      ctx.lineWidth = 1;
+      
+      for (let i = 0; i < particles.length; i++) {
+        const p1 = particles[i];
+        p1.update();
+        p1.draw();
+        
+        for (let j = i + 1; j < particles.length; j++) {
+          const p2 = particles[j];
+          const dx = p1.x - p2.x;
+          const dy = p1.y - p2.y;
+          const dist = Math.sqrt(dx * dx + dy * dy);
+          
+          if (dist < 150) {
+            ctx.beginPath();
+            ctx.moveTo(p1.x, p1.y);
+            ctx.lineTo(p2.x, p2.y);
+            ctx.stroke();
+          }
+        }
+      }
+      
+      requestAnimationFrame(animate);
+    };
+    
+    animate();
+    
+    const handleResize = () => {
+      w = canvas.width = window.innerWidth;
+      h = canvas.height = window.innerHeight;
+    };
+    
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  return <canvas ref={canvasRef} className="fixed inset-0 z-0 opacity-40 pointer-events-none" />;
+};
+
+// ------------------------------------------------------------------
+// 2. 磁力光标 (Magnetic Cursor)
+// ------------------------------------------------------------------
+const CustomCursor = () => {
+  const mouseX = useMotionValue(-100);
+  const mouseY = useMotionValue(-100);
+  
+  useEffect(() => {
+    const moveCursor = (e: MouseEvent) => {
+      mouseX.set(e.clientX);
+      mouseY.set(e.clientY);
+    };
+    window.addEventListener("mousemove", moveCursor);
+    return () => window.removeEventListener("mousemove", moveCursor);
+  }, [mouseX, mouseY]);
 
   return (
-    <div className="flex flex-col min-h-screen">
-      <style jsx global>{`
-        @keyframes pulse-slow {
-          0% { opacity: 0.6; }
-          50% { opacity: 1; }
-          100% { opacity: 0.6; }
-        }
-        
-        .animate-pulse-slow {
-          animation: pulse-slow 3s infinite ease-in-out;
-        }
-        
-        @keyframes orbit {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-        
-        .animate-orbit-slow {
-          animation: orbit 12s infinite linear;
-        }
-      `}</style>
-      {/* 导航栏 */}
-      <header className="border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 w-full fixed top-0 z-50">
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Logo size="md" />
-            <span className="font-bold text-xl">Atomic</span>
-          </div>
-          <div className="flex items-center gap-4 landing-navbar">
-            {isSignedIn ? (
-              <>
-                <UserButton/>
-              </>
-            ) : (
-              <>
+    <motion.div
+      className="fixed w-8 h-8 rounded-full border border-white/20 pointer-events-none z-[9999] hidden md:block mix-blend-difference"
+      style={{
+        x: mouseX,
+        y: mouseY,
+        translateX: "-50%",
+        translateY: "-50%",
+      }}
+    >
+      <div className="absolute inset-0 bg-white/10 rounded-full animate-ping" />
+    </motion.div>
+  );
+};
+
+// ------------------------------------------------------------------
+// 3. 极简导航 + 优雅登录交互
+// ------------------------------------------------------------------
+const MinimalNav = () => {
+  const { isSignedIn } = useUser();
+  const [isHovered, setIsHovered] = useState(false);
+  
+  return (
+    <nav className="fixed top-0 left-0 w-full p-8 flex justify-between items-start z-50 text-white">
+      <div className="flex flex-col mix-blend-difference">
+        <span className="font-mono text-xs tracking-[0.5em] uppercase opacity-50">Atomic AI</span>
+        <span className="text-sm font-bold mt-1">Ver. 2.0</span>
+      </div>
+      
+      <div className="flex items-center gap-6">
+         {isSignedIn ? (
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="relative"
+            >
+              {/* UserButton 外层装饰效果 */}
+              <div className="absolute -inset-3 bg-gradient-to-r from-blue-500/20 to-purple-500/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
+              <UserButton 
+                appearance={{
+                  elements: {
+                    userButtonAvatarBox: "w-10 h-10 ring-2 ring-white/20 hover:ring-white/40 transition-all"
+                  }
+                }}
+              />
+            </motion.div>
+         ) : (
+           <SignInButton mode="modal">
+             <motion.button 
+               onHoverStart={() => setIsHovered(true)}
+               onHoverEnd={() => setIsHovered(false)}
+               className="group relative flex items-center gap-3 overflow-hidden"
+             >
+               {/* 文字部分 */}
+               <motion.span 
+                 animate={{ 
+                   x: isHovered ? -8 : 0,
+                   opacity: isHovered ? 0.6 : 1 
+                 }}
+                 transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                 className="font-mono text-xs tracking-[0.3em] uppercase"
+               >
+                 Login
+               </motion.span>
+               
+               {/* 动态下划线 */}
+               <motion.div 
+                 initial={{ width: 0 }}
+                 animate={{ width: isHovered ? "3rem" : 0 }}
+                 transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+                 className="h-[1px] bg-white absolute -bottom-1 right-0"
+               />
+               
+               {/* 光晕点 */}
+               <AnimatePresence>
+                 {isHovered && (
+                   <motion.div
+                     initial={{ scale: 0, opacity: 0 }}
+                     animate={{ scale: 1, opacity: 1 }}
+                     exit={{ scale: 0, opacity: 0 }}
+                     transition={{ duration: 0.2 }}
+                     className="absolute -right-1 top-1/2 -translate-y-1/2 w-1.5 h-1.5 bg-white rounded-full shadow-[0_0_12px_rgba(255,255,255,0.8)]"
+                   />
+                 )}
+               </AnimatePresence>
+             </motion.button>
+           </SignInButton>
+         )}
+      </div>
+    </nav>
+  );
+};
+
+// ------------------------------------------------------------------
+// 4. 章节：起源 (Genesis) - 大胆的排版动画
+// ------------------------------------------------------------------
+const GenesisSection = () => {
+  const { scrollY } = useScroll();
+  const { isSignedIn } = useUser();
+  const y1 = useTransform(scrollY, [0, 500], [0, 200]);
+  const y2 = useTransform(scrollY, [0, 500], [0, -100]);
+  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+
+  return (
+    <section className="h-screen relative flex items-center justify-center overflow-hidden px-4">
+      <motion.div 
+        style={{ opacity }}
+        className="relative z-10 w-full max-w-[90vw]"
+      >
+        <div className="flex flex-col gap-0 leading-none">
+          <motion.h1 
+            style={{ y: y1 }}
+            initial={{ x: "-100%" }}
+            animate={{ x: "0%" }}
+            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1] }}
+            className="text-[12vw] sm:text-[15vw] font-black text-white tracking-tighter mix-blend-overlay"
+          >
+            THINK
+          </motion.h1>
+          
+          <motion.div 
+            style={{ y: y2 }}
+            initial={{ x: "100%" }}
+            animate={{ x: "0%" }}
+            transition={{ duration: 1.5, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+            className="flex flex-col items-end"
+          >
+            <div className="flex items-center gap-4 sm:gap-8">
+               <div className="h-[2px] bg-white/50 w-[20vw]" />
+               <h1 className="text-[12vw] sm:text-[15vw] font-black text-transparent bg-clip-text bg-gradient-to-r from-white to-white/0 tracking-tighter">
+                REALITY
+              </h1>
+            </div>
+
+            {/* 极简系统入口 CTA */}
+            <motion.div 
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 1.2, duration: 1 }}
+              className="mt-8 mr-2"
+            >
+              {isSignedIn ? (
+                <Link href="/home">
+                  <SystemStartBtn text="ENTER_WORKSPACE" />
+                </Link>
+              ) : (
                 <SignInButton mode="modal">
-                  <Button variant="outline" size="sm">Dashboard</Button>
+                  <SystemStartBtn text="START_ENGINE" />
                 </SignInButton>
-              </>
-            )}
+              )}
+            </motion.div>
+          </motion.div>
+        </div>
+      </motion.div>
+      
+      <div className="absolute bottom-12 left-8 font-mono text-xs text-white/40 flex flex-col gap-2">
+         <span>SCROLL TO EXPLORE</span>
+         <span>///</span>
+      </div>
+    </section>
+  );
+};
+
+// 全息系统按钮组件
+const SystemStartBtn = ({ text, onClick }: { text: string, onClick?: () => void }) => (
+  <button onClick={onClick} className="group relative overflow-hidden bg-white/5 px-8 py-4 backdrop-blur-[2px] transition-all duration-300">
+    {/* 扫描线背景 */}
+    <div className="absolute inset-0 -translate-y-full bg-gradient-to-b from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-y-full" />
+    
+    {/* 边框动画 */}
+    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500 delay-100" />
+    <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+
+    <div className="relative z-10 flex items-center gap-6">
+      <div className="flex flex-col items-end">
+        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/30 group-hover:text-blue-400 transition-colors">
+          System_Ready
+        </span>
+        <span className="font-bold tracking-[0.15em] text-white text-base sm:text-lg">
+          {text}
+        </span>
+      </div>
+      <div className="h-8 w-[1px] bg-white/20 group-hover:bg-white/50 transition-colors" />
+      <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
+    </div>
+
+    {/* 角标装饰 */}
+    <div className="absolute left-0 top-0 h-2 w-2 border-l border-t border-white/20 transition-all duration-300 group-hover:border-white/80" />
+    <div className="absolute right-0 top-0 h-2 w-2 border-r border-t border-white/20 transition-all duration-300 group-hover:border-white/80" />
+    <div className="absolute left-0 bottom-0 h-2 w-2 border-l border-b border-white/20 transition-all duration-300 group-hover:border-white/80" />
+    <div className="absolute right-0 bottom-0 h-2 w-2 border-r border-b border-white/20 transition-all duration-300 group-hover:border-white/80" />
+  </button>
+);
+
+// ------------------------------------------------------------------
+// 5. 章节：解构 (Deconstruction) - 3D 变换与交互
+// ------------------------------------------------------------------
+const DeconstructionSection = () => {
+  return (
+    <section className="min-h-screen relative py-32 px-4 flex flex-col items-center justify-center">
+      <div className="max-w-4xl w-full">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-16">
+          <div className="space-y-12">
+            <motion.div
+               initial={{ opacity: 0 }}
+               whileInView={{ opacity: 1 }}
+               viewport={{ margin: "-20%" }}
+            >
+              <span className="font-mono text-blue-400 text-xs tracking-widest mb-4 block">01. THE PROBLEM</span>
+              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
+                Chaos in<br/>Creation.
+              </h2>
+              <p className="text-white/50 text-lg leading-relaxed">
+                The modern workflow is broken. Fragments of intelligence scattered across isolated tools. We built a bridge over the void.
+              </p>
+            </motion.div>
+
+             <motion.div
+               initial={{ opacity: 0 }}
+               whileInView={{ opacity: 1 }}
+               viewport={{ margin: "-20%" }}
+               transition={{ delay: 0.2 }}
+            >
+              <span className="font-mono text-purple-400 text-xs tracking-widest mb-4 block">02. THE SOLUTION</span>
+              <h2 className="text-4xl md:text-6xl font-bold text-white mb-6">
+                Atomic<br/>Structure.
+              </h2>
+              <p className="text-white/50 text-lg leading-relaxed">
+                Not just a generator. A synthesizer. Reality feeds the prompt. The prompt shapes reality. An infinite, self-improving loop of pure creation.
+              </p>
+            </motion.div>
+          </div>
+
+          {/* 抽象 3D 视觉展示 */}
+          <div className="relative h-[60vh] md:h-auto flex items-center justify-center perspective-1000">
+             <motion.div 
+                style={{ rotateX: 15, rotateY: -15, transformStyle: "preserve-3d" }}
+                animate={{ rotateY: [-15, 15, -15], rotateX: [15, 5, 15] }}
+                transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+                className="w-64 h-64 sm:w-80 sm:h-80 border border-white/20 relative bg-white/5 backdrop-blur-sm"
+             >
+                <div className="absolute inset-0 border border-white/10 translate-z-10 scale-90" />
+                <div className="absolute inset-0 border border-white/10 translate-z-20 scale-75" />
+                <div className="absolute inset-0 bg-gradient-to-br from-blue-500 to-purple-500 opacity-20 blur-xl translate-z-[-50px]" />
+                
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white font-mono text-xs tracking-widest mix-blend-difference">
+                  ATOMIC_CORE
+                </div>
+             </motion.div>
           </div>
         </div>
-      </header>
+      </div>
+    </section>
+  );
+};
 
-      <main className="flex-1">
-        {/* 英雄区域 - 占满首屏 */}
-        <section className="h-screen flex items-center relative">
-          {/* 移除背景效果 */}
+// ------------------------------------------------------------------
+// 6. 章节：显化 (Manifestation) - 水平滚动展示
+// ------------------------------------------------------------------
+const ManifestationSection = () => {
+  const targetRef = useRef(null);
+  const { scrollYProgress } = useScroll({ target: targetRef });
+  const x = useTransform(scrollYProgress, [0, 1], ["0%", "-65%"]);
+
+  return (
+    <section ref={targetRef} className="relative h-[300vh] bg-neutral-950">
+      <div className="sticky top-0 h-screen flex items-center overflow-hidden">
+        <motion.div style={{ x }} className="flex gap-8 sm:gap-16 px-8 sm:px-32">
           
-          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 z-10">
-            <div className="grid md:grid-cols-2 gap-8 lg:gap-12 w-full items-center">
-              {/* 左侧内容 */}
-              <div className="flex flex-col justify-center text-left ml-0 md:ml-[2rem]">
-                <div className="inline-flex items-center rounded-full border px-3 py-1 text-sm mb-6 w-fit bg-white">
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-medium">AI驱动的开发效率革命</span>
-                </div>
-                <h1 className="text-[1.75rem] sm:text-[2.25rem] md:text-[2.75rem] lg:text-[3.5rem] font-semibold tracking-tight mb-4 sm:mb-6">
-                  模块化AI协作<span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">开发效率平台</span>
-                </h1>
-                <p className="text-base sm:text-lg text-muted-foreground mb-6 sm:mb-8 max-w-xl">
-                  通过模块化、可组合的提示词管理与AI智能体协作，覆盖开发全生命周期场景，提升开发效率与代码质量
-                </p>
-                <div className="flex flex-col sm:flex-row gap-4">
-                  {isSignedIn ? (
-                    <Link href="/home">
-                      <Button className="px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                        开始使用
-                      </Button>
-                    </Link>
-                  ) : (
-                    <SignInButton mode="modal">
-                      <Button className="px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                        开始使用
-                      </Button>
-                    </SignInButton>
-                  )}
-                  <Button variant="outline" className="px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base">
-                    查看演示
-                  </Button>
-                </div>
-              </div>
-              
-              {/* 右侧占位区域 - 为将来的动画效果预留空间 */}
-              <div className="hidden md:flex justify-center items-center ml-0 md:ml-[2rem]">
-                <div className="relative w-full max-w-md aspect-square">
-                  {/* 外层光晕效果 */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-blue-500/20 to-purple-600/20 rounded-full blur-xl"></div>
-                  
-                  {/* 内层圆形 */}
-                  <div className="absolute inset-4 bg-white rounded-full flex items-center justify-center shadow-lg">
-                    {/* 简单的图标网格，作为占位 */}
-                    <div className="grid grid-cols-2 gap-4 p-6 lg:gap-6 lg:p-10">
-                      <div className="bg-blue-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="1.75rem" height="1.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 lg:w-[2.25rem] lg:h-[2.25rem]">
-                          <circle cx="12" cy="12" r="10" />
-                          <circle cx="12" cy="12" r="2" />
-                          <path d="M12 19a7 7 0 1 0 0-14" />
-                        </svg>
-                      </div>
-                      <div className="bg-purple-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="1.75rem" height="1.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 lg:w-[2.25rem] lg:h-[2.25rem]">
-                          <rect width="18" height="18" x="3" y="3" rx="2" />
-                          <path d="M3 9h18" />
-                          <path d="M9 21V9" />
-                        </svg>
-                      </div>
-                      <div className="bg-green-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="1.75rem" height="1.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 lg:w-[2.25rem] lg:h-[2.25rem]">
-                          <path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8Z" />
-                          <circle cx="12" cy="10" r="3" />
-                        </svg>
-                      </div>
-                      <div className="bg-orange-50 rounded-lg p-3 lg:p-5 flex items-center justify-center shadow-sm">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="1.75rem" height="1.75rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-orange-600 lg:w-[2.25rem] lg:h-[2.25rem]">
-                          <path d="M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" />
-                          <path d="m9 12 2 2 4-4" />
-                        </svg>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          {/* Intro Card */}
+          <div className="w-[80vw] sm:w-[60vw] shrink-0 flex flex-col justify-center">
+             <h2 className="text-[8vw] font-bold text-white/20 leading-none mb-8">
+               THE<br/>SUITE
+             </h2>
+             <p className="text-xl text-white max-w-md">
+               Explore the tools designed to reshape your reality. Swipe to discover.
+             </p>
+             <div className="mt-12 flex items-center gap-4 text-white/40">
+               <ArrowRight className="animate-pulse" />
+               <span className="font-mono text-xs">SCROLL HORIZONTALLY</span>
+             </div>
           </div>
-          
-          {/* 移除向下滚动指示器 */}
-        </section>
 
-        {/* 特性区域 */}
-        <section id="features" className="py-8 sm:py-12">
-          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-4 sm:mb-8 ">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">三层模块化架构</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
-                支持灵活组合与扩展
-              </p>
-            </div>
-
-            <div className="grid md:grid-cols-3 gap-6 lg:gap-8 ">
-              {/* 原子层 */}
-              <div className="bg-background rounded-xl border p-6 lg:p-8 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 lg:w-[3.5rem] lg:h-[3.5rem] rounded-lg bg-blue-100 flex items-center justify-center mb-4 lg:mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-blue-600 lg:w-[1.75rem] lg:h-[1.75rem]">
-                    <circle cx="12" cy="12" r="10" />
-                    <circle cx="12" cy="12" r="2" />
-                    <path d="M12 19a7 7 0 1 0 0-14" />
-                  </svg>
+          {/* Module 1: Chat */}
+          <div className="w-[85vw] sm:w-[45vw] aspect-[4/5] bg-[#111] border border-white/10 p-8 relative group hover:bg-[#151515] transition-colors shrink-0">
+             <div className="absolute top-8 right-8 font-mono text-xs text-white/30">01</div>
+             <div className="h-full flex flex-col justify-between">
+                <div className="w-12 h-12 bg-blue-500/20 rounded-full blur-xl group-hover:bg-blue-500/40 transition-all" />
+                <div>
+                  <h3 className="text-3xl font-bold text-white mb-4">Neural Chat</h3>
+                  <p className="text-white/60">More than text. A command center for your digital existence. Execute code, analyze data, invoke agents.</p>
                 </div>
-                <h3 className="text-lg lg:text-xl font-bold mb-2 lg:mb-3">原子层</h3>
-                <h4 className="text-xs lg:text-sm text-muted-foreground mb-2 lg:mb-3">Prompt Modules</h4>
-                <p className="text-muted-foreground text-sm lg:text-base">
-                  基础提示词模块，可重用、可组合的AI提示词库，覆盖各类开发场景
-                </p>
-              </div>
-
-              {/* 组合层 */}
-              <div className="bg-background rounded-xl border p-6 lg:p-8 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 lg:w-[3.5rem] lg:h-[3.5rem] rounded-lg bg-purple-100 flex items-center justify-center mb-4 lg:mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-purple-600 lg:w-[1.75rem] lg:h-[1.75rem]">
-                    <rect width="18" height="18" x="3" y="3" rx="2" />
-                    <path d="M3 9h18" />
-                    <path d="M9 21V9" />
-                  </svg>
-                </div>
-                <h3 className="text-lg lg:text-xl font-bold mb-2 lg:mb-3">组合层</h3>
-                <h4 className="text-xs lg:text-sm text-muted-foreground mb-2 lg:mb-3">Flow Canvas</h4>
-                <p className="text-muted-foreground text-sm lg:text-base">
-                  可视化拖拽式流程编排，将原子提示词模块组合成复杂工作流
-                </p>
-              </div>
-
-              {/* 智能层 */}
-              <div className="bg-background rounded-xl border p-6 lg:p-8 hover:shadow-md transition-shadow">
-                <div className="w-12 h-12 lg:w-[3.5rem] lg:h-[3.5rem] rounded-lg bg-green-100 flex items-center justify-center mb-4 lg:mb-6">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="1.5rem" height="1.5rem" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-green-600 lg:w-[1.75rem] lg:h-[1.75rem]">
-                    <path d="M12 2a8 8 0 0 0-8 8c0 5.4 7 12 8 12s8-6.6 8-12a8 8 0 0 0-8-8Z" />
-                    <circle cx="12" cy="10" r="3" />
-                  </svg>
-                </div>
-                <h3 className="text-lg lg:text-xl font-bold mb-2 lg:mb-3">智能层</h3>
-                <h4 className="text-xs lg:text-sm text-muted-foreground mb-2 lg:mb-3">AI Agent Hub</h4>
-                <p className="text-muted-foreground text-sm lg:text-base">
-                  AI交互与自动化，智能体协作完成复杂开发任务，提升团队效率
-                </p>
-              </div>
-            </div>
+             </div>
           </div>
-        </section>
 
-        {/* 工作流程区域 */}
-        <section id="workflow" className="py-16 sm:py-24">
-          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">覆盖开发全生命周期</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
-                从需求分析到代码实现，从测试到部署，Atomic全程助力
-              </p>
-            </div>
-
-            {/* 工作流程设计 */}
-            <div className="relative mt-12 sm:mt-20">
-              {/* 水平连接线 */}
-              <div className="hidden md:block absolute top-16 left-0 w-full h-[0.0625rem] bg-border"></div>
-              
-              <div className="grid md:grid-cols-4 gap-6 lg:gap-8">
-                {/* 步骤1 */}
-                <div className="flex flex-col items-center">
-                  <div className="w-[3rem] h-[3rem] sm:w-[4rem] sm:h-[4rem] rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
-                    <span className="font-bold text-primary text-lg sm:text-xl">1</span>
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">需求分析</h3>
-                  <p className="text-muted-foreground text-center text-sm sm:text-base">
-                    AI辅助分析需求文档，提取关键点，生成任务清单
-                  </p>
+          {/* Module 2: Docs */}
+          <div className="w-[85vw] sm:w-[45vw] aspect-[4/5] bg-[#111] border border-white/10 p-8 relative group hover:bg-[#151515] transition-colors shrink-0">
+             <div className="absolute top-8 right-8 font-mono text-xs text-white/30">02</div>
+             <div className="h-full flex flex-col justify-between">
+                <div className="w-12 h-12 bg-purple-500/20 rounded-full blur-xl group-hover:bg-purple-500/40 transition-all" />
+                <div>
+                  <h3 className="text-3xl font-bold text-white mb-4">Living Docs</h3>
+                  <p className="text-white/60">Documents that breathe. Auto-generating, self-updating knowledge bases that evolve with your project.</p>
                 </div>
-
-                {/* 步骤2 */}
-                <div className="flex flex-col items-center">
-                  <div className="w-[3rem] h-[3rem] sm:w-[4rem] sm:h-[4rem] rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
-                    <span className="font-bold text-primary text-lg sm:text-xl">2</span>
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">代码生成</h3>
-                  <p className="text-muted-foreground text-center text-sm sm:text-base">
-                    基于需求智能生成高质量代码，支持多种框架和语言
-                  </p>
-                </div>
-
-                {/* 步骤3 */}
-                <div className="flex flex-col items-center">
-                  <div className="w-[3rem] h-[3rem] sm:w-[4rem] sm:h-[4rem] rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
-                    <span className="font-bold text-primary text-lg sm:text-xl">3</span>
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">测试与优化</h3>
-                  <p className="text-muted-foreground text-center text-sm sm:text-base">
-                    自动生成测试用例，发现并修复潜在问题，优化性能
-                  </p>
-                </div>
-
-                {/* 步骤4 */}
-                <div className="flex flex-col items-center">
-                  <div className="w-[3rem] h-[3rem] sm:w-[4rem] sm:h-[4rem] rounded-full border-2 border-primary bg-background flex items-center justify-center mb-6 sm:mb-8 z-10">
-                    <span className="font-bold text-primary text-lg sm:text-xl">4</span>
-                  </div>
-                  <h3 className="text-lg sm:text-xl font-bold mb-2 sm:mb-3 text-center">部署与监控</h3>
-                  <p className="text-muted-foreground text-center text-sm sm:text-base">
-                    协助配置部署流程，提供运行时监控和问题诊断
-                  </p>
-                </div>
-              </div>
-            </div>
+             </div>
           </div>
-        </section>
 
-        {/* CTA区域 */}
-        <section className="py-16 sm:py-24 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
-          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 text-center">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-4 sm:mb-6">准备好提升您的开发效率了吗？</h2>
-            <p className="text-white/80 max-w-2xl mx-auto mb-8 sm:mb-10 text-sm sm:text-lg">
-              加入数千名开发者的行列，体验AI驱动的开发效率革命
-            </p>
-            <Button variant="secondary" className="bg-white text-primary hover:bg-white/90 px-[1.5rem] py-[0.5rem] sm:px-[2rem] sm:py-[1.5rem] text-sm sm:text-base">
-              <Link href="/home">立即开始免费试用</Link>
-            </Button>
+          {/* Module 3: Apps */}
+          <div className="w-[85vw] sm:w-[45vw] aspect-[4/5] bg-[#111] border border-white/10 p-8 relative group hover:bg-[#151515] transition-colors shrink-0">
+             <div className="absolute top-8 right-8 font-mono text-xs text-white/30">03</div>
+             <div className="h-full flex flex-col justify-between">
+                <div className="w-12 h-12 bg-green-500/20 rounded-full blur-xl group-hover:bg-green-500/40 transition-all" />
+                <div>
+                  <h3 className="text-3xl font-bold text-white mb-4">App Forge</h3>
+                  <p className="text-white/60">Idea to deployment in seconds. Describe the functionality, and watch the code construct itself before your eyes.</p>
+                </div>
+             </div>
           </div>
-        </section>
 
-        {/* 常见问题 */}
-        <section id="faq" className="py-16 sm:py-24">
-          <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div className="text-center mb-12 sm:mb-16">
-              <h2 className="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4">常见问题</h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto text-sm sm:text-base">
-                关于Atomic的一些常见问题解答
-              </p>
-            </div>
+        </motion.div>
+      </div>
+    </section>
+  );
+};
 
-            <div className="grid md:grid-cols-2 gap-6 lg:gap-8 max-w-4xl mx-auto">
-              <div className="border rounded-lg p-5 sm:p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-base sm:text-lg font-bold mb-2">Atomic适合哪些开发者？</h3>
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  Atomic适合所有前端开发者和技术团队，无论是个人开发者还是大型企业团队都能从中受益。
-                </p>
-              </div>
+// ------------------------------------------------------------------
+// 7. 终章：呼唤 (The Call)
+// ------------------------------------------------------------------
+const FinalCall = () => {
+  const { isSignedIn } = useUser();
+  return (
+    <section className="h-[80vh] flex items-center justify-center bg-black relative overflow-hidden">
+      {/* 背景干扰线 */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,1)_100%),linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+      
+      <div className="relative z-10 text-center px-4">
+        <motion.h2 
+          initial={{ scale: 0.9, opacity: 0 }}
+          whileInView={{ scale: 1, opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tight"
+        >
+          Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">Transmute</span>?
+        </motion.h2>
+        
+        <div className="flex flex-col items-center gap-6">
+          <p className="text-white/40 max-w-lg mb-8">
+            Join the architects of the new digital era. 
+            <br/>Your prompt is the only limit.
+          </p>
 
-              <div className="border rounded-lg p-5 sm:p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-base sm:text-lg font-bold mb-2">如何开始使用Atomic？</h3>
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  注册账号后，您可以立即开始使用基础功能。我们提供详细的文档和教程帮助您快速上手。
-                </p>
-              </div>
+          {isSignedIn ? (
+            <Link href="/home">
+               <button className="group relative px-8 py-4 bg-white text-black font-bold tracking-widest overflow-hidden">
+                  <span className="relative z-10 group-hover:text-white transition-colors duration-300">ENTER DASHBOARD</span>
+                  <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+               </button>
+            </Link>
+          ) : (
+            <SignInButton mode="modal">
+               <button className="group relative px-8 py-4 bg-white text-black font-bold tracking-widest overflow-hidden">
+                  <span className="relative z-10 group-hover:text-white transition-colors duration-300">INITIATE SEQUENCE</span>
+                  <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+               </button>
+            </SignInButton>
+          )}
+        </div>
+      </div>
+    </section>
+  );
+};
 
-              <div className="border rounded-lg p-5 sm:p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-base sm:text-lg font-bold mb-2">Atomic支持哪些编程语言和框架？</h3>
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  我们支持主流的前端框架和语言，包括React、Vue、Angular、TypeScript等，并持续扩展中。
-                </p>
-              </div>
-
-              <div className="border rounded-lg p-5 sm:p-6 hover:shadow-md transition-shadow">
-                <h3 className="text-base sm:text-lg font-bold mb-2">Atomic如何保护我的代码和数据安全？</h3>
-                <p className="text-muted-foreground text-sm sm:text-base">
-                  我们采用企业级加密技术保护您的代码和数据，并提供细粒度的权限控制，确保安全性。
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+export default function Home() {
+  return (
+    <div className="bg-black min-h-screen text-white font-sans selection:bg-white selection:text-black cursor-none">
+      <CustomCursor />
+      <NeuralField />
+      <MinimalNav />
+      
+      <main>
+        <GenesisSection />
+        <DeconstructionSection />
+        <ManifestationSection />
+        <FinalCall />
       </main>
-
-      {/* 页脚 */}
-      <footer className="border-t py-8 sm:py-12 bg-muted/30">
-        <div className="container mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="flex items-center gap-2 mb-6 md:mb-0">
-              <Logo size="md" />
-              <span className="font-bold text-xl">Atomic</span>
-            </div>
-            <div className="flex flex-wrap justify-center gap-4 sm:gap-8">
-              <Link href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground">关于我们</Link>
-              <Link href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground">博客</Link>
-              <Link href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground">文档</Link>
-              <Link href="#" className="text-xs sm:text-sm text-muted-foreground hover:text-foreground">联系我们</Link>
-            </div>
-          </div>
-          <div className="mt-6 sm:mt-8 pt-6 sm:pt-8 border-t text-center text-xs sm:text-sm text-muted-foreground">
-            &copy; {new Date().getFullYear()} Atomic. 保留所有权利。
-          </div>
+      
+      <footer className="py-8 px-8 border-t border-white/10 flex justify-between items-end text-xs text-white/30 font-mono uppercase">
+        <div>
+          © {new Date().getFullYear()} Atomic AI Labs<br/>
+          All Systems Nominal
+        </div>
+        <div className="text-right">
+          Designed for<br/>The Future
         </div>
       </footer>
     </div>
