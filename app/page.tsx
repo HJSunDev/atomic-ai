@@ -5,12 +5,12 @@ import React, { useEffect, useRef, useState } from "react";
 import { motion, useScroll, useTransform, useSpring, useMotionValue, useMotionTemplate, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { SignInButton, useUser, UserButton } from "@clerk/nextjs";
-import { ArrowRight, Minus } from "lucide-react";
+import { ArrowRight, Minus, FileText, Zap, MessageSquare } from "lucide-react";
 
-// ------------------------------------------------------------------
-// 1. 沉浸式流体背景 (The Neural Field)
-// 使用 HTML5 Canvas 实现高性能粒子流场
-// ------------------------------------------------------------------
+/**
+ * 沉浸式流体背景 (The Neural Field)
+ * 使用 HTML5 Canvas 实现高性能粒子流场
+ */
 const NeuralField = () => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
@@ -106,9 +106,9 @@ const NeuralField = () => {
   return <canvas ref={canvasRef} className="fixed inset-0 z-0 opacity-40 pointer-events-none" />;
 };
 
-// ------------------------------------------------------------------
-// 2. 磁力光标 (Magnetic Cursor)
-// ------------------------------------------------------------------
+/**
+ * 磁力光标 (Magnetic Cursor)
+ */
 const CustomCursor = () => {
   const mouseX = useMotionValue(-100);
   const mouseY = useMotionValue(-100);
@@ -137,9 +137,9 @@ const CustomCursor = () => {
   );
 };
 
-// ------------------------------------------------------------------
-// 3. 极简导航 + 优雅登录交互
-// ------------------------------------------------------------------
+/**
+ * 极简导航 + 优雅登录交互
+ */
 const MinimalNav = () => {
   const { isSignedIn } = useUser();
   const [isHovered, setIsHovered] = useState(false);
@@ -215,15 +215,75 @@ const MinimalNav = () => {
   );
 };
 
-// ------------------------------------------------------------------
-// 4. 章节：起源 (Genesis) - 大胆的排版动画
-// ------------------------------------------------------------------
+
+/**
+ * 全息系统按钮组件
+ */
+const SystemStartBtn = ({ text, onClick }: { text: string, onClick?: () => void }) => (
+    <button onClick={onClick} className="group relative overflow-hidden bg-white/5 px-8 py-4 backdrop-blur-[2px] transition-all duration-300">
+      {/* 扫描线背景 */}
+      <div className="absolute inset-0 -translate-y-full bg-gradient-to-b from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-y-full" />
+      
+      {/* 边框动画 */}
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500 delay-100" />
+      <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
+  
+      <div className="relative z-10 flex items-center gap-6">
+        <div className="flex flex-col items-end">
+          <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/30 group-hover:text-blue-400 transition-colors">
+            System_Ready
+          </span>
+          <span className="font-bold tracking-[0.15em] text-white text-base sm:text-lg">
+            {text}
+          </span>
+        </div>
+        <div className="h-8 w-[1px] bg-white/20 group-hover:bg-white/50 transition-colors" />
+        <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
+      </div>
+  
+      {/* 角标装饰 */}
+      <div className="absolute left-0 top-0 h-2 w-2 border-l border-t border-white/20 transition-all duration-300 group-hover:border-white/80" />
+      <div className="absolute right-0 top-0 h-2 w-2 border-r border-t border-white/20 transition-all duration-300 group-hover:border-white/80" />
+      <div className="absolute left-0 bottom-0 h-2 w-2 border-l border-b border-white/20 transition-all duration-300 group-hover:border-white/80" />
+      <div className="absolute right-0 bottom-0 h-2 w-2 border-r border-b border-white/20 transition-all duration-300 group-hover:border-white/80" />
+    </button>
+);
+
+/**
+ * 章节：起源 - 首屏
+ */
 const GenesisSection = () => {
   const { scrollY } = useScroll();
   const { isSignedIn } = useUser();
   const y1 = useTransform(scrollY, [0, 500], [0, 200]);
   const y2 = useTransform(scrollY, [0, 500], [0, -100]);
-  const opacity = useTransform(scrollY, [0, 300], [1, 0]);
+  
+  // 延长首屏内容消失的时间，让小块运动时背景还可见
+  const opacity = useTransform(scrollY, [200, 600], [1, 0]);
+
+  // 定义三个块的滚动运动轨迹
+  // 目标：运动到屏幕下方中间消失
+  // 我们需要更长的滚动距离来完成这个动画
+  
+  // 水平位移：汇聚到中心
+  const moveX_Docs = useTransform(scrollY, [0, 600], ["0%", "-28vw"]); 
+  const moveX_Apps = useTransform(scrollY, [0, 600], ["0%", "35vw"]); 
+  const moveX_Chat = useTransform(scrollY, [0, 600], ["0%", "30vw"]); 
+
+  // 垂直位移：大幅向下，直到消失在视口下方
+  // 这里的数值需要足够大以抵消 section 的上移并继续向下
+  const moveY_Docs = useTransform(scrollY, [0, 600], ["0%", "120vh"]); 
+  const moveY_Apps = useTransform(scrollY, [0, 600], ["0%", "80vh"]); 
+  const moveY_Chat = useTransform(scrollY, [0, 600], ["0%", "100vh"]); 
+  
+  // 透明度：在接近目的地时才消失
+  const itemOpacity = useTransform(scrollY, [400, 700], [1, 0]);
+  
+  // 缩放：逐渐变小，模拟远去
+  const itemScale = useTransform(scrollY, [0, 600], [1, 0.2]);
+  
+  // 旋转：增加动感
+  const itemRotate = useTransform(scrollY, [0, 600], [0, 120]); 
 
   return (
     <section className="h-screen relative flex items-center justify-center overflow-hidden px-4">
@@ -276,6 +336,103 @@ const GenesisSection = () => {
           </motion.div>
         </div>
       </motion.div>
+
+      {/* 三个功能小块 - 灵动浮动 + 倾斜 + 滚动汇聚效果 */}
+      {/* DOCS: 右上角 */}
+      <motion.div 
+        style={{ 
+          x: moveX_Docs, 
+          y: moveY_Docs, 
+          opacity: itemOpacity, 
+          scale: itemScale,
+          rotate: itemRotate
+        }}
+        className="absolute right-[12%] top-[18%] z-20"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, rotate: 15 }}
+          animate={{ 
+            opacity: 1, 
+            scale: 1,
+            y: [0, -15, 0],
+            rotate: [15, 12, 15]
+          }}
+          transition={{ 
+            opacity: { delay: 1.5, duration: 0.8 },
+            scale: { delay: 1.5, duration: 0.8 },
+            y: { duration: 4, repeat: Infinity, ease: "easeInOut" },
+            rotate: { duration: 5, repeat: Infinity, ease: "easeInOut" }
+          }}
+          className="w-20 h-20 bg-white/10 backdrop-blur-sm rounded-xl shadow-xl border border-white/20 p-3 flex flex-col items-center justify-center"
+        >
+          <FileText strokeWidth={1.5} size={24} className="text-white mb-2" />
+          <span className="text-[9px] font-mono text-white/60 tracking-widest">DOCS</span>
+        </motion.div>
+      </motion.div>
+
+      {/* APPS: 左下偏上 */}
+      <motion.div 
+        style={{ 
+          x: moveX_Apps, 
+          y: moveY_Apps, 
+          opacity: itemOpacity, 
+          scale: itemScale, 
+          rotate: itemRotate
+        }}
+        className="absolute left-[8%] bottom-[30%] z-20"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, rotate: 5 }}
+          animate={{ 
+            opacity: 1, 
+            scale: 1,
+            y: [0, 20, 0],
+            rotate: [5, 2, 5]
+          }}
+          transition={{ 
+            opacity: { delay: 1.7, duration: 0.8 },
+            scale: { delay: 1.7, duration: 0.8 },
+            y: { duration: 5, repeat: Infinity, ease: "easeInOut", delay: 1 },
+            rotate: { duration: 6, repeat: Infinity, ease: "easeInOut" }
+          }}
+          className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-xl shadow-xl border border-white/20 p-3 flex flex-col items-center justify-center"
+        >
+          <Zap strokeWidth={1.5} size={20} className="text-white mb-2" />
+          <span className="text-[9px] font-mono text-white/60 tracking-widest">APPS</span>
+        </motion.div>
+      </motion.div>
+
+      {/* CHAT: 左上角 */}
+      <motion.div 
+        style={{ 
+          x: moveX_Chat, 
+          y: moveY_Chat, 
+          opacity: itemOpacity, 
+          scale: itemScale,
+          rotate: itemRotate
+        }}
+        className="absolute left-[10%] top-[22%] z-20"
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.8, rotate: -10 }}
+          animate={{ 
+            opacity: 1, 
+            scale: 1,
+            y: [0, -15, 0],
+            rotate: [-10, -15, -10]
+          }}
+          transition={{ 
+            opacity: { delay: 1.9, duration: 0.8 },
+            scale: { delay: 1.9, duration: 0.8 },
+            y: { duration: 4.5, repeat: Infinity, ease: "easeInOut", delay: 0.5 },
+            rotate: { duration: 5.5, repeat: Infinity, ease: "easeInOut" }
+          }}
+          className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-xl shadow-xl border border-white/20 p-3 flex flex-col items-center justify-center"
+        >
+          <MessageSquare strokeWidth={1.5} size={20} className="text-white mb-2" />
+          <span className="text-[9px] font-mono text-white/60 tracking-widest">CHAT</span>
+        </motion.div>
+      </motion.div>
       
       <div className="absolute bottom-12 left-8 font-mono text-xs text-white/40 flex flex-col gap-2">
          <span>SCROLL TO EXPLORE</span>
@@ -285,40 +442,9 @@ const GenesisSection = () => {
   );
 };
 
-// 全息系统按钮组件
-const SystemStartBtn = ({ text, onClick }: { text: string, onClick?: () => void }) => (
-  <button onClick={onClick} className="group relative overflow-hidden bg-white/5 px-8 py-4 backdrop-blur-[2px] transition-all duration-300">
-    {/* 扫描线背景 */}
-    <div className="absolute inset-0 -translate-y-full bg-gradient-to-b from-transparent via-white/10 to-transparent transition-transform duration-700 group-hover:translate-y-full" />
-    
-    {/* 边框动画 */}
-    <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500 delay-100" />
-    <div className="absolute bottom-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-white/50 to-transparent scale-x-0 group-hover:scale-x-100 transition-transform duration-500" />
-
-    <div className="relative z-10 flex items-center gap-6">
-      <div className="flex flex-col items-end">
-        <span className="font-mono text-[9px] uppercase tracking-[0.2em] text-white/30 group-hover:text-blue-400 transition-colors">
-          System_Ready
-        </span>
-        <span className="font-bold tracking-[0.15em] text-white text-base sm:text-lg">
-          {text}
-        </span>
-      </div>
-      <div className="h-8 w-[1px] bg-white/20 group-hover:bg-white/50 transition-colors" />
-      <ArrowRight className="h-5 w-5 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all duration-300" />
-    </div>
-
-    {/* 角标装饰 */}
-    <div className="absolute left-0 top-0 h-2 w-2 border-l border-t border-white/20 transition-all duration-300 group-hover:border-white/80" />
-    <div className="absolute right-0 top-0 h-2 w-2 border-r border-t border-white/20 transition-all duration-300 group-hover:border-white/80" />
-    <div className="absolute left-0 bottom-0 h-2 w-2 border-l border-b border-white/20 transition-all duration-300 group-hover:border-white/80" />
-    <div className="absolute right-0 bottom-0 h-2 w-2 border-r border-b border-white/20 transition-all duration-300 group-hover:border-white/80" />
-  </button>
-);
-
-// ------------------------------------------------------------------
-// 5. 章节：解构 (Deconstruction) - 3D 变换与交互
-// ------------------------------------------------------------------
+/**
+ * 章节：解构 - 表达产品理念
+ */
 const DeconstructionSection = () => {
   return (
     <section className="min-h-screen relative py-32 px-4 flex flex-col items-center justify-center">
@@ -378,9 +504,9 @@ const DeconstructionSection = () => {
   );
 };
 
-// ------------------------------------------------------------------
-// 6. 章节：显化 (Manifestation) - 水平滚动展示
-// ------------------------------------------------------------------
+/**
+ * 章节：显化 - 水平滚动展示
+ */
 const ManifestationSection = () => {
   const targetRef = useRef(null);
   const { scrollYProgress } = useScroll({ target: targetRef });
@@ -447,48 +573,46 @@ const ManifestationSection = () => {
   );
 };
 
-// ------------------------------------------------------------------
-// 7. 终章：呼唤 (The Call)
-// ------------------------------------------------------------------
+/**
+ * 终章 - 呼唤 
+ */
 const FinalCall = () => {
   const { isSignedIn } = useUser();
   return (
-    <section className="h-[80vh] flex items-center justify-center bg-black relative overflow-hidden">
-      {/* 背景干扰线 */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_bottom,transparent_50%,rgba(0,0,0,1)_100%),linear-gradient(to_right,rgba(255,255,255,0.02)_1px,transparent_1px)] bg-[size:4rem_4rem]" />
+    <section className="h-[60vh] flex flex-col items-center justify-center text-center px-4 relative overflow-hidden bg-white text-black">
+      {/* 网格背景 - 使用更明显的网格图案 */}
+      <div 
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `linear-gradient(rgba(0,0,0,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0,0,0,0.05) 1px, transparent 1px)`,
+          backgroundSize: '32px 32px'
+        }}
+      />
+      {/* 水平渐变：从左边的浅蓝灰色过渡到右边的浅桃橙色 */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-50/60 via-transparent to-orange-50/60" />
       
-      <div className="relative z-10 text-center px-4">
-        <motion.h2 
-          initial={{ scale: 0.9, opacity: 0 }}
-          whileInView={{ scale: 1, opacity: 1 }}
-          transition={{ duration: 0.8 }}
-          className="text-5xl md:text-7xl font-bold text-white mb-8 tracking-tight"
-        >
-          Ready to <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-500 to-purple-600">Transmute</span>?
-        </motion.h2>
-        
-        <div className="flex flex-col items-center gap-6">
-          <p className="text-white/40 max-w-lg mb-8">
-            Join the architects of the new digital era. 
-            <br/>Your prompt is the only limit.
-          </p>
-
-          {isSignedIn ? (
+      <h2 className="text-5xl md:text-7xl font-bold tracking-tighter mb-8 text-zinc-900 relative z-10">
+        Ready to build?
+      </h2>
+      
+      <div className="flex flex-col sm:flex-row gap-4 relative z-10">
+        {isSignedIn ? (
             <Link href="/home">
-               <button className="group relative px-8 py-4 bg-white text-black font-bold tracking-widest overflow-hidden">
-                  <span className="relative z-10 group-hover:text-white transition-colors duration-300">ENTER DASHBOARD</span>
-                  <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+               <button className="group relative px-8 py-4 bg-black text-white font-medium rounded-full overflow-hidden transition-transform hover:scale-105 active:scale-95">
+                  <span className="relative z-10 flex items-center gap-2">
+                    Enter Workspace <ArrowRight className="w-4 h-4" />
+                  </span>
                </button>
             </Link>
-          ) : (
+        ) : (
             <SignInButton mode="modal">
-               <button className="group relative px-8 py-4 bg-white text-black font-bold tracking-widest overflow-hidden">
-                  <span className="relative z-10 group-hover:text-white transition-colors duration-300">INITIATE SEQUENCE</span>
-                  <div className="absolute inset-0 bg-black translate-y-full group-hover:translate-y-0 transition-transform duration-300" />
+               <button className="group relative px-8 py-4 bg-black text-white font-medium rounded-full overflow-hidden transition-transform hover:scale-105 active:scale-95">
+                  <span className="relative z-10 flex items-center gap-2">
+                    Start Free Workspace <ArrowRight className="w-4 h-4" />
+                  </span>
                </button>
             </SignInButton>
-          )}
-        </div>
+        )}
       </div>
     </section>
   );
