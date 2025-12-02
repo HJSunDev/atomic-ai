@@ -79,7 +79,7 @@ export const PromptRealityCube = () => {
                 <span className="text-xs font-mono">PROMPT</span>
             </div>
             <p className="font-mono text-sm text-gray-600 leading-relaxed">
-                "Generate a knowledge system that evolves with my thoughts."
+            "Now that AI is here, what really caps your productivity is the habit of reinventing the wheel every time"
             </p>
             <div className="mt-auto h-1 w-4 bg-black animate-pulse" />
         </div>

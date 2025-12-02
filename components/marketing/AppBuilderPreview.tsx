@@ -3,9 +3,9 @@
 import React, { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Bot, Play, Zap, Layout, MousePointer2, 
-  Sparkles, Send, FileCode, Search, 
-  Menu, X, Command, Hash, ChevronRight,
+  Bot, Zap, Layout, MousePointer2, 
+  Sparkles, Send, FileCode, 
+  X, Command, Hash, ChevronRight,
   Code2
 } from "lucide-react";
 
@@ -117,18 +117,10 @@ export const AppBuilderPreview = () => {
              <div className="w-2.5 h-2.5 rounded-full bg-green-500/20 border border-green-500/50" />
           </div>
           <div className="h-4 w-[1px] bg-white/10 mx-2" />
-          <div className="flex items-center gap-2 text-neutral-500 text-xs">
-            <Menu size={12} />
-            <span className="font-mono">Atomic Builder</span>
+          <div className="flex items-center gap-2 px-3 py-1 bg-neutral-900 rounded border border-white/5 text-[10px] text-neutral-400">
+            <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            <span>v1.0.0-beta</span>
           </div>
-        </div>
-        
-        <div className="flex items-center gap-3">
-           <div className="flex items-center gap-2 px-3 py-1 bg-neutral-900 rounded border border-white/5 text-[10px] text-neutral-400">
-             <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-             <span>v2.4.0-beta</span>
-           </div>
-           <Play size={12} className="text-green-400 fill-current opacity-80" />
         </div>
       </div>
 
@@ -211,11 +203,7 @@ export const AppBuilderPreview = () => {
         {/* CENTER PANEL: Preview (45%) - The Star of the Show */}
         <div className="w-[45%] bg-[#111] flex flex-col relative z-0">
            {/* Browser Toolbar */}
-           <div className="h-9 bg-[#1A1A1A] border-b border-white/5 flex items-center px-3 gap-3 justify-between">
-              <div className="flex items-center gap-2 text-neutral-500 bg-black/40 rounded px-2 py-1 border border-white/5 w-full max-w-[200px]">
-                <Search size={10} />
-                <span className="text-[9px] font-mono">localhost:3000</span>
-              </div>
+           <div className="h-9 bg-[#1A1A1A] border-b border-white/5 flex items-center px-3 gap-3 justify-end">
               <div className="flex gap-2 text-neutral-600">
                 <Layout size={12} />
               </div>

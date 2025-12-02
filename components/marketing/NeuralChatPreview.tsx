@@ -297,14 +297,14 @@ export const NeuralChatPreview = () => {
 
         {/* Input Area (Fixed Bottom) */}
         <div className="absolute bottom-0 left-0 right-0 p-4 bg-white">
-           <div className="border border-zinc-200 rounded-xl bg-white shadow-sm focus-within:ring-1 focus-within:ring-zinc-300 transition-all">
-              <textarea 
-                 readOnly
-                 rows={1}
-                 className="w-full resize-none px-4 py-3 outline-none text-sm text-zinc-800 placeholder:text-zinc-400 bg-transparent min-h-[50px]"
-                 placeholder={phase === 0 ? "问我任何问题..." : ""}
-                 value={phase === 1 ? "React Server Components 最佳实践" : ""}
-              />
+          <div className="relative border border-zinc-200 rounded-xl bg-white shadow-sm focus-within:ring-1 focus-within:ring-zinc-300 transition-all">
+             <textarea 
+                readOnly
+                rows={1}
+                className="w-full resize-none px-4 py-3 outline-none text-sm text-zinc-800 placeholder:text-zinc-400 bg-transparent min-h-[50px]"
+                placeholder={phase === 0 ? "问我任何问题..." : ""}
+                value=""
+             />
               
               {/* Typing Simulation */}
               {phase === 1 && (

@@ -10,6 +10,7 @@ import { PromptRealityCube } from "@/components/marketing/PromptRealityCube";
 import { AppBuilderPreview } from "@/components/marketing/AppBuilderPreview";
 import { NeuralChatPreview } from "@/components/marketing/NeuralChatPreview";
 import { LivingDocsPreview } from "@/components/marketing/LivingDocsPreview";
+import { getAppVersion, formatVersion } from "@/lib/version";
 
 /**
  * 沉浸式流体背景 (The Neural Field)
@@ -67,6 +68,7 @@ const NeuralField = () => {
     }
     
     const animate = () => {
+      if (!ctx) return;
       ctx.clearRect(0, 0, w, h);
       
       // Draw connections
@@ -82,9 +84,9 @@ const NeuralField = () => {
           const p2 = particles[j];
           const dx = p1.x - p2.x;
           const dy = p1.y - p2.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
+          const distSq = dx * dx + dy * dy;
           
-          if (dist < 150) {
+          if (distSq < 22500) { // 150 * 150
             ctx.beginPath();
             ctx.moveTo(p1.x, p1.y);
             ctx.lineTo(p2.x, p2.y);
@@ -93,10 +95,10 @@ const NeuralField = () => {
         }
       }
       
-      requestAnimationFrame(animate);
+      animationFrameId = requestAnimationFrame(animate);
     };
     
-    animate();
+    let animationFrameId = requestAnimationFrame(animate);
     
     const handleResize = () => {
       w = canvas.width = window.innerWidth;
@@ -104,7 +106,10 @@ const NeuralField = () => {
     };
     
     window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(animationFrameId);
+    };
   }, []);
 
   return <canvas ref={canvasRef} className="fixed inset-0 z-0 opacity-40 pointer-events-none" />;
@@ -147,12 +152,13 @@ const CustomCursor = () => {
 const MinimalNav = () => {
   const { isSignedIn } = useUser();
   const [isHovered, setIsHovered] = useState(false);
+  const version = formatVersion();
   
   return (
     <nav className="fixed top-0 left-0 w-full p-8 flex justify-between items-start z-50 text-white">
       <div className="flex flex-col mix-blend-difference">
         <span className="font-mono text-xs tracking-[0.5em] uppercase opacity-50">Atomic AI</span>
-        <span className="text-sm font-bold mt-1">Ver. 2.0</span>
+        <span className="text-sm font-bold mt-1">Ver. {version}</span>
       </div>
       
       <div className="flex items-center gap-6">
@@ -491,20 +497,14 @@ const ManifestationSection = () => {
 
           {/* Module 1: Chat */}
           <div className="w-[90vw] sm:w-[70vw] aspect-square sm:aspect-video bg-[#111] border border-white/10 relative group shrink-0 rounded-xl overflow-hidden">
-             <NeuralChatPreview />
+             <div className="w-full h-full pointer-events-none">
+                <NeuralChatPreview />
+             </div>
              
              {/* Overlay Info */}
-             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none flex flex-col justify-end p-8">
+             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none flex flex-col justify-end p-8 z-20">
                 <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <div className="flex items-center gap-4 mb-2">
-                     <div className="w-8 h-8 bg-blue-500/20 rounded-lg flex items-center justify-center backdrop-blur-md border border-blue-500/30">
-                        <MessageSquare className="w-4 h-4 text-blue-400" />
-                     </div>
-                     <h3 className="text-2xl sm:text-3xl font-bold text-white">Neural Chat</h3>
-                  </div>
-                  <p className="text-white/60 max-w-lg text-sm sm:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                    More than text. A command center for your digital existence. Execute code, analyze data, invoke agents.
-                  </p>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white">Neural Chat</h3>
                 </div>
              </div>
              
@@ -513,20 +513,14 @@ const ManifestationSection = () => {
 
           {/* Module 2: Docs */}
           <div className="w-[90vw] sm:w-[70vw] aspect-square sm:aspect-video bg-[#111] border border-white/10 relative group shrink-0 rounded-xl overflow-hidden">
-             <LivingDocsPreview />
+             <div className="w-full h-full pointer-events-none">
+                <LivingDocsPreview />
+             </div>
              
              {/* Overlay Info */}
-             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none flex flex-col justify-end p-8">
+             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none flex flex-col justify-end p-8 z-20">
                 <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <div className="flex items-center gap-4 mb-2">
-                     <div className="w-8 h-8 bg-purple-500/20 rounded-lg flex items-center justify-center backdrop-blur-md border border-purple-500/30">
-                        <FileText className="w-4 h-4 text-purple-400" />
-                     </div>
-                     <h3 className="text-2xl sm:text-3xl font-bold text-white">Living Docs</h3>
-                  </div>
-                  <p className="text-white/60 max-w-lg text-sm sm:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                    Documents that breathe. Auto-generating, self-updating knowledge bases that evolve with your project.
-                  </p>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white">Living Docs</h3>
                 </div>
              </div>
 
@@ -535,20 +529,14 @@ const ManifestationSection = () => {
 
           {/* Module 3: Apps */}
           <div className="w-[90vw] sm:w-[70vw] aspect-square sm:aspect-video bg-[#111] border border-white/10 relative group shrink-0 rounded-xl overflow-hidden">
-             <AppBuilderPreview />
+             <div className="w-full h-full pointer-events-none">
+                <AppBuilderPreview />
+             </div>
              
              {/* Overlay Info */}
-             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none flex flex-col justify-end p-8">
+             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-transparent to-transparent pointer-events-none flex flex-col justify-end p-8 z-20">
                 <div className="transform translate-y-4 group-hover:translate-y-0 transition-transform duration-500">
-                  <div className="flex items-center gap-4 mb-2">
-                     <div className="w-8 h-8 bg-green-500/20 rounded-lg flex items-center justify-center backdrop-blur-md border border-green-500/30">
-                        <Zap className="w-4 h-4 text-green-400" />
-                     </div>
-                     <h3 className="text-2xl sm:text-3xl font-bold text-white">App Forge</h3>
-                  </div>
-                  <p className="text-white/60 max-w-lg text-sm sm:text-base opacity-0 group-hover:opacity-100 transition-opacity duration-500 delay-100">
-                    Idea to deployment in seconds. Describe the functionality, and watch the code construct itself before your eyes.
-                  </p>
+                  <h3 className="text-2xl sm:text-3xl font-bold text-white">App Forge</h3>
                 </div>
              </div>
              
@@ -608,22 +596,21 @@ const FinalCall = () => {
 
 export default function Home() {
   return (
-    <div className="bg-black min-h-screen text-white font-sans selection:bg-white selection:text-black cursor-none">
+    <div className="bg-black min-h-screen text-white font-sans selection:bg-white selection:text-black md:cursor-none">
       <CustomCursor />
       <NeuralField />
-      <MinimalNav />
-      
+
       <main>
+        <MinimalNav />
         <GenesisSection />
         <DeconstructionSection />
         <ManifestationSection />
         <FinalCall />
       </main>
       
-      <footer className="py-8 px-8 border-t border-white/10 flex justify-between items-end text-xs text-white/30 font-mono uppercase">
+      <footer className="py-6 px-8 border-t border-black/5 flex justify-between items-end text-xs text-black/30 font-mono uppercase bg-[#F7F7F5]">
         <div>
           © {new Date().getFullYear()} Atomic AI Labs<br/>
-          All Systems Nominal
         </div>
         <div className="text-right">
           Designed for<br/>The Future
