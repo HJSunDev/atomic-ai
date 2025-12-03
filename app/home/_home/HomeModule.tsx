@@ -5,14 +5,17 @@ import {
   Calendar, 
   Clock, 
   Users, 
-  LayoutGrid, 
-  Sun, 
-  Coffee, 
-  BookOpen, 
-  Plus 
+  Plus,
+  Bot,
+  Sparkles,
+  Zap,
+  Presentation,
+  FileUser,
+  ArrowRight,
+  Command,
+  MessageSquare,
+  AppWindow
 } from 'lucide-react';
-
-import { WelcomePanel } from "./_components/WelcomePanel";
 
 import { RecentlyVisited } from './_components/RecentlyVisited';
 import TimeGreeting from "@/components/time-greeting/TimeGreeting";
@@ -21,101 +24,221 @@ export const HomeModule = () => {
   return (
     <main className="relative w-full h-full bg-white overflow-y-auto p-8">
       <div className="max-w-4xl mx-auto">
-        {/* Header */}
-         <header className="mb-10">
+        {/* 欢迎区 */}
+         <section className="mb-10">
            <TimeGreeting 
              variant="simple"
              className="max-w-2xl" 
              showTime={true} 
              showMessage={true}
            />
-         </header>
+         </section>
 
         {/* Recently Visited */}
         <RecentlyVisited />
 
-        {/* Upcoming Events */}
+        {/* AI Creation / 智创引导 */}
         <section className="mb-12">
           <h2 className="text-sm font-medium text-gray-500 mb-4 flex items-center">
-            <Calendar className="w-4 h-4 mr-2" />
-            Upcoming events
+            <Zap className="w-4 h-4 mr-2" />
+            Start Creating
           </h2>
-          <div className="grid grid-cols-2 gap-8">
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6">
-              <div className="w-8 h-8 flex items-center justify-center bg-gray-200 rounded-lg mb-4">
-                <Calendar className="w-5 h-5 text-gray-600" />
+          
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col md:flex-row min-h-[220px]">
+            
+            {/* Left: Text Info */}
+            <div className="flex-1 p-8 flex flex-col justify-center border-b md:border-b-0 md:border-r border-gray-100">
+              <div className="flex items-center space-x-2 mb-3">
+                <Command className="w-4 h-4 text-gray-400" strokeWidth={1.5} />
+                <span className="text-xs font-medium text-gray-500 uppercase tracking-wider">AI Creation</span>
               </div>
-              <h3 className="font-semibold text-gray-800">Connect AI Meeting Notes with your Calendar events</h3>
-              <p className="text-sm text-gray-500 my-2">Join calls, transcribe audio, and summarize meetings all in Notion.</p>
-              <button className="text-sm text-blue-600 font-medium mt-2">Connect Notion Calendar</button>
+              
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Turn ideas into reality
+              </h3>
+              <p className="text-sm text-gray-500 leading-relaxed mb-6 max-w-xs">
+                Just describe what you need. We'll handle the rest—automatically routing your request to the perfect AI tool.
+              </p>
+
+              <button className="group flex items-center text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors w-fit">
+                  Try it now <ArrowRight className="w-4 h-4 ml-1 opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all" />
+              </button>
             </div>
-            <div className="pt-2">
-              <div className="flex items-start mb-4">
-                <div className="text-sm text-gray-500 w-20">
-                  <p>Today</p>
-                  <p>Sep 11</p>
-                </div>
-                <div className="border-l-2 border-gray-200 pl-4">
-                  <p className="font-medium">Team standup</p>
-                  <p className="text-sm text-gray-500">9 AM · Office</p>
-                  <button className="mt-2 text-sm bg-gray-100 border border-gray-200 rounded-md px-3 py-1 text-gray-600 flex items-center">
-                    <Plus className="w-4 h-4 mr-1"/> Join and take notes
-                  </button>
-                </div>
-              </div>
-              <div className="flex items-start">
-                <div className="text-sm text-gray-500 w-20">
-                  <p>Fri</p>
-                  <p>Sep 12</p>
-                </div>
-                <div className="border-l-2 border-gray-200 pl-4">
-                  <p className="font-medium">Project check-in</p>
-                  <p className="text-sm text-gray-500">10 AM · Office</p>
-                </div>
-              </div>
+
+            {/* Right: Interactive Flow Visual */}
+            <div className="flex-1 bg-[#F7F7F5] p-6 flex flex-col justify-center items-center relative overflow-hidden">
+               
+               {/* Flow Container */}
+               <div className="w-full max-w-[280px] flex flex-col items-center z-10 relative">
+                  
+                  {/* 1. Input Field (The Origin) */}
+                  <div className="w-full relative z-20">
+                     <div className="relative bg-white rounded-lg border border-gray-200 shadow-sm flex items-center transition-all duration-300 group focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100">
+                        <input 
+                           type="text" 
+                           placeholder="Ask AI to create..." 
+                           className="w-full h-10 px-3 text-sm text-gray-700 placeholder:text-gray-400 bg-transparent border-none outline-none focus:ring-0"
+                        />
+                        <div className="pr-3 text-gray-300">
+                           <span className="text-[10px] border border-gray-200 rounded px-1.5 py-0.5 font-sans">↵</span>
+                        </div>
+                     </div>
+                  </div>
+
+                  {/* 2. The Branching Connections (SVG) */}
+                  <div className="h-12 w-full relative -mt-1 -mb-1 z-0">
+                     <svg className="w-full h-full" preserveAspectRatio="none">
+                        {/* Left Path */}
+                        <path 
+                           d="M140,0 C140,20 50,20 50,48" 
+                           fill="none" 
+                           stroke="#E5E7EB" 
+                           strokeWidth="1.5"
+                        />
+                        {/* Center Path */}
+                        <path 
+                           d="M140,0 L140,48" 
+                           fill="none" 
+                           stroke="#E5E7EB" 
+                           strokeWidth="1.5" 
+                           strokeDasharray="4 4"
+                        />
+                        {/* Right Path */}
+                        <path 
+                           d="M140,0 C140,20 230,20 230,48" 
+                           fill="none" 
+                           stroke="#E5E7EB" 
+                           strokeWidth="1.5"
+                        />
+                        
+                        {/* Animated Particles (Neutral Gray) */}
+                        <circle r="2" fill="#9CA3AF" className="animate-[flow-left_3s_infinite]">
+                           <animateMotion 
+                              dur="3s" 
+                              repeatCount="indefinite" 
+                              path="M140,0 C140,20 50,20 50,48" 
+                              keyPoints="0;1" 
+                              keyTimes="0;1" 
+                              calcMode="spline" 
+                              keySplines="0.4 0 0.2 1"
+                           />
+                        </circle>
+                        <circle r="2" fill="#9CA3AF" className="animate-[flow-center_3s_infinite_1s]">
+                           <animateMotion 
+                              dur="3s" 
+                              repeatCount="indefinite" 
+                              path="M140,0 L140,48" 
+                           />
+                        </circle>
+                         <circle r="2" fill="#9CA3AF" className="animate-[flow-right_3s_infinite_0.5s]">
+                           <animateMotion 
+                              dur="3s" 
+                              repeatCount="indefinite" 
+                              path="M140,0 C140,20 230,20 230,48" 
+                              keyPoints="0;1" 
+                              keyTimes="0;1" 
+                              calcMode="spline" 
+                              keySplines="0.4 0 0.2 1"
+                           />
+                        </circle>
+                     </svg>
+                  </div>
+
+                  {/* 3. The Destinations */}
+                  <div className="flex items-start justify-between w-full px-2">
+                      {/* Chat Option */}
+                      <div className="flex flex-col items-center gap-2 group/item cursor-pointer w-20">
+                         <div className="relative w-12 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all duration-300 group-hover/item:-translate-y-1 group-hover/item:shadow-md group-hover/item:border-gray-300">
+                            <MessageSquare className="w-5 h-5 text-gray-400 group-hover/item:text-gray-900 relative z-10 transition-colors duration-300" strokeWidth={1.5} />
+                         </div>
+                         <span className="text-[11px] font-medium text-gray-400 group-hover/item:text-gray-900 transition-colors">Chat</span>
+                      </div>
+
+                      {/* Doc Option */}
+                      <div className="flex flex-col items-center gap-2 group/item cursor-pointer w-20">
+                         <div className="relative w-12 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all duration-300 group-hover/item:-translate-y-1 group-hover/item:shadow-md group-hover/item:border-gray-300">
+                            <FileText className="w-5 h-5 text-gray-400 group-hover/item:text-gray-900 relative z-10 transition-colors duration-300" strokeWidth={1.5} />
+                         </div>
+                         <span className="text-[11px] font-medium text-gray-400 group-hover/item:text-gray-900 transition-colors">Doc</span>
+                      </div>
+
+                      {/* App Option */}
+                      <div className="flex flex-col items-center gap-2 group/item cursor-pointer w-20">
+                         <div className="relative w-12 h-12 bg-white border border-gray-200 rounded-xl flex items-center justify-center shadow-[0_2px_4px_rgba(0,0,0,0.02)] transition-all duration-300 group-hover/item:-translate-y-1 group-hover/item:shadow-md group-hover/item:border-gray-300">
+                            <AppWindow className="w-5 h-5 text-gray-400 group-hover/item:text-gray-900 relative z-10 transition-colors duration-300" strokeWidth={1.5} />
+                         </div>
+                         <span className="text-[11px] font-medium text-gray-400 group-hover/item:text-gray-900 transition-colors">App</span>
+                      </div>
+                  </div>
+
+               </div>
             </div>
+
           </div>
         </section>
 
-        {/* Home views */}
+        {/* Up Next */}
         <section>
           <h2 className="text-sm font-medium text-gray-500 mb-4 flex items-center">
-            <LayoutGrid className="w-4 h-4 mr-2" />
-            Home views
+            <Sparkles className="w-4 h-4 mr-2" />
+            Up Next
           </h2>
-          <div className="grid grid-cols-2 gap-8">
-            <div className="bg-gray-50 border border-gray-200 rounded-lg p-6 flex flex-col items-center text-center">
-              <div className="w-10 h-10 flex items-center justify-center bg-gray-200 rounded-lg mb-4">
-                 <LayoutGrid className="w-6 h-6 text-gray-600" />
+          
+          {/* Single Container for Notion-like feel */}
+          <div className="bg-white border border-gray-200 rounded-xl overflow-hidden flex flex-col md:flex-row min-h-[200px]">
+            
+            {/* Left: Concept Teaser (Empty State Style) */}
+            <div className="flex-1 p-8 flex flex-col items-center justify-center text-center border-b md:border-b-0 md:border-r border-gray-100">
+              <div className="mb-4 opacity-20">
+                <Sparkles className="w-12 h-12 text-gray-900" strokeWidth={1.5} />
               </div>
-              <p className="text-sm text-gray-500">Pin a database view to quickly access it from Home.</p>
+              <h3 className="text-sm font-medium text-gray-900 mb-1">Custom AI Agents</h3>
+              <p className="text-sm text-gray-500 max-w-[240px] leading-relaxed">
+                Design specialized AI agents with custom workflows. The future unit of work.
+              </p>
+              <div className="mt-4 px-3 py-1 bg-gray-50 text-xs text-gray-500 rounded-full border border-gray-200">
+                Coming soon
+              </div>
             </div>
-            <div className="border border-gray-200 rounded-lg p-4">
-              <div className="flex justify-between text-sm text-gray-500 mb-3">
-                <span>Activity</span>
+
+            {/* Right: Roadmap List */}
+            <div className="flex-1 p-6 bg-gray-50/30">
+              <div className="flex justify-between items-center text-xs font-medium text-gray-400 mb-4 px-2">
+                <span>Module</span>
                 <span>Status</span>
               </div>
-              <div className="space-y-3">
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center"><Sun className="w-4 h-4 mr-2 text-yellow-500"/> Wake up and freshen up</span>
-                  <span className="text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded">Done</span>
+              <div className="space-y-1">
+                {/* Item 1 */}
+                <div className="flex justify-between items-center p-2 rounded hover:bg-gray-50 transition-colors cursor-default group">
+                  <div className="flex items-center text-sm text-gray-600 group-hover:text-gray-900">
+                    <Presentation className="w-4 h-4 mr-3 text-gray-400" strokeWidth={1.5} />
+                    AI Presentation (PPT)
+                  </div>
+                  <span className="text-xs text-gray-400 font-mono">Planning</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center"><Coffee className="w-4 h-4 mr-2 text-orange-500"/> Have breakfast</span>
-                  <span className="text-sm bg-blue-100 text-blue-700 px-2 py-0.5 rounded">In progress</span>
+                
+                {/* Item 2 */}
+                <div className="flex justify-between items-center p-2 rounded hover:bg-gray-50 transition-colors cursor-default group">
+                  <div className="flex items-center text-sm text-gray-600 group-hover:text-gray-900">
+                    <FileUser className="w-4 h-4 mr-3 text-gray-400" strokeWidth={1.5} />
+                    Smart Resume
+                  </div>
+                  <span className="text-xs text-gray-400 font-mono">Planning</span>
                 </div>
-                <div className="flex justify-between items-center">
-                  <span className="flex items-center"><BookOpen className="w-4 h-4 mr-2 text-gray-500"/> Work or study</span>
-                   <span className="text-sm text-gray-600 bg-gray-100 px-2 py-0.5 rounded">Not started</span>
+
+                {/* Item 3 */}
+                <div className="flex justify-between items-center p-2 rounded hover:bg-gray-50 transition-colors cursor-default group">
+                  <div className="flex items-center text-sm text-gray-600 group-hover:text-gray-900">
+                    <Bot className="w-4 h-4 mr-3 text-gray-400" strokeWidth={1.5} />
+                    Agent Workflow
+                  </div>
+                  <span className="text-xs text-blue-600 bg-blue-50 px-2 py-0.5 rounded border border-blue-100/50">In Progress</span>
                 </div>
               </div>
             </div>
+
           </div>
         </section>
-
-
-      {/* 欢迎面板 */}
-      <WelcomePanel />
 
       </div>
     </main>

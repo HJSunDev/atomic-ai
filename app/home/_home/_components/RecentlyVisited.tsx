@@ -23,27 +23,27 @@ import { cn } from "@/lib/utils";
 const recentItems = [
   {
     id: 1,
-    icon: <FileText className="w-6 h-6 text-gray-500" />,
+    icon: <FileText className="w-5 h-5 text-gray-500" />,
     title: "7号-周日",
     subtitle: "H Sep 7"
   },
   {
     id: 2,
-    icon: <p className="text-2xl">💌</p>,
+    icon: <span className="text-xl">💌</span>,
     title: "SocialContact",
     subtitle: "H Jun 27"
   },
   {
     id: 3,
-    icon: <FileText className="w-6 h-6 text-gray-500" />,
+    icon: <FileText className="w-5 h-5 text-gray-500" />,
     title: "时光日志",
     subtitle: "H 17h ago"
   },
   {
     id: 4,
     icon: (
-      <div className="w-6 h-6 bg-blue-200 rounded flex items-center justify-center">
-        <Users className="w-4 h-4 text-blue-600" />
+      <div className="w-5 h-5 bg-blue-50 rounded flex items-center justify-center border border-blue-100">
+        <Users className="w-3 h-3 text-blue-600" />
       </div>
     ),
     title: "2025",
@@ -52,8 +52,8 @@ const recentItems = [
   {
     id: 5,
     icon: (
-      <div className="w-6 h-6 bg-gray-200 rounded flex items-center justify-center">
-        <LayoutGrid className="w-4 h-4 text-gray-600" />
+      <div className="w-5 h-5 bg-gray-100 rounded flex items-center justify-center border border-gray-200">
+        <LayoutGrid className="w-3 h-3 text-gray-600" />
       </div>
     ),
     title: "模型仓库 (方法论)",
@@ -61,7 +61,7 @@ const recentItems = [
   },
   {
     id: 6,
-    icon: <FileText className="w-6 h-6 text-gray-500" />,
+    icon: <FileText className="w-5 h-5 text-gray-500" />,
     title: "Cursor 使用教程",
     subtitle: "H 2h ago"
   }
@@ -134,12 +134,26 @@ export const RecentlyVisited = () => {
           <CarouselContent className="-ml-4">
             {recentItems.map((item) => (
               <CarouselItem key={item.id} className="pl-4 basis-auto">
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 w-48 cursor-pointer hover:bg-gray-100 transition-colors">
-                  <div className="mb-8 h-6">
-                    {item.icon}
+                <div className="group relative flex flex-col justify-between w-[160px] h-[110px] p-4 bg-white border border-gray-200 rounded-xl transition-colors duration-200 cursor-pointer hover:bg-[#F7F7F5]">
+                  
+                  {/* Icon Area */}
+                  <div className="flex items-start justify-between">
+                     <div className="relative z-10">
+                        {item.icon}
+                     </div>
+                     {/* Optional: Subtle corner decoration or action trigger could go here */}
                   </div>
-                  <p className="font-medium text-sm text-gray-800">{item.title}</p>
-                  <p className="text-xs text-gray-400 mt-1">{item.subtitle}</p>
+                  
+                  {/* Content Area */}
+                  <div className="mt-auto">
+                     <h3 className="font-medium text-[13px] text-gray-900 leading-tight truncate mb-1 group-hover:text-gray-900">
+                        {item.title}
+                     </h3>
+                     <p className="text-[11px] text-gray-400 font-normal truncate flex items-center group-hover:text-gray-500">
+                        {item.subtitle}
+                     </p>
+                  </div>
+                  
                 </div>
               </CarouselItem>
             ))}
