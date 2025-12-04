@@ -59,6 +59,8 @@ export const promptSchema = {
     promptSuffix: v.optional(v.string()), 
     // 软删除标记，默认为 false
     isArchived: v.boolean(),
+    // 最后打开时间 (Unix时间戳 ms)
+    lastOpenedAt: v.optional(v.number()),
     // 该文档包含的引用块数量（冗余存储用于提升查询性能，避免每次聚合查询）
     referenceCount: v.number(),
   })
@@ -70,7 +72,9 @@ export const promptSchema = {
     .searchIndex("search_documents_by_title", {
       searchField: "title",
       filterFields: ["userId"], 
-    }),
+    })
+    // 按用户ID和最后打开时间索引，用于“最近访问”列表的高效查询
+    .index("by_userId_lastOpenedAt", ["userId", "lastOpenedAt"]),
 
   // 块表（新架构）
   // 系统的核心，定义了所有文档的具体内容和结构

@@ -430,6 +430,60 @@ export const getDocumentWithBlocks = query({
 });
 
 
+/**
+ * 获取最近访问的文档 (混合排序)
+ * 
+ * 排序逻辑：优先使用 lastOpenedAt，如果不存在则回退到 _creationTime。
+ * 解决了旧数据没有 lastOpenedAt 导致列表为空或排序混乱的问题。
+ */
+export const getRecentlyVisited = query({
+  args: {
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) return [];
+
+    const limit = args.limit ?? 14;
+
+    // 策略 A：优先查“最近访问过”的文档 (利用索引高效查询)
+    // 这利用了 by_userId_lastOpenedAt 索引，速度极快，无需内存排序
+    const visitedDocs = await ctx.db
+      .query("documents")
+      .withIndex("by_userId_lastOpenedAt", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(limit);
+    
+    // 过滤掉已归档的
+    const results = visitedDocs.filter(doc => !doc.isArchived);
+
+    // 如果数量够了，直接返回，不再进行后续查询
+    if (results.length >= limit) {
+      return results.slice(0, limit);
+    }
+
+    // 策略 B：如果数量不足，说明可能是旧数据，补充查“最近创建”的文档
+    const existingIds = new Set(results.map(d => d._id));
+
+    // 利用系统默认的时间索引查询
+    const createdDocs = await ctx.db
+      .query("documents")
+      .withIndex("by_userId", (q) => q.eq("userId", userId))
+      .order("desc")
+      .take(limit * 2); // 多取一点以应对归档过滤
+
+    for (const doc of createdDocs) {
+      if (results.length >= limit) break;
+      
+      // 补充条件：未归档 + 未在结果集中 + 确实没有 lastOpenedAt (避免逻辑重叠)
+      if (!doc.isArchived && !existingIds.has(doc._id) && !doc.lastOpenedAt) {
+        results.push(doc);
+      }
+    }
+
+    return results;
+  },
+});
 
 
 /**

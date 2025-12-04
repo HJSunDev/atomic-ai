@@ -513,6 +513,37 @@ export const updateBlocksOrder = mutation({
 });
 
 
+/**
+ * 触碰文档 (更新最后访问时间)
+ * 前端在进入文档详情页时静默调用
+ */
+export const touchDocument = mutation({
+  args: {
+    id: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    // 校验文档归属
+    const doc = await ctx.db.get(args.id);
+    if (!doc || doc.userId !== userId) return;
+
+    // 防抖/限流：如果最后打开时间在 60 秒内，则不更新
+    // 避免因组件重渲染或短时间内频繁切换导致的密集写入
+    const now = Date.now();
+    if (doc.lastOpenedAt && (now - doc.lastOpenedAt < 60 * 1000)) {
+      return;
+    }
+
+    // 更新时间戳
+    await ctx.db.patch(args.id, {
+      lastOpenedAt: now,
+    });
+  },
+});
+
+
 
 /**
  * [内部] 更新块内容 (用于内部更新content字段)
@@ -672,3 +703,4 @@ export const updateBlockAgentSteps = internalMutation({
     await ctx.db.patch(args.blockId, { steps: args.steps });
   },
 });
+

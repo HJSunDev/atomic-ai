@@ -1,6 +1,9 @@
 "use client";
 
 import { useRouter } from "next/navigation";
+import { useMutation } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { Id } from "@/convex/_generated/dataModel";
 import { useDocumentStore } from "@/store/home/documentStore";
 import { useGenerationJob } from "@/store/prompt/generationJobStore";
 import { useGenerationJobStore } from "@/store/prompt/generationJobStore";
@@ -98,6 +101,15 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
   
   // 优先使用 prop documentId（全屏模式），否则从 Store 读取（drawer/modal）
   const finalDocumentId = propDocumentId ?? storeDocumentId;
+  
+  const touchDocument = useMutation(api.prompt.mutations.touchDocument);
+
+  // 记录文档访问时间（所有模式统一处理）
+  useEffect(() => {
+    if (finalDocumentId) {
+      touchDocument({ id: finalDocumentId as Id<"documents"> });
+    }
+  }, [finalDocumentId, touchDocument]);
   
   // 订阅生成任务状态
   const { job, isLocked } = useGenerationJob(finalDocumentId);
