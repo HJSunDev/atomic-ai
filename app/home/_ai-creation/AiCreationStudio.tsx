@@ -9,9 +9,6 @@ import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 import { useIntentRouter } from "@/services/intent";
 import { IntentRoutingOverlay } from "./components/IntentRoutingOverlay";
 
-// 引入意图处理器
-import { useChatIntentHandler, useDocumentIntentHandler, useAppIntentHandler } from "./handlers";
-
 /**
  * 智创模块主入口 (AiCreationStudio)
  * 
@@ -23,18 +20,14 @@ import { useChatIntentHandler, useDocumentIntentHandler, useAppIntentHandler } f
  * 5. 执行意图识别，自动路由到 chat/document/app 模块
  */
 export const AiCreationStudio = () => {
-  // 引入意图识别和路由器
+  // 使用统一的意图路由 Hook
+  // 内置了所有业务逻辑，开箱即用
   const { 
     executeIntentRouting, 
     status: routingStatus, 
     intentResult, 
     resetStatus 
   } = useIntentRouter();
-
-  // 引入业务模块处理器
-  const { handleChatIntent } = useChatIntentHandler();
-  const { handleDocumentIntent, startGeneration } = useDocumentIntentHandler();
-  const { handleAppIntent } = useAppIntentHandler();
 
   /**
    * 处理 AI 创作输入的提交
@@ -46,40 +39,20 @@ export const AiCreationStudio = () => {
    */
   const handleCreationSubmit = useCallback(
     async (payload: CreationInputPayload) => {
-      try {
-        // 执行意图识别和路由
-        const result = await executeIntentRouting(
-          {
-            userPrompt: payload.userPrompt,
-            modelId: payload.modelId,
-            webSearchEnabled: payload.webSearchEnabled,
-            userApiKey: payload.userApiKey,
-          },
-          // 注入自定义处理器
-          {
-            chat: handleChatIntent,
-            document: handleDocumentIntent,
-            app: handleAppIntent,
-          }
-        );
-
-        return { success: result.success };
-      } catch (error) {
-        console.error("[AiCreationStudio] 意图路由失败", error);
-        
-        // 降级策略：如果意图识别整体失败，走文档生成逻辑作为保底
-        // 因为当前页面主要展示的是 DocumentCreationView
-        const fallbackResult = await startGeneration({
+      const result = await executeIntentRouting(
+        {
           userPrompt: payload.userPrompt,
           modelId: payload.modelId,
           webSearchEnabled: payload.webSearchEnabled,
           userApiKey: payload.userApiKey,
-        });
+        },
+        // 配置项：保底策略设为 chat
+        { defaultIntent: "chat" }
+      );
 
-        return { success: fallbackResult.success ?? false };
-      }
+      return { success: result.success };
     },
-    [executeIntentRouting, handleChatIntent, handleDocumentIntent, handleAppIntent, startGeneration]
+    [executeIntentRouting]
   );
 
   return (
@@ -120,4 +93,3 @@ export const AiCreationStudio = () => {
     </main>
   );
 };
-

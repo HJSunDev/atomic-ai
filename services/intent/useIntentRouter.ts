@@ -1,13 +1,12 @@
 import { useCallback, useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { useRouter } from "next/navigation";
 import type { IntentResult, IntentRouteInput, IntentType, IntentHandlers } from "./types";
-
+import { useChatIntentHandler, useDocumentIntentHandler, useAppIntentHandler } from "./handlers";
 
 /**
  * 意图识别超时时间（毫秒）
- * 如果超过此时间仍未返回结果，将降级到 chat 模式
+ * 如果超过此时间仍未返回结果，将降级到默认模式
  */
 const INTENT_DETECTION_TIMEOUT = 5000; // 5秒
 
@@ -17,26 +16,41 @@ const INTENT_DETECTION_TIMEOUT = 5000; // 5秒
 export type RoutingStatus = "idle" | "detecting" | "routing" | "success" | "error";
 
 /**
+ * 路由配置选项
+ */
+export interface RouterOptions {
+  /**
+   * 识别失败时的默认意图
+   * @default "chat"
+   */
+  defaultIntent?: IntentType;
+}
+
+/**
  * 意图识别和路由 Hook
  * 
  * 职责：
  * 1. 调用后端意图识别服务（使用服务端默认模型）
  * 2. 解析 AI 返回的结构化结果
- * 3. 根据识别结果路由到对应模块
- * 4. 提供保底策略（默认 chat 模式）
+ * 3. 根据识别结果分发给对应的处理器 (Handlers)
+ * 4. 提供保底策略（可配置默认意图）
  * 5. 提供详细的状态管理供 UI 展示
  * 
- * 设计说明：
- * - 意图识别是轻量级任务，使用服务端默认模型即可（快速、稳定、成本低）
- * - 路由后的实际业务逻辑（如文档生成）使用用户选择的模型配置
+ * 特性：
+ * - 内置所有业务模块的默认处理器 (Chat, Document, App)
+ * - 支持通过参数覆盖默认处理器
  */
 export const useIntentRouter = () => {
-  const router = useRouter();
   const executeTask = useAction(api.chat.action.executeTask);
   
   // 状态管理
   const [status, setStatus] = useState<RoutingStatus>("idle");
   const [intentResult, setIntentResult] = useState<IntentResult | null>(null);
+
+  // 预装配所有业务处理器
+  const { handleChatIntent } = useChatIntentHandler();
+  const { handleDocumentIntent } = useDocumentIntentHandler();
+  const { handleAppIntent } = useAppIntentHandler();
 
   /**
    * 解析 AI 返回的意图识别结果
@@ -83,8 +97,9 @@ export const useIntentRouter = () => {
    * 使用服务端默认模型，不传递模型配置信息
    */
   const detectIntent = useCallback(
-    async (input: IntentRouteInput): Promise<IntentResult> => {
+    async (input: IntentRouteInput, options?: RouterOptions): Promise<IntentResult> => {
       const startTime = Date.now();
+      const defaultIntent = options?.defaultIntent || "chat";
       
       try {
         console.log("[IntentRouter] 开始意图识别（使用默认模型）", {
@@ -112,12 +127,12 @@ export const useIntentRouter = () => {
         const duration = Date.now() - startTime;
 
         if (!result.success || !result.data) {
-          console.warn("[IntentRouter] 意图识别失败，降级到 chat", {
+          console.warn(`[IntentRouter] 意图识别失败，降级到 ${defaultIntent}`, {
             error: result.error,
             duration,
           });
           return {
-            intent: "chat",
+            intent: defaultIntent,
             confidence: 0,
             reason: "识别失败，使用默认模式",
             summary: input.userPrompt.slice(0, 50),
@@ -128,12 +143,12 @@ export const useIntentRouter = () => {
         const parsed = parseIntentResult(result.data);
         
         if (!parsed) {
-          console.warn("[IntentRouter] 无法解析意图结果，降级到 chat", {
+          console.warn(`[IntentRouter] 无法解析意图结果，降级到 ${defaultIntent}`, {
             rawData: result.data,
             duration,
           });
           return {
-            intent: "chat",
+            intent: defaultIntent,
             confidence: 0,
             reason: "解析失败，使用默认模式",
             summary: input.userPrompt.slice(0, 50),
@@ -155,7 +170,7 @@ export const useIntentRouter = () => {
           duration,
         });
         return {
-          intent: "chat",
+          intent: defaultIntent,
           confidence: 0,
           reason: "发生异常，使用默认模式",
           summary: input.userPrompt.slice(0, 50),
@@ -169,82 +184,62 @@ export const useIntentRouter = () => {
    * 根据意图路由到对应模块
    */
   const routeToModule = useCallback(
-    async (intent: IntentResult, input: IntentRouteInput, handlers?: IntentHandlers): Promise<{ success: boolean }> => {
+    async (intent: IntentResult, input: IntentRouteInput, handlers: IntentHandlers): Promise<{ success: boolean }> => {
       try {
-        // 优先使用自定义处理器
-        if (handlers && handlers[intent.intent]) {
-          const success = await handlers[intent.intent]!(intent, input);
-          return { success };
+        const handler = handlers[intent.intent];
+        
+        if (handler) {
+            console.log(`[IntentRouter] 路由匹配成功: ${intent.intent}`);
+            const success = await handler(intent, input);
+            return { success };
         }
 
-        switch (intent.intent) {
-          case "chat":
-            // TODO: 创建新的聊天对话
-            // 1. 调用 createConversation mutation 创建新对话
-            // 2. 使用 input.userPrompt 作为第一条用户消息
-            // 3. 跳转到 /home/chat?id={conversationId}
-            console.log("[IntentRouter] 路由到 chat 模块", {
-              summary: intent.summary,
-              confidence: intent.confidence,
-            });
-            // router.push(`/home/chat?id=${conversationId}`);
-            return { success: true };
-          case "app":
-            // TODO: 创建新的应用/网页
-            // 1. 调用 createApp 相关的 mutation 创建新应用
-            // 2. 使用 intent.summary 作为应用标题
-            // 3. 使用 input.userPrompt 触发应用代码生成
-            // 4. 跳转到应用预览/编辑页面
-            console.log("[IntentRouter] 路由到 app 模块", {
-              summary: intent.summary,
-              confidence: intent.confidence,
-            });
-            return { success: true };
-
-          default:
-            console.warn("[IntentRouter] 未知的意图类型，降级到 chat", intent.intent);
-            // 降级到 chat 模式
-            return { success: true };
-        }
+        console.warn(`[IntentRouter] 未找到意图 ${intent.intent} 的处理器`);
+        return { success: false };
       } catch (error) {
         console.error("[IntentRouter] 路由执行失败", error);
         return { success: false };
       }
     },
-    [router]
+    []
   );
 
   /**
    * 执行完整的意图识别和路由流程
    * 
-   * 注意：
-   * - 意图识别阶段使用服务端默认模型（快速、稳定）
-   * - 路由后的业务逻辑使用用户选择的模型配置（input.modelId, input.userApiKey 等）
+   * @param input 用户输入
+   * @param options 配置项（可选）
+   * @param customHandlers 自定义处理器（可选，将与默认处理器合并）
    */
   const executeIntentRouting = useCallback(
-    async (input: IntentRouteInput, handlers?: IntentHandlers): Promise<{ success: boolean }> => {
+    async (input: IntentRouteInput, options: RouterOptions = { defaultIntent: "chat" }, customHandlers?: Partial<IntentHandlers>): Promise<{ success: boolean }> => {
       // 重置状态
       setStatus("detecting");
       setIntentResult(null);
 
+      // 合并处理器：优先使用传入的 customHandlers，否则使用内置默认处理器
+      const finalHandlers: IntentHandlers = {
+        chat: customHandlers?.chat || handleChatIntent,
+        document: customHandlers?.document || handleDocumentIntent,
+        app: customHandlers?.app || handleAppIntent,
+      };
+
       try {
         // 1. 识别意图（只使用 userPrompt，服务端默认模型）
-        const intent = await detectIntent(input);
+        const intent = await detectIntent(input, options);
         setIntentResult(intent);
         
-        // 如果识别失败（降级到 chat 且 reason 包含失败信息），设置状态为 error 但不中断
-        // 注意：detectIntent 即使失败也会返回一个 chat 意图，所以这里主要看 reason 或 confidence
-        if (intent.intent === 'chat' && intent.reason.includes('失败')) {
+        // 如果是保底情况（confidence 0），可能需要短暂展示错误状态
+        if (intent.confidence === 0 && intent.reason.includes('失败')) {
             setStatus("error");
             // 延迟一下让用户看到错误提示，然后继续执行路由（保底）
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
 
         setStatus("routing");
-        console.log("[IntentRouter] 意图识别结果", intent);
-
-        // 2. 路由到对应模块（传递完整配置，供后续业务逻辑使用）
-        const routeResult = await routeToModule(intent, input, handlers);
+        
+        // 2. 路由到对应模块
+        const routeResult = await routeToModule(intent, input, finalHandlers);
 
         if (routeResult.success) {
           setStatus("success");
@@ -259,7 +254,7 @@ export const useIntentRouter = () => {
         return { success: false };
       }
     },
-    [detectIntent, routeToModule]
+    [detectIntent, routeToModule, handleChatIntent, handleDocumentIntent, handleAppIntent]
   );
 
   // 提供重置状态的方法，供 UI 关闭 Overlay 时使用
@@ -269,12 +264,15 @@ export const useIntentRouter = () => {
   }, []);
 
   return {
+    // 核心执行方法
     executeIntentRouting,
-    detectIntent,
-    routeToModule,
-    // 暴露状态
+    
+    // 状态
     status,
     intentResult,
-    resetStatus
+    resetStatus,
+    
+    // 暴露底层方法（高级用法）
+    detectIntent,
   };
 };
