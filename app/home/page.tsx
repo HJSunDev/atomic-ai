@@ -28,7 +28,6 @@ const MENU_TO_AI_CONTEXT: Record<string, AiContext | null> = {
   "ai-creation": { id: "ai-creation-module", type: "ai-creation", showCatalyst: false, catalystPlacement: 'global' },
   "chat": { id: "chat-module", type: "chat", showCatalyst: false, catalystPlacement: 'global' },
   "discovery": { id: "discovery-module", type: "discovery", showCatalyst: false, catalystPlacement: 'global' },
-  "documents": { id: "documents-module", type: "documents", showCatalyst: false, catalystPlacement: 'global' },
   "knowledge-base": { id: "knowledge-base-module", type: "knowledge-base", showCatalyst: false, catalystPlacement: 'global' },
   "feedback": { id: "feedback-module", type: "feedback", showCatalyst: false, catalystPlacement: 'global' },
   "settings": { id: "settings-module", type: "settings", showCatalyst: false, catalystPlacement: 'global' },
@@ -68,7 +67,6 @@ export default function DashboardPage() {
     // 发现模块
     "discovery": <MenuPlaceholder title="发现" description="探索和发现更多有趣的内容和创意。" />,
     // 其他菜单项使用占位内容
-    "documents": <MenuPlaceholder title="文档中心" description="查看和编辑您的文档。" />,
     "knowledge-base": <MenuPlaceholder title="知识库" description="探索和学习知识资源。" />,
     "feedback": <MenuPlaceholder title="反馈中心" description="提供您的意见和建议。" />,
     "settings": <MenuPlaceholder title="系统设置" description="调整系统的各项设置和配置。" />,

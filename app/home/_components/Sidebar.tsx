@@ -8,7 +8,6 @@ import {
   MoreHorizontal,
   Settings,
   UserCircle,
-  FileText,
   BookOpen,
   History,
   MessageSquare,
@@ -487,26 +486,6 @@ export function Sidebar() {
             {/* 菜单内容 */}
             <div className="py-3 px-2 bg-white rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-60 dark:bg-[#202020]">
               {/* 以下为菜单项 */}
-              
-              <div className="block" onClick={() => handleMenuClick("documents") }>
-                <div className={cn(
-                  "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
-                  activeMenuId === "documents"
-                    ? "bg-primary/10 dark:bg-[#27272A]"
-                    : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
-                )}>
-                  <FileText className={cn(
-                    "h-[1rem] w-[1rem]",
-                    activeMenuId === "documents"
-                      ? "text-primary dark:text-gray-200"
-                      : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
-                  )} />
-                  <span className={cn(
-                    "text-sm",
-                    activeMenuId === "documents" && "text-primary dark:text-gray-200 font-medium"
-                  )}>文档中心</span>
-                </div>
-              </div>
               
               <div className="block" onClick={() => handleMenuClick("knowledge-base") }>
                 <div className={cn(

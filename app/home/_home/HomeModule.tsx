@@ -1,5 +1,6 @@
 "use client";
 
+import { useCallback, useState } from "react";
 import { 
   FileText, 
   Calendar, 
@@ -14,13 +15,62 @@ import {
   ArrowRight,
   Command,
   MessageSquare,
-  AppWindow
+  AppWindow,
+  ArrowUp
 } from 'lucide-react';
 
 import { RecentlyVisited } from './_components/RecentlyVisited';
 import TimeGreeting from "@/components/time-greeting/TimeGreeting";
+import { useIntentRouter } from "@/services/intent";
+import { useChatStore } from "@/store/home/useChatStore";
+import { IntentRoutingOverlay } from "@/app/home/_ai-creation/components/IntentRoutingOverlay";
 
 export const HomeModule = () => {
+  // 输入状态
+  const [userPrompt, setUserPrompt] = useState("");
+
+  // 意图路由 Hook
+  const { 
+    executeIntentRouting, 
+    status: routingStatus, 
+    intentResult, 
+    resetStatus 
+  } = useIntentRouter();
+
+  // 从全局 store 读取默认配置
+  const selectedModel = useChatStore((state) => state.selectedModel);
+  const webSearchEnabled = useChatStore((state) => state.webSearchEnabled);
+  const userApiKey = useChatStore((state) => state.userApiKey);
+
+  // 处理输入提交
+  const handleSend = useCallback(async () => {
+    if (!userPrompt.trim()) return;
+
+    const result = await executeIntentRouting(
+      {
+        userPrompt: userPrompt.trim(),
+        modelId: selectedModel,
+        webSearchEnabled,
+        userApiKey: userApiKey || undefined,
+      },
+      { defaultIntent: "chat" }
+    );
+
+    if (result.success) {
+      setUserPrompt("");
+    }
+  }, [userPrompt, executeIntentRouting, selectedModel, webSearchEnabled, userApiKey]);
+
+  const handleKeyDown = useCallback(
+    (e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        handleSend();
+      }
+    },
+    [handleSend]
+  );
+
   return (
     <main className="relative w-full h-full bg-white overflow-y-auto p-8">
       <div className="max-w-4xl mx-auto">
@@ -38,7 +88,14 @@ export const HomeModule = () => {
         <RecentlyVisited />
 
         {/* AI Creation / 智创引导 */}
-        <section className="mb-12">
+        <section className="mb-12 relative">
+          {/* 意图识别状态遮罩 */}
+          <IntentRoutingOverlay 
+            status={routingStatus} 
+            intentResult={intentResult}
+            onClose={resetStatus}
+          />
+
           <h2 className="text-sm font-medium text-gray-500 mb-4 flex items-center">
             <Zap className="w-4 h-4 mr-2" />
             Start Creating
@@ -76,12 +133,18 @@ export const HomeModule = () => {
                      <div className="relative bg-white rounded-lg border border-gray-200 shadow-sm flex items-center transition-all duration-300 group focus-within:border-gray-400 focus-within:ring-2 focus-within:ring-gray-100">
                         <input 
                            type="text" 
+                           value={userPrompt}
+                           onChange={(e) => setUserPrompt(e.target.value)}
+                           onKeyDown={handleKeyDown}
                            placeholder="Ask AI to create..." 
                            className="w-full h-10 px-3 text-sm text-gray-700 placeholder:text-gray-400 bg-transparent border-none outline-none focus:ring-0"
                         />
-                        <div className="pr-3 text-gray-300">
-                           <span className="text-[10px] border border-gray-200 rounded px-1.5 py-0.5 font-sans">↵</span>
-                        </div>
+                        <button
+                           onClick={handleSend}
+                           className="pr-3 flex items-center justify-center text-gray-300 hover:text-gray-600 disabled:opacity-50 disabled:cursor-not-allowed transition-colors cursor-pointer"
+                        >
+                           <span className="text-[10px] border border-gray-200 rounded px-1.5 py-0.5 font-sans hover:border-gray-300 hover:bg-gray-50 transition-colors">↵</span>
+                        </button>
                      </div>
                   </div>
 

@@ -10,7 +10,6 @@ export type MenuItemId =
   | "discovery"
   | "settings" 
   | "profile" 
-  | "documents" 
   | "knowledge-base" 
   | "feedback";
 
@@ -27,7 +26,6 @@ export const MENU_ITEMS_CONFIG: Record<MenuItemId, MenuItemMetadata> = {
   "chat": { id: "chat" },
   "factory": { id: "factory" },
   "discovery": { id: "discovery" },
-  "documents": { id: "documents" },
   "knowledge-base": { id: "knowledge-base" },
   "feedback": { id: "feedback" },
   "settings": { id: "settings" },
