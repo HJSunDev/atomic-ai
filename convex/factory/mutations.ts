@@ -55,6 +55,80 @@ export const archiveApp = mutation({
   },
 });
 
+// 彻底删除应用（物理删除，而非归档）
+// 同时删除关联的消息与代码版本，避免遗留数据
+export const deleteApp = mutation({
+  args: {
+    appId: v.id("apps"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("未授权操作：请先登录");
+    }
+    const userId = identity.subject;
+
+    const app = await ctx.db.get(args.appId);
+    if (!app) {
+      throw new Error("应用不存在");
+    }
+    if (app.userId !== userId) {
+      throw new Error("无权操作此应用");
+    }
+
+    // 删除关联消息
+    const messages = await ctx.db
+      .query("app_messages")
+      .withIndex("by_app", (q) => q.eq("appId", args.appId))
+      .collect();
+    for (const m of messages) {
+      await ctx.db.delete(m._id);
+    }
+
+    // 删除关联版本
+    const versions = await ctx.db
+      .query("app_versions")
+      .withIndex("by_app", (q) => q.eq("appId", args.appId))
+      .collect();
+    for (const v of versions) {
+      await ctx.db.delete(v._id);
+    }
+
+    // 最后删除应用本身
+    await ctx.db.delete(args.appId);
+  },
+});
+
+// 重命名应用
+export const renameApp = mutation({
+  args: {
+    appId: v.id("apps"),
+    name: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("未授权操作：请先登录");
+    }
+    const userId = identity.subject;
+
+    const app = await ctx.db.get(args.appId);
+    if (!app) {
+      throw new Error("应用不存在");
+    }
+    if (app.userId !== userId) {
+      throw new Error("无权操作此应用");
+    }
+
+    const trimmedName = args.name.trim();
+    if (!trimmedName) {
+      throw new Error("应用名称不能为空");
+    }
+
+    await ctx.db.patch(args.appId, { name: trimmedName });
+  },
+});
+
 // 发布应用
 export const publishApp = mutation({
   args: {
