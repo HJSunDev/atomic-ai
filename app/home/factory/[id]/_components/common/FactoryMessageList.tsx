@@ -1,5 +1,5 @@
 import React from "react";
-import { Code2, Clock, GitCommitHorizontal } from "lucide-react";
+import { Clock, GitCommitHorizontal, Loader2 } from "lucide-react";
 import { AppMessage } from "./FactoryChatCore";
 import { Id } from "@/convex/_generated/dataModel";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -20,6 +20,37 @@ interface FactoryMessageListProps {
   streamingMessageId?: Id<"app_messages"> | null;
   isMessagesLoading?: boolean;
   onVersionClick?: (versionId: Id<"app_versions">) => void; // 点击版本标签时的回调
+}
+
+
+
+// 在流式阶段隐藏分隔符后的长代码，仅保留说明文字，并决定是否展示占位提示
+function sliceContentForStreaming(content: string, isStreaming: boolean) {
+  if (!isStreaming) {
+    return { displayMd: content, showArtifactPlaceholder: false };
+  }
+
+  // 兼容不规范分隔符（缺冒号/多空格/大小写），仅找首个出现位置
+  const delimiterIndex = content.search(/:::?\s*artifact/i);
+  if (delimiterIndex === -1) {
+    return { displayMd: content, showArtifactPlaceholder: false };
+  }
+
+  const before = content.slice(0, delimiterIndex).trim();
+  return {
+    displayMd: before,
+    showArtifactPlaceholder: true,
+  };
+}
+
+// Notion 风格的轻量占位，提示代码正在生成，避免长代码刷屏
+function StreamingArtifactPlaceholder() {
+  return (
+    <div className="mt-2 rounded-lg border bg-muted/40 px-3 py-2 text-xs text-muted-foreground flex items-center gap-2">
+      <Loader2 className="h-3.5 w-3.5 animate-spin opacity-80" />
+      <span className="opacity-90">代码生成中，正在写入片段…</span>
+    </div>
+  );
 }
 
 /**
@@ -172,16 +203,33 @@ export function FactoryMessageList({
                   )}
                 </header>
 
-                <div className="markdown-content">
-                  <MessageRenderer
-                    className="prose prose-sm dark:prose-invert max-w-none text-sm"
-                    parts={[{ type: "md", content: message.content } satisfies MessagePart]}
-                  />
-                  <MessageStreamingEffects
-                    message={message}
-                    streamingMessageId={streamingMessageId || null}
-                  />
-                </div>
+                {(() => {
+                  const isAssistantStreaming = streamingMessageId === message._id;
+                  const { displayMd, showArtifactPlaceholder } = sliceContentForStreaming(
+                    message.content,
+                    isAssistantStreaming
+                  );
+
+                  return (
+                    <>
+                      <div className="markdown-content">
+                        <MessageRenderer
+                          className="prose prose-sm dark:prose-invert max-w-none text-sm"
+                          parts={[{ type: "md", content: displayMd } satisfies MessagePart]}
+                        />
+                        {/* 当开始生成代码（显示占位符）时，说明文字已生成完毕，隐藏文本光标，避免视觉干扰 */}
+                        {!showArtifactPlaceholder && (
+                          <MessageStreamingEffects
+                            message={message}
+                            streamingMessageId={streamingMessageId || null}
+                          />
+                        )}
+                      </div>
+
+                      {showArtifactPlaceholder && <StreamingArtifactPlaceholder />}
+                    </>
+                  );
+                })()}
 
                 {!streamingMessageId && (
                   <footer className="flex items-center gap-3 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 text-xs text-gray-500 dark:text-gray-400">

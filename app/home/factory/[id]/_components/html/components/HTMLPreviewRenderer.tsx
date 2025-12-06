@@ -57,7 +57,9 @@ export const HTMLPreviewRenderer = ({ html, device }: HTMLPreviewRendererProps) 
           ref={iframeRef}
           className="w-full h-full border-none"
           title="HTML Preview"
-          sandbox="allow-scripts allow-same-origin allow-forms allow-modals"
+          // 移除 allow-same-origin 以隔离 LocalStorage 和 Cookie
+          // 注意：这会导致 localStorage 访问报错，必须配合 templates-html.ts 中的 Storage Mock 使用
+          sandbox="allow-scripts allow-forms allow-modals"
           srcDoc={html}
         />
       </div>

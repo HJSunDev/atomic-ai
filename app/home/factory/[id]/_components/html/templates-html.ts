@@ -561,6 +561,34 @@ export const generateMicroAppHtml = ({ title = "AI Micro App", code, theme = "li
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${title}</title>
   
+  <!-- === 0. 环境隔离: Storage Mock === -->
+  <!-- 关键修复：由于 sandbox 移除了 allow-same-origin，直接访问 localStorage 会抛错 -->
+  <!-- 此脚本模拟一个内存版 Storage，既保证代码不崩，又防止污染主应用的主题/状态 -->
+  <script>
+    (function() {
+      try {
+        const createMemoryStorage = () => {
+          const store = new Map();
+          return {
+            getItem: (key) => store.get(key) || null,
+            setItem: (key, value) => store.set(key, String(value)),
+            removeItem: (key) => store.delete(key),
+            clear: () => store.clear(),
+            key: (i) => Array.from(store.keys())[i] || null,
+            get length() { return store.size; }
+          };
+        };
+        
+        // 使用 Object.defineProperty 覆盖只读属性
+        const mock = createMemoryStorage();
+        Object.defineProperty(window, 'localStorage', { value: mock, writable: true });
+        Object.defineProperty(window, 'sessionStorage', { value: createMemoryStorage(), writable: true });
+      } catch (e) {
+        console.warn('Storage Mock failed:', e);
+      }
+    })();
+  </script>
+
   <!-- === 1. 字体系统 === -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -122,9 +122,18 @@ export const REACT_GENERATION_SYSTEM_PROMPT = `You are an expert React Developer
 (此处为预留，React 模式的完整提示词待后续补充)`;
 
 /**
- * 代码分隔符
+ * 代码分隔符（规范格式）
  */
 const ARTIFACT_DELIMITER = ":::artifact:::";
+const ARTIFACT_BLOCK_REGEX =
+  /:::?\s*artifact\s*:::?([\s\S]*?)(?::::?\s*artifact\s*:::?|$)/i;
+
+/**
+ * 将不规范的分隔符（缺少冒号或存在多余空格、换行）归一化为规范格式
+ */
+function normalizeArtifactDelimiters(raw: string): string {
+  return raw.replace(/:::?\s*artifact\s*:::?/gi, ARTIFACT_DELIMITER);
+}
 
 /**
  * 从 AI 响应中提取纯净代码
@@ -141,24 +150,27 @@ const ARTIFACT_DELIMITER = ":::artifact:::";
  * @returns 提取出的纯净代码，如果没有找到分隔符则返回原始响应
  */
 export function extractCodeFromResponse(rawResponse: string): string {
-  const parts = rawResponse.split(ARTIFACT_DELIMITER);
-  
-  if (parts.length >= 3) {
-    // 标准格式：[说明文字, 代码, 空字符串或其他]
-    return parts[1].trim();
-  } else if (parts.length === 2) {
-    // 只有一个分隔符的情况（可能 AI 忘记闭合）
-    return parts[1].trim();
-  } else {
-    // 没有分隔符，可能 AI 直接输出了代码
-    // 尝试检测是否是纯 HTML/代码
-    const trimmed = rawResponse.trim();
-    if (trimmed.startsWith("<") || trimmed.startsWith("import ")) {
-      return trimmed;
-    }
-    // 否则返回原始响应
-    return rawResponse;
+  const normalized = normalizeArtifactDelimiters(rawResponse);
+
+  // 优先按分隔符解析（兼容缺冒号/多空格的变体）
+  const artifactMatch = normalized.match(ARTIFACT_BLOCK_REGEX);
+  if (artifactMatch && artifactMatch[1]) {
+    return artifactMatch[1].trim();
   }
+
+  // 退化方案：尝试抓取首个 Markdown 代码块
+  const fenceMatch = normalized.match(/```[a-zA-Z0-9]*\n([\s\S]*?)```/);
+  if (fenceMatch && fenceMatch[1]) {
+    return fenceMatch[1].trim();
+  }
+
+  // 再退化：直接返回可能的纯代码内容
+  const trimmed = normalized.trim();
+  if (trimmed.startsWith("<") || trimmed.startsWith("import ")) {
+    return trimmed;
+  }
+
+  return rawResponse;
 }
 
 /**
@@ -178,21 +190,29 @@ export function extractCodeFromResponse(rawResponse: string): string {
  * @returns 提取出的纯说明文字，如果没有找到分隔符则返回原始响应
  */
 export function extractExplanationFromResponse(rawResponse: string): string {
-  const parts = rawResponse.split(ARTIFACT_DELIMITER);
-  
-  if (parts.length >= 1 && parts[0].trim()) {
-    // 返回第一个分隔符之前的内容（说明文字）
-    return parts[0].trim();
+  const normalized = normalizeArtifactDelimiters(rawResponse);
+
+  // 分隔符前的内容视为说明
+  const delimiterIndex = normalized.search(/:::artifact:::/i);
+  if (delimiterIndex !== -1) {
+    const explanation = normalized.slice(0, delimiterIndex).trim();
+    return explanation || "已为您生成代码";
   }
-  
-  // 如果没有分隔符，但内容看起来是纯代码，返回默认说明
-  const trimmed = rawResponse.trim();
+
+  // 退化方案：若存在 Markdown 代码块，则取其前面的说明
+  const fenceIndex = normalized.search(/```/);
+  if (fenceIndex !== -1) {
+    const explanation = normalized.slice(0, fenceIndex).trim();
+    return explanation || "已为您生成代码";
+  }
+
+  // 再退化：若整体看似代码，则给出默认说明
+  const trimmed = normalized.trim();
   if (trimmed.startsWith("<") || trimmed.startsWith("import ")) {
     return "已为您生成代码";
   }
-  
-  // 否则返回原始响应
-  return rawResponse.trim();
+
+  return normalized.trim();
 }
 
 /**
