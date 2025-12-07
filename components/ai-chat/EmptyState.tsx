@@ -17,27 +17,36 @@ export function EmptyState({
   className = ""
 }: EmptyStateProps) {
   return (
-    <div className={`flex flex-col items-center justify-center ${className} bg-red-100`}>
-      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6 bg-blue-100">
+    <div className={`flex flex-col items-center justify-center ${className} `}>
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-6">
         <AiAssistantAvatar />
       </div>
       
       {promptCards.length > 0 && (
-        <div className="grid grid-cols-2 gap-3 w-full max-w-md bg-purple-100">
+        <div className="flex flex-wrap justify-center gap-3 w-full max-w-2xl px-4">
           {promptCards.map((card, index) => (
-            <div 
+            <button 
               key={index}
-              className="p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:border-blue-300 hover:bg-blue-50/30 dark:hover:bg-blue-900/20 transition-colors group cursor-pointer"
+              className="
+                flex flex-col text-left
+                w-full sm:w-64 p-4
+                rounded-xl border border-gray-200 dark:border-gray-800
+                bg-white dark:bg-[#1a1a1a]
+                hover:bg-gray-50 dark:hover:bg-[#262626]
+                transition-colors cursor-pointer outline-none
+              "
               onClick={() => card.onClick(card.promptText)}
             >
-              <div className="flex items-center mb-2">
-                <span className="text-sm font-medium text-gray-700 dark:text-gray-300 group-hover:text-blue-600">{card.title}</span>
-              </div>
-              <p className="text-xs text-gray-500 dark:text-gray-400">{card.description}</p>
-            </div>
+              <span className="text-sm font-medium text-gray-900 dark:text-gray-200 mb-1.5 block">
+                {card.title}
+              </span>
+              <p className="text-xs text-gray-500 dark:text-gray-400 leading-relaxed">
+                {card.description}
+              </p>
+            </button>
           ))}
         </div>
       )}
     </div>
   );
-} 
+}

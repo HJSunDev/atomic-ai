@@ -22,12 +22,19 @@ export function useMenuRouteSync() {
 
   useEffect(() => {
     // 1. 处理独立路由模块 (Standalone Routes)
-    // 规则：只要路径以 /home/factory 开头，菜单必须高亮 factory
-    if (pathname.startsWith("/home/factory")) {
-      if (activeMenuId !== "factory") {
-        setActiveMenu("factory");
+    // 规则：路径前缀匹配的菜单必须高亮对应项
+    const standaloneRules: Array<{ prefix: string; menuId: MenuItemId }> = [
+      { prefix: "/home/factory", menuId: "factory" },
+      { prefix: "/home/discovery", menuId: "discovery" },
+    ];
+
+    for (const rule of standaloneRules) {
+      if (pathname.startsWith(rule.prefix)) {
+        if (activeMenuId !== rule.menuId) {
+          setActiveMenu(rule.menuId);
+        }
+        return;
       }
-      return;
     }
 
     // 2. 处理主页下的 SPA 模块 (/home)

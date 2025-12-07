@@ -11,9 +11,14 @@ export const ChatContent = ({ showSidebar, onToggleSidebar }: { showSidebar: boo
   const promptCards = [
     {
       title: "知识节点",
-      description: "帮我拓宽知识边界，探索知识节点",
-      promptText: "&&&是什么？有什么用？使用场景是什么？如何使用？用不用的区别是什么？最佳实践是什么？",
-    }
+      description: "拓宽知识边界，探索知识节点",
+      promptText: "&&&是什么？有什么用？使用场景是什么？如何使用？用不用它的区别是什么？最佳实践是什么？",
+    },
+    {
+      title: "社交洞察",
+      description: "运用第一性原理，透视社交本质",
+      promptText: "我遇到了一个社交难题：&&&。\n\n请运用“第一性原理”进行深度剖析：\n1. 【剥离表象】：抛弃社会惯例和既定假设，找到问题的最基本事实。\n2. 【本质追问】：回溯到人际关系的根本动力（如价值交换、部落归属、安全感等）。\n3. 【重构方案】：基于这些本质真理，推导出最符合逻辑的破局策略。",
+    },
   ];
   
   return (

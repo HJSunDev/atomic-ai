@@ -18,9 +18,7 @@ export const ChatModule = () => {
       {showSidebar && <ChatSidebar onToggle={toggleSidebar} />}
       
       {/* 聊天内容区域 - 直接占满剩余空间 */}
-      <div className="flex-1">
-        <ChatContent showSidebar={showSidebar} onToggleSidebar={toggleSidebar} />
-      </div>
+      <ChatContent showSidebar={showSidebar} onToggleSidebar={toggleSidebar} />
     </div>
   );
 };

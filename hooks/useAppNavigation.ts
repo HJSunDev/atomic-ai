@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useSidebarMenuStore } from "@/store/home";
 import { useDocumentStore } from "@/store/home/documentStore";
@@ -18,15 +18,24 @@ export const useAppNavigation = () => {
   // 文档状态：用于在从独立路由返回主页前确保状态清理
   const closeDocument = useDocumentStore((state) => state.close);
 
+  // 独立路由模块与对应路径的映射，保持与 Sidebar 菜单的语义一致
+  const standaloneMenuRoutes = useMemo<Partial<Record<MenuItemId, string>>>(
+    () => ({
+      factory: "/home/factory",
+      discovery: "/home/discovery",
+    }),
+    []
+  );
+
   // 统一菜单导航：处理不同类型的菜单跳转
   const navigateToMenu = useCallback((menuId: MenuItemId) => {
     // 1. 独立路由处理 (Standalone Routes)
-    // 工坊等模块拥有独立的路由路径 /home/factory
-    if (menuId === "factory") {
-      // 立即更新状态，因为接下来的路由跳转是明确的
+    const standaloneRoute = standaloneMenuRoutes[menuId];
+    if (standaloneRoute) {
+      // 立即更新状态，保证 Sidebar 高亮与路由跳转保持同步
       setActiveMenu(menuId);
-      if (!pathname.startsWith("/home/factory")) {
-        router.push("/home/factory");
+      if (!pathname.startsWith(standaloneRoute)) {
+        router.push(standaloneRoute);
       }
       return;
     }
@@ -45,7 +54,7 @@ export const useAppNavigation = () => {
       closeDocument();
       router.push(`/home?module=${menuId}`);
     }
-  }, [pathname, router, setActiveMenu, closeDocument]);
+  }, [pathname, router, setActiveMenu, closeDocument, standaloneMenuRoutes]);
 
   return {
     navigateToMenu,

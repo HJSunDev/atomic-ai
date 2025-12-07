@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Copy, ThumbsUp, ThumbsDown, MoreHorizontal, Clock, Globe, ChevronRight, Loader2, ExternalLink } from "lucide-react";
+import { Copy, Check, Clock, Globe, ChevronRight, Loader2, ExternalLink } from "lucide-react";
 import { Message, MessageStreamingEffects } from "./AiChatCore";
 import { Id } from "@/convex/_generated/dataModel";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -382,6 +382,19 @@ export function MessageList({
   streamingMessageId,
   isMessagesLoading,
 }: MessageListProps) {
+  const [copiedId, setCopiedId] = useState<Id<"messages"> | null>(null);
+
+  // 复制消息内容，提供短暂的反馈状态
+  const handleCopy = async (message: Message) => {
+    try {
+      await navigator.clipboard.writeText(message.content);
+      setCopiedId(message._id);
+      setTimeout(() => setCopiedId(null), 1500);
+    } catch (error) {
+      // 保留错误日志，便于排查复制失败原因（如权限或不安全上下文）
+      console.error("复制消息内容失败:", error);
+    }
+  };
 
   if (isMessagesLoading) {
     return <MessagesSkeleton />;
@@ -422,13 +435,18 @@ export function MessageList({
                 {formatTimestamp(message._creationTime)}
               </div>
               
-              {/* 用户消息功能区 - 根据是否为最后一条消息决定是否默认显示 */}
+              {/* 用户消息功能区 - 仅保留复制 */}
               <footer className={`mt-2 flex items-center gap-1 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
-                <button className="w-6 h-6 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A]">
-                  <Copy className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
-                </button>
-                <button className="w-6 h-6 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A]">
-                  <MoreHorizontal className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                <button
+                  className="w-6 h-6 rounded hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A] cursor-pointer"
+                  onClick={() => handleCopy(message)}
+                  aria-label="复制消息"
+                >
+                  {copiedId === message._id ? (
+                    <Check className="w-3.5 h-3.5 text-gray-600 dark:text-gray-200" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                  )}
                 </button>
               </footer>
             </section>
@@ -492,19 +510,18 @@ export function MessageList({
                 )}
               </div>
               
-              {/* AI消息功能区 - 根据是否为最后一条消息决定是否默认显示 */}
+              {/* AI消息功能区 - 仅保留复制 */}
               <footer className={`mt-2 flex items-center gap-1.5 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
-                <button className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A]">
-                  <ThumbsUp className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
-                </button>
-                <button className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A]">
-                  <ThumbsDown className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
-                </button>
-                <button className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A]">
-                  <Copy className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
-                </button>
-                <button className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A]">
-                  <MoreHorizontal className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                <button
+                  className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A] cursor-pointer"
+                  onClick={() => handleCopy(message)}
+                  aria-label="复制AI回复"
+                >
+                  {copiedId === message._id ? (
+                    <Check className="w-3.5 h-3.5 text-gray-600 dark:text-gray-200" />
+                  ) : (
+                    <Copy className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
+                  )}
                 </button>
               </footer>
             </section>

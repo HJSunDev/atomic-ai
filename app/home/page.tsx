@@ -27,7 +27,6 @@ const MENU_TO_AI_CONTEXT: Record<string, AiContext | null> = {
   "home": { id: "home-module", type: "home", showCatalyst: true, catalystPlacement: 'global' },
   "ai-creation": { id: "ai-creation-module", type: "ai-creation", showCatalyst: false, catalystPlacement: 'global' },
   "chat": { id: "chat-module", type: "chat", showCatalyst: false, catalystPlacement: 'global' },
-  "discovery": { id: "discovery-module", type: "discovery", showCatalyst: false, catalystPlacement: 'global' },
   "knowledge-base": { id: "knowledge-base-module", type: "knowledge-base", showCatalyst: false, catalystPlacement: 'global' },
   "feedback": { id: "feedback-module", type: "feedback", showCatalyst: false, catalystPlacement: 'global' },
   "settings": { id: "settings-module", type: "settings", showCatalyst: false, catalystPlacement: 'global' },
@@ -64,8 +63,6 @@ export default function DashboardPage() {
     "ai-creation": <AiCreationStudio />,
     // 聊天模块使用独立组件
     "chat": <ChatModule />,
-    // 发现模块
-    "discovery": <MenuPlaceholder title="发现" description="探索和发现更多有趣的内容和创意。" />,
     // 其他菜单项使用占位内容
     "knowledge-base": <MenuPlaceholder title="知识库" description="探索和学习知识资源。" />,
     "feedback": <MenuPlaceholder title="反馈中心" description="提供您的意见和建议。" />,
@@ -75,7 +72,7 @@ export default function DashboardPage() {
 
   // 确定要渲染的模块和对应的菜单ID (处理 fallback 情况)
   // 注意：对于独立路由的模块（如 factory），这里不应该回退到 home，而是应该渲染空/Loading，等待路由跳转
-  const isStandaloneRoute = ["factory"].includes(activeMenuId);
+  const isStandaloneRoute = ["factory", "discovery"].includes(activeMenuId);
   
   if (isStandaloneRoute) {
     // 如果是独立路由，渲染一个空白容器，或者透明Loading
