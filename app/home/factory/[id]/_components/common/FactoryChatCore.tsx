@@ -22,6 +22,8 @@ export interface AppMessage {
   _creationTime: number;
 }
 
+import { SelectedContext } from "@/components/ai-chat/ContextAdder";
+
 /**
  * FactoryChatCore 组件属性
  */
@@ -42,7 +44,7 @@ export interface FactoryChatRenderProps {
   isMessagesLoading: boolean;
   streamingMessageId: Id<"app_messages"> | null;
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
-  handleSendMessage: (prompt: string) => void;
+  handleSendMessage: (prompt: string, contexts?: SelectedContext[]) => void;
 }
 
 /**
@@ -100,7 +102,7 @@ export function FactoryChatCore({
     scrollToBottom();
   }, [messages]);
 
-  const handleSendMessage = async (prompt: string) => {
+  const handleSendMessage = async (prompt: string, contexts?: SelectedContext[]) => {
     const trimmedPrompt = prompt.trim();
     // 多重防护：空消息、正在生成、未登录、流式传输中都不允许发送新消息
     // 这些检查防止了无效提交和并发请求导致的竞态条件
@@ -111,6 +113,14 @@ export function FactoryChatCore({
     setIsSending(true);
 
     try {
+      // 构造动态上下文参数
+      const contextPayload = contexts && contexts.length > 0 ? {
+        documents: contexts.map(c => ({
+          id: c.id,
+          type: c.type
+        }))
+      } : undefined;
+
       const result = await streamGenerateApp({
         appId,
         userPrompt: trimmedPrompt,
@@ -119,6 +129,7 @@ export function FactoryChatCore({
         modelId: selectedModel,
         // 将空字符串转换为 undefined，避免后端接收到空字符串而非未定义值
         userApiKey: userApiKey || undefined,
+        context: contextPayload,
       });
 
       // 仅在成功生成代码时触发 回调，允许父组件执行后续操作（如预览、保存等）

@@ -11,9 +11,10 @@ import { Send, Maximize2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { ModelSelector } from "@/components/ai-chat/ModelSelector";
 import { useFactoryStore } from "@/store/home/useFactoryStore";
+import { ContextAdder, type SelectedContext, type ContextUsageType } from "@/components/ai-chat/ContextAdder";
 
 interface FactoryChatInputProps {
-  onSendMessage: (prompt: string) => void;
+  onSendMessage: (prompt: string, contexts?: SelectedContext[]) => void;
   isGenerating?: boolean;
 }
 
@@ -25,6 +26,7 @@ export function FactoryChatInput({
   isGenerating = false,
 }: FactoryChatInputProps) {
   const [inputValue, setInputValue] = useState("");
+  const [selectedContexts, setSelectedContexts] = useState<SelectedContext[]>([]);
   const [isFocused, setIsFocused] = useState(false);
   const [isMaximized, setIsMaximized] = useState(false);
 
@@ -32,6 +34,21 @@ export function FactoryChatInput({
   
   // 从全局 Store 获取待处理的 Prompt
   const { pendingPrompt, setPendingPrompt } = useFactoryStore();
+
+  // 上下文操作回调
+  const handleAddContext = React.useCallback((context: SelectedContext) => {
+    setSelectedContexts((prev) => [...prev, context]);
+  }, []);
+
+  const handleRemoveContext = React.useCallback((contextId: string) => {
+    setSelectedContexts((prev) => prev.filter((c) => c.id !== contextId));
+  }, []);
+
+  const handleUpdateContext = React.useCallback((contextId: string, newType: ContextUsageType) => {
+    setSelectedContexts((prev) =>
+      prev.map((c) => (c.id === contextId ? { ...c, type: newType } : c))
+    );
+  }, []);
 
   // 处理自动填充 Prompt
   useEffect(() => {
@@ -60,8 +77,9 @@ export function FactoryChatInput({
     const trimmedValue = inputValue.trim();
     if (!trimmedValue || isGenerating) return;
 
-    onSendMessage(trimmedValue);
+    onSendMessage(trimmedValue, selectedContexts);
     setInputValue("");
+    setSelectedContexts([]);
 
     if (isMaximized) {
       setIsMaximized(false);
@@ -130,15 +148,24 @@ export function FactoryChatInput({
 
         <div
           className={cn(
-            "border rounded-md overflow-hidden",
+            "border rounded-xl overflow-hidden",
             isMaximized
               ? "flex-1 flex flex-col mx-4 mb-4"
               : "mx-4 mt-1 mb-2",
             isFocused
-              ? "border-[#947DF2]"
+              ? "border-gray-400 dark:border-gray-500"
               : "border-gray-200 dark:border-gray-700"
           )}
         >
+          <div className="px-2 pt-2">
+            <ContextAdder
+              selectedContexts={selectedContexts}
+              onAddContext={handleAddContext}
+              onRemoveContext={handleRemoveContext}
+              onUpdateContext={handleUpdateContext}
+            />
+          </div>
+
           <div
             className={cn(
               "overflow-hidden",
@@ -155,7 +182,7 @@ export function FactoryChatInput({
                 "w-full resize-none rounded-none border-0 focus-visible:ring-0 focus:outline-none px-3 py-2.5 text-sm bg-white dark:bg-[#202020] dark:text-gray-100",
                 isMaximized
                   ? "flex-1 min-h-0 overflow-y-auto"
-                  : "min-h-[3.7rem] max-h-[6.25rem] overflow-y-auto"
+                  : "min-h-[4.5rem] max-h-[8rem] overflow-y-auto"
               )}
               value={inputValue}
               onChange={handleInputChange}

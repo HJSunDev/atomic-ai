@@ -8,6 +8,7 @@ import { SystemMessage, HumanMessage } from "@langchain/core/messages";
 import {
   getApiKey,
   createChatModel,
+  buildChatInput,
 } from "../_lib/chatUtils";
 
 import {
@@ -55,6 +56,29 @@ export const streamGenerateApp = action({
     appType: v.union(v.literal("html"), v.literal("react")),
     modelId: v.optional(v.string()),
     userApiKey: v.optional(v.string()),
+    context: v.optional(
+      v.object({
+        // 动态指定的核心任务
+        coreTask: v.optional(v.string()),
+        // 动态指定的输出规范
+        specification: v.optional(v.string()),
+        // 动态指定的背景信息
+        backgroundInfo: v.optional(v.string()),
+        // 文档现在是带有类型的对象数组
+        documents: v.optional(
+          v.array(
+            v.object({
+              id: v.id("documents"),
+              type: v.union(
+                v.literal("core_task"),
+                v.literal("specification"),
+                v.literal("background_info")
+              ),
+            })
+          )
+        ),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const startTime = Date.now();
@@ -124,13 +148,23 @@ export const streamGenerateApp = action({
           ? HTML_GENERATION_SYSTEM_PROMPT
           : REACT_GENERATION_SYSTEM_PROMPT;
 
+      // 8.5. 如果提供了动态上下文，使用 ContextBuilder 构建最终的输入
+      let finalUserPrompt = args.userPrompt;
+      if (args.context) {
+        finalUserPrompt = await buildChatInput(
+          ctx,
+          args.userPrompt,
+          args.context
+        );
+      }
+
       // 9. 构建 LangChain 消息
       const langchainMessages: (SystemMessage | HumanMessage)[] = [];
 
       if (isCreationMode) {
         // --- 创建模式：简单直接 ---
         langchainMessages.push(new SystemMessage(baseSystemPrompt));
-        langchainMessages.push(new HumanMessage(args.userPrompt));
+        langchainMessages.push(new HumanMessage(finalUserPrompt));
       } else {
         // --- 修改模式：注入当前代码和历史上下文 ---
         const enhancedSystemPrompt = `${baseSystemPrompt}
@@ -163,7 +197,7 @@ The user will provide instructions to modify this code. Please generate the COMP
           langchainMessages.push(...recentMessages);
         }
 
-        langchainMessages.push(new HumanMessage(args.userPrompt));
+        langchainMessages.push(new HumanMessage(finalUserPrompt));
       }
 
       // 10. 创建流式聊天模型
