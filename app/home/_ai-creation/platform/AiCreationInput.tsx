@@ -4,7 +4,7 @@ import { useState, memo, useCallback } from "react";
 import { useChatStore } from "@/store/home/useChatStore";
 import { ModelSelector } from "@/components/ai-chat/ModelSelector";
 import { NetworkSearchEntry } from "@/components/ai-chat/NetworkSearchEntry";
-import { ContextAdder } from "@/components/ai-chat/ContextAdder";
+import { ContextAdder, type SelectedContext, type ContextUsageType } from "@/components/ai-chat/ContextAdder";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { ArrowUp, Loader2 } from "lucide-react";
@@ -52,11 +52,26 @@ export const AiCreationInput = ({
 }: AiCreationInputProps) => {
   const [userPrompt, setUserPrompt] = useState("");
   const [isSending, setIsSending] = useState(false);
+  const [selectedContexts, setSelectedContexts] = useState<SelectedContext[]>([]);
 
   // 从全局 store 读取 AI 设置
   const selectedModel = useChatStore((state) => state.selectedModel);
   const webSearchEnabled = useChatStore((state) => state.webSearchEnabled);
   const userApiKey = useChatStore((state) => state.userApiKey);
+
+  const handleAddContext = useCallback((context: SelectedContext) => {
+    setSelectedContexts((prev) => [...prev, context]);
+  }, []);
+
+  const handleRemoveContext = useCallback((contextId: string) => {
+    setSelectedContexts((prev) => prev.filter((c) => c.id !== contextId));
+  }, []);
+
+  const handleUpdateContext = useCallback((contextId: string, newType: ContextUsageType) => {
+    setSelectedContexts((prev) =>
+      prev.map((c) => (c.id === contextId ? { ...c, type: newType } : c))
+    );
+  }, []);
 
   // 处理提交逻辑
   const handleSend = useCallback(async () => {
@@ -69,16 +84,18 @@ export const AiCreationInput = ({
         modelId: selectedModel,
         webSearchEnabled,
         userApiKey: userApiKey || undefined,
+        // TODO: 将 selectedContexts 传递给 onSubmit (目前仅前端展示)
       });
 
       // 如果提交成功，清空输入框
       if (result.success) {
         setUserPrompt("");
+        setSelectedContexts([]);
       }
     } finally {
       setIsSending(false);
     }
-  }, [userPrompt, isSending, disabled, onSubmit, selectedModel, webSearchEnabled, userApiKey]);
+  }, [userPrompt, isSending, disabled, onSubmit, selectedModel, webSearchEnabled, userApiKey, selectedContexts]);
 
   // 处理键盘事件：Enter 提交，Shift+Enter 换行
   const handleKeyDown = useCallback(
@@ -94,7 +111,12 @@ export const AiCreationInput = ({
   return (
     <section className="max-w-[43rem] w-full mx-auto flex flex-col items-center border border-border rounded-[18px] overflow-hidden shrink-0">
       <header className="w-full p-2">
-        <MemoizedContextAdder />
+        <MemoizedContextAdder 
+          selectedContexts={selectedContexts}
+          onAddContext={handleAddContext}
+          onRemoveContext={handleRemoveContext}
+          onUpdateContext={handleUpdateContext}
+        />
       </header>
       <Textarea
         value={userPrompt}

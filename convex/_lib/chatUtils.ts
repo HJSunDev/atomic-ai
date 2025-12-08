@@ -109,7 +109,7 @@ function processDocumentToMarkdown(docData: any): string {
   if (blocks && Array.isArray(blocks)) {
     for (const block of blocks) {
       if (block.type === "text") {
-        // 优先使用预计算的 Markdown
+        // 使用Markdown内容
         if (block.contentMarkdown) {
           parts.push(block.contentMarkdown);
         } 
@@ -155,6 +155,7 @@ export const buildChatInput = async (
     }[];
   }
 ): Promise<string> => {
+
   const builder = new ContextBuilder(userInput);
 
   if (!context) {
