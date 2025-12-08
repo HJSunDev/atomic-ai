@@ -30,6 +30,7 @@ import { getModelIcon } from "@/lib/model-icon-utils";
 import Image from "next/image";
 import { ModelSelector } from "./ModelSelector";
 import { NetworkSearchEntry } from "./NetworkSearchEntry";
+import { ContextAdder, type SelectedContext, type ContextUsageType } from "./ContextAdder";
 
 // 暴露给父组件的方法接口
 export interface ChatInputHandle {
@@ -39,7 +40,7 @@ export interface ChatInputHandle {
 }
 
 interface ChatInputProps {
-  onSendMessage: (messageContent: string) => void;
+  onSendMessage: (messageContent: string, contexts?: SelectedContext[]) => void;
   onNewConversation?: () => void; // 新建对话回调
   isLoading?: boolean; // 添加加载状态属性
   promptOptions?: Array<{
@@ -56,6 +57,8 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
 }, ref) => {
   // 输入框内容状态 - 内聚到组件内部
   const [inputValue, setInputValue] = useState("");
+  // 上下文状态
+  const [selectedContexts, setSelectedContexts] = useState<SelectedContext[]>([]);
   // 聚焦状态管理
   const [isFocused, setIsFocused] = useState(false);
   // 控制tooltip显示状态，用于解决抽屉关闭后tooltip意外显示的问题
@@ -65,6 +68,21 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
 
   // 内部 textarea ref，用于组件内部操作
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  // 上下文操作回调
+  const handleAddContext = React.useCallback((context: SelectedContext) => {
+    setSelectedContexts((prev) => [...prev, context]);
+  }, []);
+
+  const handleRemoveContext = React.useCallback((contextId: string) => {
+    setSelectedContexts((prev) => prev.filter((c) => c.id !== contextId));
+  }, []);
+
+  const handleUpdateContext = React.useCallback((contextId: string, newType: ContextUsageType) => {
+    setSelectedContexts((prev) =>
+      prev.map((c) => (c.id === contextId ? { ...c, type: newType } : c))
+    );
+  }, []);
 
   // 暴露方法给父组件，用于外部控制输入框
   useImperativeHandle(ref, () => ({
@@ -91,9 +109,10 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
     const trimmedValue = inputValue.trim();
     if (!trimmedValue || isLoading) return;
     
-    onSendMessage(trimmedValue);
-    // 发送后清空输入框
+    onSendMessage(trimmedValue, selectedContexts);
+    // 发送后清空输入框和上下文
     setInputValue("");
+    setSelectedContexts([]);
     // 发送后取消放大状态
     if (isMaximized) {
       setIsMaximized(false);
@@ -132,7 +151,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
         )}
       >
         {/* 提示词功能区 */}
-        {!isMaximized && (
+        {/* {!isMaximized && (
           <div className="px-4 py-1 flex items-center gap-3">
             <div className="flex items-center gap-1">
               <button
@@ -164,7 +183,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
               </button>
             </div>
           </div>
-        )}
+        )} */}
 
         {/* 会话操作区 */}
         {!isMaximized && (
@@ -225,11 +244,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
 
         {/* 放大状态下的顶部操作栏 */}
         {isMaximized && (
-          <div className="flex justify-end items-center px-3 py-1 ">
+          <div className="flex justify-between items-center px-4 py-2 border-b border-gray-100 dark:border-gray-800 mb-2">
+            {/* 移除 ContextAdder，因为现在它已经在输入框内部了 */}
+            <div className="flex-1" /> 
             <Tooltip>
               <TooltipTrigger asChild>
                 <button
-                  className="w-8 h-8 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center cursor-pointer"
+                  className="w-8 h-8 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center cursor-pointer ml-auto"
                   onClick={toggleMaximize}
                 >
                   <svg
@@ -260,15 +281,25 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
         {/* 输入整体模块 */}
         <div
           className={cn(
-            "border rounded-md overflow-hidden", // 基础样式
+            "border rounded-xl overflow-hidden", 
             isMaximized
               ? "flex-1 flex flex-col mx-4 mb-4" // 放大模式下：去掉上边距，保留左右和下边距
               : "mx-4 mt-1 mb-2", // 正常模式下的布局和间距
             isFocused
-              ? "border-[#947DF2]" // 聚焦时，边框为紫色
+              ? "border-gray-400 dark:border-gray-500" // 聚焦时，边框加深一点的灰色，而不是紫色
               : "border-gray-200 dark:border-gray-700" // 未聚焦时，边框统一为灰色
           )}
         >
+          {/* 上下文添加区 - 移入输入框内部顶部 */}
+          <div className="px-2 pt-2">
+            <ContextAdder
+              selectedContexts={selectedContexts}
+              onAddContext={handleAddContext}
+              onRemoveContext={handleRemoveContext}
+              onUpdateContext={handleUpdateContext}
+            />
+          </div>
+
           {/* textarea区域 */}
           <div
             className={cn(

@@ -6,6 +6,7 @@ import { Id } from "@/convex/_generated/dataModel";
 import { useChatStore } from "@/store/home/useChatStore";
 import { ThinkingCursor, TypingCursor } from "@/components/custom";
 import { ChatInputHandle } from "./ChatInput";
+import { SelectedContext } from "./ContextAdder";
 
 // 消息类型定义 
 export interface Message {
@@ -60,7 +61,7 @@ export interface AiChatRenderProps {
   messagesEndRef: React.RefObject<HTMLDivElement | null>;
   chatInputRef: React.RefObject<ChatInputHandle | null>;
   handlePromptClick: (promptText: string) => void;
-  handleSendMessage: (messageContent: string) => void;
+  handleSendMessage: (messageContent: string, contexts?: SelectedContext[]) => void;
   // 会话管理功能
   handleNewConversation: () => void;
   handleSelectConversation: (conversationId: Id<"conversations">) => void;
@@ -157,7 +158,7 @@ export function AiChatCore({
   };
 
   // 发送消息 - 接收消息内容作为参数
-  const handleSendMessage = async (messageContent: string) => {
+  const handleSendMessage = async (messageContent: string, contexts?: SelectedContext[]) => {
     // 验证条件：输入不为空、未登录、不在加载中、不在流式传输中
     const trimmedContent = messageContent.trim();
     if (!trimmedContent || isSendingMessage || !isSignedIn || streamingMessageId) return;
@@ -182,6 +183,14 @@ export function AiChatCore({
         // 设置流式传输状态
         setStreamingMessageId(assistantMessageId);
 
+        // 构造动态上下文参数
+        const contextPayload = contexts && contexts.length > 0 ? {
+          documents: contexts.map(c => ({
+            id: c.id,
+            type: c.type
+          }))
+        } : undefined;
+
         // 步骤2: 异步开始流式传输（不使用await，让它在后台运行）
         streamAssistantResponse({
           conversationId,
@@ -192,6 +201,7 @@ export function AiChatCore({
           agentFlags: {
             webSearch: webSearchEnabled,
           },
+          context: contextPayload,
         }).catch((error) => {
           console.error("流式传输失败:", error);
           // 清除流式状态，允许用户重试
