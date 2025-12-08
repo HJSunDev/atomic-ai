@@ -24,6 +24,12 @@ export interface RouterOptions {
    * @default "chat"
    */
   defaultIntent?: IntentType;
+
+  /**
+   * 强制指定意图（手动模式）
+   * 如果提供此参数且不为 "auto"，将跳过 AI 识别，直接使用此意图
+   */
+  manualIntent?: IntentType | "auto";
 }
 
 /**
@@ -225,8 +231,25 @@ export const useIntentRouter = () => {
       };
 
       try {
-        // 1. 识别意图（只使用 userPrompt，服务端默认模型）
-        const intent = await detectIntent(input, options);
+        let intent: IntentResult;
+
+        // 检查是否开启手动模式 (且不是 auto)
+        if (options.manualIntent && options.manualIntent !== "auto") {
+          console.log(`[IntentRouter] 手动模式激活: ${options.manualIntent}`);
+          // 构造一个"伪造"的意图结果
+          intent = {
+            intent: options.manualIntent,
+            confidence: 1,
+            reason: "User manual selection",
+            summary: input.userPrompt.slice(0, 50),
+          };
+          // 为了体验连贯性，稍微给一点点延迟（可选，模拟处理感）
+          await new Promise(r => setTimeout(r, 300));
+        } else {
+          // 1. 识别意图（只使用 userPrompt，服务端默认模型）
+          intent = await detectIntent(input, options);
+        }
+
         setIntentResult(intent);
         
         // 如果是保底情况（confidence 0），可能需要短暂展示错误状态

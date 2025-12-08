@@ -7,12 +7,23 @@ import { NetworkSearchEntry } from "@/components/ai-chat/NetworkSearchEntry";
 import { ContextAdder, type SelectedContext, type ContextUsageType } from "@/components/ai-chat/ContextAdder";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
-import { ArrowUp, Loader2 } from "lucide-react";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator
+} from "@/components/ui/dropdown-menu";
+import { ArrowUp, Loader2, BrainCircuit, MessageSquare, FileText, Blocks } from "lucide-react";
 
 // 将不依赖输入状态的组件 memo 化以避免不必要的重新渲染
 const MemoizedContextAdder = memo(ContextAdder);
 const MemoizedModelSelector = memo(ModelSelector);
 const MemoizedNetworkSearchEntry = memo(NetworkSearchEntry);
+
+// 定义支持的模式类型
+export type CreationMode = "auto" | "chat" | "document" | "app";
 
 // 提交时的参数类型
 export interface CreationInputPayload {
@@ -20,6 +31,8 @@ export interface CreationInputPayload {
   modelId: string;
   webSearchEnabled: boolean;
   userApiKey?: string;
+  // 指定模式
+  forcedIntent?: CreationMode;
 }
 
 // 组件 Props
@@ -53,6 +66,9 @@ export const AiCreationInput = ({
   const [userPrompt, setUserPrompt] = useState("");
   const [isSending, setIsSending] = useState(false);
   const [selectedContexts, setSelectedContexts] = useState<SelectedContext[]>([]);
+  
+  // 模式状态，默认为 auto
+  const [creationMode, setCreationMode] = useState<CreationMode>("auto");
 
   // 从全局 store 读取 AI 设置
   const selectedModel = useChatStore((state) => state.selectedModel);
@@ -73,6 +89,16 @@ export const AiCreationInput = ({
     );
   }, []);
 
+  // 计算动态 Placeholder
+  const activePlaceholder = (() => {
+    switch (creationMode) {
+      case "document": return "Describe the document you want to write...";
+      case "chat": return "Ask anything...";
+      case "app": return "Describe the app you want to build...";
+      default: return placeholder;
+    }
+  })();
+
   // 处理提交逻辑
   const handleSend = useCallback(async () => {
     if (!userPrompt.trim() || isSending || disabled) return;
@@ -84,6 +110,7 @@ export const AiCreationInput = ({
         modelId: selectedModel,
         webSearchEnabled,
         userApiKey: userApiKey || undefined,
+        forcedIntent: creationMode, 
         // TODO: 将 selectedContexts 传递给 onSubmit (目前仅前端展示)
       });
 
@@ -95,7 +122,7 @@ export const AiCreationInput = ({
     } finally {
       setIsSending(false);
     }
-  }, [userPrompt, isSending, disabled, onSubmit, selectedModel, webSearchEnabled, userApiKey, selectedContexts]);
+  }, [userPrompt, isSending, disabled, onSubmit, selectedModel, webSearchEnabled, userApiKey, selectedContexts, creationMode]);
 
   // 处理键盘事件：Enter 提交，Shift+Enter 换行
   const handleKeyDown = useCallback(
@@ -108,8 +135,18 @@ export const AiCreationInput = ({
     [handleSend]
   );
 
+  // 获取当前模式图标
+  const ModeIcon = (() => {
+    switch (creationMode) {
+      case "chat": return MessageSquare;
+      case "document": return FileText;
+      case "app": return Blocks;
+      default: return BrainCircuit;
+    }
+  })();
+
   return (
-    <section className="max-w-[43rem] w-full mx-auto flex flex-col items-center border border-border rounded-[18px] overflow-hidden shrink-0">
+    <section className="max-w-[43rem] w-full mx-auto flex flex-col items-center border border-border rounded-[18px] overflow-hidden shrink-0 bg-background/50 backdrop-blur-sm transition-all focus-within:border-primary/40 focus-within:shadow-[0_0_0_2px_rgba(var(--primary),0.05)]">
       <header className="w-full p-2">
         <MemoizedContextAdder 
           selectedContexts={selectedContexts}
@@ -122,13 +159,59 @@ export const AiCreationInput = ({
         value={userPrompt}
         onChange={(e) => setUserPrompt(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={placeholder}
-        className="min-h-[68px] max-h-[110px] p-2 border-0 focus-visible:ring-0 text-base placeholder:text-muted-foreground/80 shadow-none resize-none overflow-y-auto"
+        placeholder={activePlaceholder}
+        className="min-h-[68px] max-h-[110px] p-3 border-0 focus-visible:ring-0 text-base placeholder:text-muted-foreground/60 shadow-none resize-none overflow-y-auto bg-transparent"
         rows={2}
         disabled={isSending || disabled}
       />
-      <footer className="flex items-center justify-between w-full p-2">
-        <div className="flex items-center gap-2">
+      <footer className="flex items-center justify-between w-full p-2 pl-3">
+        <div className="flex items-center gap-1">
+          {/* [新增] 模式选择器 - 极简 Notion 风格 */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className={`h-7 w-7 rounded-md transition-all ${
+                    creationMode === 'auto' 
+                        ? 'text-muted-foreground/70 hover:bg-muted hover:text-foreground cursor-pointer' 
+                        : 'text-primary/80 bg-primary/5 hover:bg-primary/10 hover:text-primary cursor-pointer'
+                }`}
+                disabled={isSending || disabled}
+              >
+                <ModeIcon className="w-4 h-4" />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" className="w-48">
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">Routing Mode</DropdownMenuLabel>
+              
+              <DropdownMenuItem onClick={() => setCreationMode("auto")} className="gap-2 cursor-pointer">
+                <BrainCircuit className="w-4 h-4 text-muted-foreground" />
+                <span>Auto Detect</span>
+                {creationMode === "auto" && <span className="ml-auto text-xs text-muted-foreground">Default</span>}
+              </DropdownMenuItem>
+              
+              <DropdownMenuSeparator />
+              
+              <DropdownMenuItem onClick={() => setCreationMode("document")} className="gap-2 cursor-pointer">
+                <FileText className="w-4 h-4 text-muted-foreground" />
+                <span>Document</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={() => setCreationMode("chat")} className="gap-2 cursor-pointer">
+                <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                <span>Chat</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => setCreationMode("app")} className="gap-2 cursor-pointer">
+                <Blocks className="w-4 h-4 text-muted-foreground" />
+                <span>App Factory</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+
+          <div className="w-px h-4 bg-border/60 mx-1" /> {/* 细微的分隔线 */}
+
           <MemoizedModelSelector />
           <MemoizedNetworkSearchEntry />
         </div>
@@ -151,4 +234,3 @@ export const AiCreationInput = ({
     </section>
   );
 };
-

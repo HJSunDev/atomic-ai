@@ -46,8 +46,11 @@ export const AiCreationStudio = () => {
           webSearchEnabled: payload.webSearchEnabled,
           userApiKey: payload.userApiKey,
         },
-        // 配置项：保底策略设为 chat
-        { defaultIntent: "chat" }
+        // 配置项：保底策略设为 chat，并传入可能的手动意图
+        { 
+          defaultIntent: "chat",
+          manualIntent: payload.forcedIntent
+        }
       );
 
       return { success: result.success };
