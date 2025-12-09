@@ -1,25 +1,34 @@
 import React from "react";
 import Link from "next/link";
-import { ChevronLeft, Code2, Play } from "lucide-react";
+import { ChevronLeft, Play, Globe, Ban, Loader2, ExternalLink } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { Id } from "@/convex/_generated/dataModel";
 
 interface FactoryHeaderProps {
+  appId: Id<"apps">;
   title: string;
   description?: string;
   version: number;
-  onPublish?: () => void;
+  isPublished?: boolean;
+  onPublish: () => void;
+  onUnpublish: () => void;
+  isPublishing?: boolean;
 }
 
 export function FactoryHeader({ 
+  appId,
   title, 
   description, 
   version, 
-  onPublish 
+  isPublished,
+  onPublish,
+  onUnpublish,
+  isPublishing
 }: FactoryHeaderProps) {
   return (
     <header className="h-14 border-b flex items-center px-4 justify-between shrink-0 bg-white dark:bg-slate-950 z-10">
@@ -53,19 +62,66 @@ export function FactoryHeader({
           <span className="text-[10px] text-muted-foreground bg-muted px-1.5 py-0.5 rounded-md border">
             v{version}.0
           </span>
+          {isPublished && (
+            <span className="flex items-center gap-1 text-[10px] text-green-600 bg-green-50 border-green-200 px-1.5 py-0.5 rounded-md border">
+              <Globe className="w-3 h-3" />
+              已发布
+            </span>
+          )}
         </div>
       </div>
 
       {/* 右侧操作栏 */}
       <div className="flex items-center gap-2">
-        <Button 
-            size="sm" 
-            className="text-xs flex items-center gap-1 h-8"
-            onClick={onPublish}
-        >
-            <Play className="w-3 h-3" />
-            发布
-        </Button>
+        {isPublished ? (
+          <>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="text-xs flex items-center gap-1 h-8"
+                  onClick={() => window.open(`/share/factory/${appId}`, '_blank')}
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  查看分享
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent>
+                <p>在新标签页打开分享链接</p>
+              </TooltipContent>
+            </Tooltip>
+
+            <Button 
+                variant="destructive"
+                size="sm" 
+                className="text-xs flex items-center gap-1 h-8 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 shadow-none"
+                onClick={onUnpublish}
+                disabled={isPublishing}
+            >
+                {isPublishing ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                    <Ban className="w-3 h-3" />
+                )}
+                取消发布
+            </Button>
+          </>
+        ) : (
+            <Button 
+                size="sm" 
+                className="text-xs flex items-center gap-1 h-8"
+                onClick={onPublish}
+                disabled={isPublishing}
+            >
+                {isPublishing ? (
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                ) : (
+                    <Play className="w-3 h-3" />
+                )}
+                发布应用
+            </Button>
+        )}
       </div>
     </header>
   );

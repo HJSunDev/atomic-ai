@@ -156,6 +156,33 @@ export const publishApp = mutation({
   },
 });
 
+// 取消发布应用
+export const unpublishApp = mutation({
+  args: {
+    appId: v.id("apps"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("未授权操作：请先登录");
+    }
+    const userId = identity.subject;
+
+    const app = await ctx.db.get(args.appId);
+    if (!app) {
+      throw new Error("应用不存在");
+    }
+    if (app.userId !== userId) {
+      throw new Error("无权操作此应用");
+    }
+
+    await ctx.db.patch(args.appId, {
+      isPublished: false,
+      // publishedAt 不清空，作为历史记录
+    });
+  },
+});
+
 
 // 手动保存代码（用于用户编辑后的自动保存，不增加版本号）
 export const saveAppCode = mutation({

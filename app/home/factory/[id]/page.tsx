@@ -4,13 +4,14 @@ import { useState } from "react";
 import { useParams } from "next/navigation";
 import { Id } from "@/convex/_generated/dataModel";
 import { ResizableHandle, ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable";
-import { useQuery } from "convex/react";
+import { useQuery, useMutation } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Loader2 } from "lucide-react";
 import { FactoryChatPanel } from "./_components/FactoryChatPanel";
 import { FactoryPreviewContainer } from "./_components/FactoryPreviewContainer";
 import { FactoryHeader } from "./_components/FactoryHeader";
 import { AppType } from "./_components/common/types";
+import { toast } from "sonner";
 
 
 
@@ -24,6 +25,11 @@ export default function FactoryEditorPage() {
   const [previewVersionCode, setPreviewVersionCode] = useState<string | undefined>(undefined);
   
   const [appType, setAppType] = useState<AppType>("html");
+  const [isPublishing, setIsPublishing] = useState(false);
+
+
+  const publishApp = useMutation(api.factory.mutations.publishApp);
+  const unpublishApp = useMutation(api.factory.mutations.unpublishApp);
 
   // 处理模式切换：切换模式时清空之前生成的代码（因为 React 和 HTML 代码不兼容）
   const handleAppTypeChange = (newType: AppType) => {
@@ -66,6 +72,34 @@ export default function FactoryEditorPage() {
     }
   };
 
+  const handlePublish = async () => {
+    setIsPublishing(true);
+    try {
+      await publishApp({ appId });
+      toast.success("应用发布成功", { position: "top-center" });
+      // 发布成功后，自动在新标签页打开分享链接
+      window.open(`/share/factory/${appId}`, '_blank');
+    } catch (error) {
+      toast.error("发布失败，请稍后重试", { position: "top-center" });
+      console.error(error);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    setIsPublishing(true);
+    try {
+      await unpublishApp({ appId });
+      toast.success("应用已取消发布", { position: "top-center" });
+    } catch (error) {
+      toast.error("取消发布失败", { position: "top-center" });
+      console.error(error);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   // 获取应用详情 (仅用于当前页应用状态加载 和 Header 信息显示)
   const app = useQuery(api.factory.queries.getApp, { appId });
 
@@ -91,13 +125,14 @@ export default function FactoryEditorPage() {
     <div className="h-screen flex flex-col overflow-hidden bg-background">
       {/* 顶部导航栏 */}
       <FactoryHeader 
+        appId={appId}
         title={app.name}
         description={app.description}
         version={app.v}
-        onPublish={() => {
-          // TODO: 实现发布逻辑
-          console.log("发布应用");
-        }}
+        isPublished={app.isPublished}
+        onPublish={handlePublish}
+        onUnpublish={handleUnpublish}
+        isPublishing={isPublishing}
       />
 
       {/* 主工作区 */}

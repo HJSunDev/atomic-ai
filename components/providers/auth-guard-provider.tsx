@@ -11,6 +11,7 @@ import { ReactNode, useEffect } from "react";
 const PUBLIC_PATHS = [
   // 营销页面和认证页面不需要登录
   "/", // 主页（营销页面）
+  "/share", // 分享页面 (允许未登录访问)
 ];
 
 interface AuthGuardProviderProps {
