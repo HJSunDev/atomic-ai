@@ -135,6 +135,52 @@ export const getDocumentWithContent = query({
 
 
 /**
+ * 获取公开文档（无须身份验证，需校验 isPublished）
+ * 
+ * 专用于分享页面查看
+ */
+export const getPublicDocument = query({
+  args: {
+    documentId: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    // 尝试获取用户身份（用于判断是否为作者本人访问）
+    const identity = await ctx.auth.getUserIdentity();
+    const userId = identity?.subject;
+
+    const document = await ctx.db.get(args.documentId);
+    
+    // 文档不存在
+    if (!document) return null;
+
+    // 权限判断逻辑：
+    // 1. 如果是作者本人，始终允许访问（即便是未发布状态，用于预览/调试）
+    // 2. 如果不是作者，必须要求 isPublished === true
+    const isAuthor = userId === document.userId;
+    const isPublic = !!document.isPublished;
+
+    if (!isAuthor && !isPublic) {
+      return null; 
+    }
+
+    // 获取文档内容块（目前仅支持纯文本分享，不递归引用）
+    const contentBlock = await ctx.db
+      .query("blocks")
+      .withIndex("by_documentId_type", (q) => 
+        q.eq("documentId", args.documentId).eq("type", "text")
+      )
+      .first();
+
+    return {
+      document,
+      contentBlock,
+      isAuthor, // 告知前端是否为作者视角
+    };
+  },
+});
+
+
+/**
  * 文档大纲项类型定义
  */
 type OutlineItem = 

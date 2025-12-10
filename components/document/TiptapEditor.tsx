@@ -17,10 +17,11 @@ import { useMarkdownSync } from '@/hooks/useMarkdownSync';
 
 interface TiptapEditorProps {
   content: string;
-  onContentChange: (content: string) => void;
+  onContentChange?: (content: string) => void;
   placeholder?: string;
   editable?: boolean;
   documentId?: string;
+  hideToolbar?: boolean;
 }
 
 /**
@@ -52,7 +53,8 @@ export const TiptapEditor = ({
   onContentChange, 
   placeholder,
   editable = true,
-  documentId
+  documentId,
+  hideToolbar = false
 }: TiptapEditorProps) => {
 
   // 浮动菜单的key,用更新key的方式来强制刷新 菜单的显示,用来处理中文输入 shouldShow 不执行的问题
@@ -110,7 +112,9 @@ export const TiptapEditor = ({
     onUpdate: ({ editor }) => {
       const jsonContent = editor.getJSON();
       const jsonString = JSON.stringify(jsonContent);
-      onContentChange(jsonString);
+      if (onContentChange) {
+        onContentChange(jsonString);
+      }
     },
   });
 
@@ -151,7 +155,7 @@ export const TiptapEditor = ({
       </div>
 
       {/* FloatingMenu：输入斜杠 `/` 时显示 */}
-      {editor && (
+      {editor && !hideToolbar && (
         <FloatingMenu
           editor={editor}
           key={floatingMenuKey}

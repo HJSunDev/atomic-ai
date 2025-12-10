@@ -546,6 +546,51 @@ export const touchDocument = mutation({
 
 
 /**
+ * 发布文档
+ */
+export const publishDocument = mutation({
+  args: {
+    id: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    const document = await ctx.db.get(args.id);
+    if (!document) throw new Error("目标文档不存在");
+    if (document.userId !== userId) throw new Error("无权操作此文档");
+
+    await ctx.db.patch(args.id, {
+      isPublished: true,
+      publishedAt: Date.now(),
+    });
+  },
+});
+
+/**
+ * 取消发布文档
+ */
+export const unpublishDocument = mutation({
+  args: {
+    id: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    const userId = (await ctx.auth.getUserIdentity())?.subject;
+    if (!userId) throw new Error("未授权访问");
+
+    const document = await ctx.db.get(args.id);
+    if (!document) throw new Error("目标文档不存在");
+    if (document.userId !== userId) throw new Error("无权操作此文档");
+
+    await ctx.db.patch(args.id, {
+      isPublished: false,
+      // 不清空 publishedAt，保留作为历史记录
+    });
+  },
+});
+
+
+/**
  * [内部] 更新块内容 (用于内部更新content字段)
  * 
  * 设计特性：

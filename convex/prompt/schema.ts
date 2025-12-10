@@ -63,6 +63,10 @@ export const promptSchema = {
     lastOpenedAt: v.optional(v.number()),
     // 该文档包含的引用块数量（冗余存储用于提升查询性能，避免每次聚合查询）
     referenceCount: v.number(),
+    
+    // 发布相关字段
+    isPublished: v.optional(v.boolean()), // 是否已发布
+    publishedAt: v.optional(v.number()), // 发布时间
   })
     // 按用户ID索引，用于查询用户的所有文档
     .index("by_userId", ["userId"])
@@ -74,7 +78,9 @@ export const promptSchema = {
       filterFields: ["userId"], 
     })
     // 按用户ID和最后打开时间索引，用于“最近访问”列表的高效查询
-    .index("by_userId_lastOpenedAt", ["userId", "lastOpenedAt"]),
+    .index("by_userId_lastOpenedAt", ["userId", "lastOpenedAt"])
+    // 用于查询公开已发布的文档
+    .index("by_published", ["isPublished", "publishedAt"]),
 
   // 块表（新架构）
   // 系统的核心，定义了所有文档的具体内容和结构

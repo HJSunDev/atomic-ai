@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useDocumentStore } from "@/store/home/documentStore";
@@ -14,7 +14,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Check, X, MoreHorizontal, Plus, AlignLeft, Loader2, Sparkles, AlertCircle } from "lucide-react";
+import { Check, X, MoreHorizontal, Plus, AlignLeft, Loader2, Sparkles, AlertCircle, Globe, Share2, Ban, ExternalLink } from "lucide-react";
 import { LocalCatalyst } from "@/components/ai-assistant/LocalCatalyst";
 import { SidebarDisplayIcon, ModalDisplayIcon, FullscreenDisplayIcon } from "@/components/icons";
 import { useAutoSaveDocument } from "@/hooks/useAutoSaveDocument";
@@ -22,6 +22,7 @@ import { useCallback, useState, useEffect, useRef } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 // 提取为独立组件，避免因父组件重渲染而导致自身被重新创建
 interface DisplayModeSelectorProps {
@@ -115,6 +116,16 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
   const { job, isLocked } = useGenerationJob(finalDocumentId);
   const { cancelJob } = useGenerationJobStore();
 
+  // 文档发布状态管理
+  const publishDocument = useMutation(api.prompt.mutations.publishDocument);
+  const unpublishDocument = useMutation(api.prompt.mutations.unpublishDocument);
+  // 获取完整文档信息（包含发布状态）
+  const documentInfo = useQuery(api.prompt.queries.getDocumentWithContent, 
+    finalDocumentId ? { documentId: finalDocumentId as Id<"documents"> } : "skip"
+  );
+  const isPublished = documentInfo?.document.isPublished;
+  const [isPublishing, setIsPublishing] = useState(false);
+
   // 状态提升：将 useAutoSaveDocument Hook 从 DocumentForm 移至此处
   const {
     title,
@@ -158,6 +169,33 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
     });
   }, [isEditingSuffix]);
 
+  // 发布处理
+  const handlePublish = async () => {
+    if (!finalDocumentId) return;
+    setIsPublishing(true);
+    try {
+      await publishDocument({ id: finalDocumentId as Id<"documents"> });
+    } catch (error) {
+      toast.error("发布失败，请稍后重试", { position: "top-center" });
+      console.error(error);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
+  const handleUnpublish = async () => {
+    if (!finalDocumentId) return;
+    setIsPublishing(true);
+    try {
+      await unpublishDocument({ id: finalDocumentId as Id<"documents"> });
+    } catch (error) {
+      toast.error("取消发布失败", { position: "top-center" });
+      console.error(error);
+    } finally {
+      setIsPublishing(false);
+    }
+  };
+
   // 处理显示模式切换
   const handleDisplayModeChange = useCallback((mode: 'drawer' | 'modal' | 'fullscreen') => {
     switchDisplayMode(mode, {
@@ -197,6 +235,62 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
         {contextId && <LocalCatalyst ownerContextId={contextId} />}
 
         <div className="flex items-center gap-1">
+          {/* 发布/分享按钮 */}
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button
+                className="h-7 w-7 rounded-md flex items-center justify-center transition-all duration-150 focus:outline-none cursor-pointer text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+                aria-label="分享"
+                onClick={!isPublished ? (e) => { e.preventDefault(); handlePublish(); } : undefined}
+              >
+                {isPublished ? (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Globe className="h-4 w-4" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>文档已公开</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                ) : (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Share2 className="h-4 w-4" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>分享文档</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
+              </button>
+            </DropdownMenuTrigger>
+            
+            {/* 只有在已发布状态下才显示下拉菜单 */}
+            {isPublished && (
+              <DropdownMenuContent align="end" className="w-48 p-1">
+                <DropdownMenuItem 
+                  onClick={() => window.open(`/share/prompt-document/${finalDocumentId}`, '_blank')}
+                  className="flex items-center gap-2 px-2 py-1.5 cursor-pointer"
+                >
+                  <ExternalLink className="h-4 w-4 text-gray-500" />
+                  <span>查看分享</span>
+                </DropdownMenuItem>
+                <DropdownMenuItem 
+                  onClick={handleUnpublish}
+                  disabled={isPublishing}
+                  className="flex items-center gap-2 px-2 py-1.5 cursor-pointer text-red-600 hover:text-red-700 hover:bg-red-50"
+                >
+                  {isPublishing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Ban className="h-4 w-4" />}
+                  <span>取消发布</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            )}
+          </DropdownMenu>
+
           {/* 保存中状态指示：绿色小圆点，仅在保存中显示 */}
           {isSaving && (
             <span
@@ -207,17 +301,10 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
               <span className="inline-flex h-[5px] w-[5px] rounded-full bg-emerald-400" />
             </span>
           )}
-          {/* 更多操作按钮 */}
-          <button
-            className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none focus:bg-gray-100"
-            aria-label="更多操作"
-            title="更多操作"
-          >
-            <MoreHorizontal className="h-4 w-4" />
-          </button>
+          
           {/* 关闭按钮 */}
           <button
-            className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none focus:bg-gray-100"
+            className="h-7 w-7 rounded-md flex items-center justify-center text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-all duration-150 focus:outline-none cursor-pointer"
             onClick={onRequestClose ?? close}
             aria-label="关闭"
             title="关闭"
