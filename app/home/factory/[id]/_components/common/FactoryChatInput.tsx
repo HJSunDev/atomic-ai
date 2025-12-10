@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { ModelSelector } from "@/components/ai-chat/ModelSelector";
 import { useFactoryStore } from "@/store/home/useFactoryStore";
 import { ContextAdder, type SelectedContext, type ContextUsageType } from "@/components/ai-chat/ContextAdder";
+import type { Id } from "@/convex/_generated/dataModel";
 
 interface FactoryChatInputProps {
   onSendMessage: (prompt: string, contexts?: SelectedContext[]) => void;
@@ -32,8 +33,8 @@ export function FactoryChatInput({
 
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
   
-  // 从全局 Store 获取待处理的 Prompt
-  const { pendingPrompt, setPendingPrompt } = useFactoryStore();
+  // 从全局 Store 获取待处理的 Prompt 和 Context
+  const { pendingPrompt, setPendingPrompt, pendingContext, setPendingContext } = useFactoryStore();
 
   // 上下文操作回调
   const handleAddContext = React.useCallback((context: SelectedContext) => {
@@ -50,7 +51,7 @@ export function FactoryChatInput({
     );
   }, []);
 
-  // 处理自动填充 Prompt
+  // 处理自动填充 Prompt 和 Context
   useEffect(() => {
     if (pendingPrompt) {
       setInputValue(pendingPrompt);
@@ -67,7 +68,20 @@ export function FactoryChatInput({
       // 清除 Store 中的值，避免重复填充
       setPendingPrompt(null);
     }
-  }, [pendingPrompt, setPendingPrompt]);
+    
+    if (pendingContext) {
+      // 转换格式适配 SelectedContext
+      // 注意：这里需要确保 type 符合 ContextUsageType
+      const convertedContexts: SelectedContext[] = pendingContext.map(c => ({
+        id: c.id as Id<"documents">,
+        type: c.type as ContextUsageType,
+        title: c.title || "Untitled Document", // 使用传递过来的标题，或者默认值
+      }));
+      
+      setSelectedContexts(convertedContexts);
+      setPendingContext(null);
+    }
+  }, [pendingPrompt, pendingContext, setPendingPrompt, setPendingContext]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);

@@ -4,6 +4,7 @@ import { api } from "@/convex/_generated/api";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import { useChatStore } from "@/store/home/useChatStore";
 import type { IntentHandler } from "@/services/intent/types";
+import type { Id } from "@/convex/_generated/dataModel";
 
 /**
  * Chat 模块意图处理器 Hook
@@ -61,6 +62,13 @@ export const useChatIntentHandler = () => {
           agentFlags: {
             webSearch: input.webSearchEnabled,
           },
+          context: input.context ? {
+            ...input.context,
+            documents: input.context.documents.map(doc => ({
+              id: doc.id as Id<"documents">,
+              type: doc.type as "core_task" | "specification" | "background_info",
+            })),
+          } : undefined,
         }).catch((error) => {
           console.error("[ChatIntentHandler] Chat 流式传输失败:", error);
         });

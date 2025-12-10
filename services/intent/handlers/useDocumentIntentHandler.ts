@@ -22,7 +22,7 @@ export const useDocumentIntentHandler = () => {
         modelId: input.modelId,
         webSearchEnabled: input.webSearchEnabled,
         userApiKey: input.userApiKey,
-        // 可以把意图识别的 summary 作为文档标题的参考（如果需要）
+        context: input.context,
       });
       
       return genResult.success ?? false;

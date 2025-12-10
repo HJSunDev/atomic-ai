@@ -33,6 +33,15 @@ export interface IntentRouteInput {
   webSearchEnabled: boolean;
   // 用户自定义 API Key
   userApiKey?: string;
+  // 动态上下文
+  context?: {
+    documents: Array<{
+      id: string;
+      type: string;
+      // 添加可选的标题字段，用于前端 UI 展示
+      title?: string;
+    }>;
+  };
 }
 
 /**

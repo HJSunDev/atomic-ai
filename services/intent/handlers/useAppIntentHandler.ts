@@ -19,7 +19,7 @@ import type { IntentHandler } from "@/services/intent/types";
 export const useAppIntentHandler = () => {
   const router = useRouter();
   const createApp = useMutation(api.factory.mutations.createApp);
-  const { setPendingPrompt } = useFactoryStore();
+  const { setPendingPrompt, setPendingContext } = useFactoryStore();
 
   const handleAppIntent: IntentHandler = useCallback(async (intent, input) => {
     console.log("[AppIntentHandler] 路由到 app/factory 模块，开始创建应用...");
@@ -35,6 +35,10 @@ export const useAppIntentHandler = () => {
       // 2. 将用户输入保存到全局 Store，以便在跳转后自动填充到输入框
       setPendingPrompt(input.userPrompt);
       
+      if (input.context) {
+        setPendingContext(input.context.documents);
+      }
+      
       // 3. 跳转到应用编辑页面（URL 路由）
       router.push(`/home/factory/${appId}`);
       
@@ -46,7 +50,7 @@ export const useAppIntentHandler = () => {
       console.error("[AppIntentHandler] 处理失败:", error);
       return false;
     }
-  }, [createApp, router, setPendingPrompt]);
+  }, [createApp, router, setPendingPrompt, setPendingContext]);
 
   return { handleAppIntent };
 };

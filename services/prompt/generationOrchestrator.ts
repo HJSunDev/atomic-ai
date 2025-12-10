@@ -38,8 +38,14 @@ export interface GenerationParams {
   // 可选：打开模式（默认使用 documentStore 当前模式）
   openMode?: "drawer" | "modal" | "fullscreen";
   
-  // 可选：上下文文档 ID 列表（预留扩展）
-  contextDocIds?: string[];
+  // 可选：上下文文档 (替代 contextDocIds)
+  context?: {
+    documents: Array<{
+      id: string;
+      type: string;
+      title?: string;
+    }>;
+  };
   
   // 可选：用户自己的 API Key
   userApiKey?: string;
@@ -86,7 +92,7 @@ export function useGenerationOrchestrator() {
       modelId,
       systemPrompt,
       openMode,
-      contextDocIds = [],
+      context,
       userApiKey,
       webSearchEnabled = false,
     } = params;
@@ -125,7 +131,7 @@ export function useGenerationOrchestrator() {
         userPrompt,
         modelConfig,
         systemPrompt,
-        contextDocIds,
+        contextDocIds: context?.documents.map(d => d.id) ?? [],
       });
 
       // ============================================
@@ -174,7 +180,11 @@ export function useGenerationOrchestrator() {
                 "请使用 Markdown 格式输出最终结果（支持 GFM）。",
                 "不要添加与文档内容无关的额外解释性文字或前后缀说明。",
               ].join("\n"),
-              // 预留：将上下文文档 ID 映射为“背景信息”文档，供上下文构建器使用
+              // 将 context 映射为 action 接受的格式
+              documents: context?.documents.map(doc => ({
+                id: doc.id as Id<"documents">,
+                type: doc.type as "core_task" | "specification" | "background_info",
+              })),
             },
           });
 

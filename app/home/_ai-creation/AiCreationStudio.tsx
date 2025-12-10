@@ -8,6 +8,7 @@ import { DocumentCreationView } from "./documents/DocumentCreationView";
 import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 import { useIntentRouter } from "@/services/intent";
 import { IntentRoutingOverlay } from "./components/IntentRoutingOverlay";
+import { SelectedContext } from "@/components/ai-chat/ContextAdder";
 
 /**
  * 智创模块主入口 (AiCreationStudio)
@@ -38,13 +39,21 @@ export const AiCreationStudio = () => {
    * 3. 保底策略：识别失败时默认走 chat 模式
    */
   const handleCreationSubmit = useCallback(
-    async (payload: CreationInputPayload) => {
+    async (payload: CreationInputPayload, contexts?: SelectedContext[]) => {
       const result = await executeIntentRouting(
         {
           userPrompt: payload.userPrompt,
           modelId: payload.modelId,
           webSearchEnabled: payload.webSearchEnabled,
           userApiKey: payload.userApiKey,
+          // 将上下文传递给 IntentRouter
+          context: contexts && contexts.length > 0 ? {
+            documents: contexts.map(c => ({
+              id: c.id,
+              type: c.type,
+              title: c.title
+            }))
+          } : undefined,
         },
         // 配置项：保底策略设为 chat，并传入可能的手动意图
         { 

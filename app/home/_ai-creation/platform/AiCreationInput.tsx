@@ -38,7 +38,7 @@ export interface CreationInputPayload {
 // 组件 Props
 export interface AiCreationInputProps {
   // 提交回调函数，返回 Promise<{ success: boolean }>
-  onSubmit: (payload: CreationInputPayload) => Promise<{ success: boolean }>;
+  onSubmit: (payload: CreationInputPayload, contexts?: SelectedContext[]) => Promise<{ success: boolean }>;
   // 占位符文本
   placeholder?: string;
   // 是否禁用输入（外部控制）
@@ -111,8 +111,7 @@ export const AiCreationInput = ({
         webSearchEnabled,
         userApiKey: userApiKey || undefined,
         forcedIntent: creationMode, 
-        // TODO: 将 selectedContexts 传递给 onSubmit (目前仅前端展示)
-      });
+      }, selectedContexts);
 
       // 如果提交成功，清空输入框
       if (result.success) {
