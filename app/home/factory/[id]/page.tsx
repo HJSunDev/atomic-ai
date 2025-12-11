@@ -77,8 +77,6 @@ export default function FactoryEditorPage() {
     try {
       await publishApp({ appId });
       toast.success("应用发布成功", { position: "top-center" });
-      // 发布成功后，自动在新标签页打开分享链接
-      window.open(`/share/factory/${appId}`, '_blank');
     } catch (error) {
       toast.error("发布失败，请稍后重试", { position: "top-center" });
       console.error(error);

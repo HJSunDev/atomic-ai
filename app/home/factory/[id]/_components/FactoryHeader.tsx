@@ -80,7 +80,7 @@ export function FactoryHeader({
                 <Button
                   variant="outline"
                   size="sm"
-                  className="text-xs flex items-center gap-1 h-8"
+                  className="text-xs flex items-center gap-1 h-8 cursor-pointer"
                   onClick={() => window.open(`/share/factory/${appId}`, '_blank')}
                 >
                   <ExternalLink className="w-3.5 h-3.5" />
@@ -95,7 +95,7 @@ export function FactoryHeader({
             <Button 
                 variant="destructive"
                 size="sm" 
-                className="text-xs flex items-center gap-1 h-8 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 shadow-none"
+                className="text-xs flex items-center gap-1 h-8 bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 shadow-none cursor-pointer"
                 onClick={onUnpublish}
                 disabled={isPublishing}
             >
@@ -110,7 +110,7 @@ export function FactoryHeader({
         ) : (
             <Button 
                 size="sm" 
-                className="text-xs flex items-center gap-1 h-8"
+                className="text-xs flex items-center gap-1 h-8 cursor-pointer"
                 onClick={onPublish}
                 disabled={isPublishing}
             >
