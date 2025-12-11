@@ -3,9 +3,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSidebarMenuStore } from "@/store/home";
 import { useManageAiContext } from "@/hooks/useAiContext";
-import { MOCK_DISCOVERY_ITEMS, DiscoveryItemType } from "./data";
+import { MOCK_DISCOVERY_ITEMS, DiscoveryItemType, DiscoveryItem } from "./data";
 import { DiscoveryCard } from "./_components/DiscoveryCard";
-import { Search, Sparkles, Filter, LayoutGrid, List } from "lucide-react";
+import { Search, Sparkles, Filter, LayoutGrid, List, Telescope, FolderOpen } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -34,22 +34,25 @@ export default function DiscoveryPage() {
   const [searchQuery, setSearchQuery] = useState("");
 
   // Filter Logic
-  const filteredItems = useMemo(() => {
-    return MOCK_DISCOVERY_ITEMS.filter(item => {
-      const matchesTab = activeTab === 'all' || item.type === activeTab;
-      const matchesSearch = item.title.toLowerCase().includes(searchQuery.toLowerCase()) || 
-                           item.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                           item.tags.some(tag => tag.toLowerCase().includes(searchQuery.toLowerCase()));
+  const filteredItems = useMemo<DiscoveryItem[]>(() => {
+    return MOCK_DISCOVERY_ITEMS.filter((item) => {
+      const matchesTab = activeTab === "all" || item.type === activeTab;
+      const query = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        query.length === 0 ||
+        item.title.toLowerCase().includes(query) ||
+        item.description.toLowerCase().includes(query) ||
+        item.tags.some((tag) => tag.toLowerCase().includes(query));
       return matchesTab && matchesSearch;
     });
   }, [activeTab, searchQuery]);
 
   return (
     <div className="h-full w-full overflow-y-auto bg-white dark:bg-[#161616]">
-      <div className="max-w-7xl mx-auto px-6 py-10 md:py-16">
+      <div className="max-w-7xl mx-auto px-6 py-8 md:py-12 min-h-full flex flex-col">
         
         {/* Header Section */}
-        <header className="mb-10">
+        <header className="mb-8 flex-none">
           <div className="flex flex-col gap-6">
             
             {/* Title & Description */}
@@ -107,7 +110,7 @@ export default function DiscoveryPage() {
         </header>
 
         {/* Content Grid */}
-        <main className="min-h-[400px]">
+        <main className="flex-1 flex flex-col">
           {filteredItems.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {filteredItems.map((item) => (
@@ -116,23 +119,37 @@ export default function DiscoveryPage() {
             </div>
           ) : (
             // Empty State
-            <div className="flex flex-col items-center justify-center py-20 text-center text-gray-500">
-              <div className="w-16 h-16 bg-gray-50 dark:bg-gray-800 rounded-full flex items-center justify-center mb-4">
-                <Search className="w-8 h-8 text-gray-300" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 dark:text-gray-100 mb-1">
-                No items found
-              </h3>
-              <p className="text-sm text-gray-400 max-w-sm">
-                We couldn't find anything matching "{searchQuery}". Try adjusting your filters or search terms.
-              </p>
-              <Button 
-                variant="link" 
-                onClick={() => { setSearchQuery(""); setActiveTab("all"); }}
-                className="mt-2 text-primary"
-              >
-                Clear all filters
-              </Button>
+            <div className="flex-1 flex flex-col items-center justify-center animate-in fade-in zoom-in-95 duration-500 min-h-[200px]">
+              {searchQuery || activeTab !== 'all' ? (
+                 // Search/Filter Empty State
+                <>
+                  <FolderOpen className="w-10 h-10 text-gray-200 dark:text-gray-800 mb-4 stroke-[1.5]" />
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-200">
+                    No results found
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xs text-center mb-6 leading-relaxed">
+                    No items match your current filter. Try adjusting your search keywords.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => { setSearchQuery(""); setActiveTab("all"); }}
+                    className="h-8 px-3 text-xs border-gray-200 dark:border-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+                  >
+                    Clear filters
+                  </Button>
+                </>
+              ) : (
+                // Initial Empty State
+                <>
+                  <Telescope className="w-10 h-10 text-gray-200 dark:text-gray-800 mb-4 stroke-[1.5]" />
+                  <h3 className="text-sm font-medium text-gray-900 dark:text-gray-200">
+                    No items yet
+                  </h3>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-1 max-w-xs text-center leading-relaxed">
+                    The collection is currently empty. Be the first to discover new prompts and apps.
+                  </p>
+                </>
+              )}
             </div>
           )}
         </main>
