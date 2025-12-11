@@ -16,7 +16,14 @@ export const appGenerationSchema = {
     // 发布相关字段
     isPublished: v.optional(v.boolean()), // 是否已发布
     publishedAt: v.optional(v.number()), // 发布时间
-    visitCount: v.optional(v.number()), // 访问次数 (预留)
+    
+    // 社区/统计字段
+    authorName: v.optional(v.string()), // 作者名 (快照)
+    authorAvatar: v.optional(v.string()), // 作者头像 (快照)
+    views: v.optional(v.number()), // 访问/查看数 (新标准)
+    likes: v.optional(v.number()), // 点赞数
+    clones: v.optional(v.number()), // 复用/克隆数
+    tags: v.optional(v.array(v.string())), // 标签
   })
     .index("by_user", ["userId"])
     // 新增索引：用于查询公开已发布的应用，按发布时间倒序

@@ -23,6 +23,9 @@ export const createApp = mutation({
       v: 0,
       isArchived: false,
       creationTime: Date.now(),
+      // 记录作者信息
+      authorName: identity.nickname || identity.name || identity.givenName || "User",
+      authorAvatar: identity.pictureUrl,
     });
 
     return appId;
@@ -152,6 +155,9 @@ export const publishApp = mutation({
     await ctx.db.patch(args.appId, {
       isPublished: true,
       publishedAt: Date.now(),
+      // 更新作者信息快照
+      authorName: identity.nickname || identity.name || identity.givenName || app.authorName,
+      authorAvatar: identity.pictureUrl || app.authorAvatar,
     });
   },
 });
@@ -180,6 +186,52 @@ export const unpublishApp = mutation({
       isPublished: false,
       // publishedAt 不清空，作为历史记录
     });
+  },
+});
+
+// 复用/克隆应用 (Fork)
+export const forkApp = mutation({
+  args: {
+    appId: v.id("apps"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) {
+      throw new Error("请先登录");
+    }
+    const userId = identity.subject;
+
+    // 1. 获取源应用
+    const sourceApp = await ctx.db.get(args.appId);
+    if (!sourceApp) {
+      throw new Error("应用不存在");
+    }
+
+    // 检查权限 如果源应用不是公开的，则只能自己克隆
+    if (!sourceApp.isPublished && sourceApp.userId !== userId) {
+      throw new Error("无法复用未公开的私有应用");
+    }
+
+    // 2. 创建新应用
+    const newAppId = await ctx.db.insert("apps", {
+      userId,
+      prompt: sourceApp.prompt, // 继承原始提示词
+      name: `${sourceApp.name} (Fork)`,
+      description: sourceApp.description,
+      latestCode: sourceApp.latestCode, // 继承当前最新代码
+      v: 0, // 版本重置为0
+      isArchived: false,
+      creationTime: Date.now(),
+      authorName: identity.nickname || identity.name || identity.givenName || "User",
+      authorAvatar: identity.pictureUrl,
+    });
+
+    // 3. 更新源应用统计
+    await ctx.db.patch(sourceApp._id, {
+      clones: (sourceApp.clones || 0) + 1,
+    });
+
+    return newAppId;
   },
 });
 

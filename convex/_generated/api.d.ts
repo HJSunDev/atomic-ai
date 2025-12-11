@@ -21,6 +21,8 @@ import type * as chat_mutations from "../chat/mutations.js";
 import type * as chat_queries from "../chat/queries.js";
 import type * as convex_api_demo_http from "../convex_api_demo/http.js";
 import type * as convex_api_demo_httpActions from "../convex_api_demo/httpActions.js";
+import type * as discovery_mutations from "../discovery/mutations.js";
+import type * as discovery_queries from "../discovery/queries.js";
 import type * as factory_action from "../factory/action.js";
 import type * as factory_factoryUtils from "../factory/factoryUtils.js";
 import type * as factory_mutations from "../factory/mutations.js";
@@ -63,6 +65,8 @@ declare const fullApi: ApiFromModules<{
   "chat/queries": typeof chat_queries;
   "convex_api_demo/http": typeof convex_api_demo_http;
   "convex_api_demo/httpActions": typeof convex_api_demo_httpActions;
+  "discovery/mutations": typeof discovery_mutations;
+  "discovery/queries": typeof discovery_queries;
   "factory/action": typeof factory_action;
   "factory/factoryUtils": typeof factory_factoryUtils;
   "factory/mutations": typeof factory_mutations;

@@ -67,6 +67,14 @@ export const promptSchema = {
     // 发布相关字段
     isPublished: v.optional(v.boolean()), // 是否已发布
     publishedAt: v.optional(v.number()), // 发布时间
+
+    // 社区/统计字段
+    authorName: v.optional(v.string()), // 作者名 (快照)
+    authorAvatar: v.optional(v.string()), // 作者头像 (快照)
+    views: v.optional(v.number()), // 查看/访问数
+    likes: v.optional(v.number()), // 点赞数
+    clones: v.optional(v.number()), // 复用/克隆数
+    tags: v.optional(v.array(v.string())), // 标签
   })
     // 按用户ID索引，用于查询用户的所有文档
     .index("by_userId", ["userId"])

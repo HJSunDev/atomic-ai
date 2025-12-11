@@ -21,13 +21,17 @@ import { v } from "convex/values";
 export const createDocument = mutation({
   args: {},
   handler: async (ctx) => {
-    const userId = (await ctx.auth.getUserIdentity())?.subject;
-    if (!userId) throw new Error("未授权访问");
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("未授权访问");
+    const userId = identity.subject;
 
     const documentId = await ctx.db.insert("documents", {
       userId,
       isArchived: false,
       referenceCount: 0,
+      // 初始创建时记录作者信息
+      authorName: identity.nickname || identity.name || identity.givenName || "User",
+      authorAvatar: identity.pictureUrl,
     });
 
     await ctx.db.insert("blocks", {
@@ -553,16 +557,20 @@ export const publishDocument = mutation({
     id: v.id("documents"),
   },
   handler: async (ctx, args) => {
-    const userId = (await ctx.auth.getUserIdentity())?.subject;
-    if (!userId) throw new Error("未授权访问");
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("未授权访问");
+    const userId = identity.subject;
 
     const document = await ctx.db.get(args.id);
     if (!document) throw new Error("目标文档不存在");
     if (document.userId !== userId) throw new Error("无权操作此文档");
 
+    // 发布时更新作者信息快照
     await ctx.db.patch(args.id, {
       isPublished: true,
       publishedAt: Date.now(),
+      authorName: identity.nickname || identity.name || identity.givenName || document.authorName,
+      authorAvatar: identity.pictureUrl || document.authorAvatar,
     });
   },
 });
@@ -586,6 +594,79 @@ export const unpublishDocument = mutation({
       isPublished: false,
       // 不清空 publishedAt，保留作为历史记录
     });
+  },
+});
+
+
+/**
+ * 复用/克隆文档 (Fork)
+ * 
+ * 将公开的文档完整复制一份给当前用户
+ */
+export const forkDocument = mutation({
+  args: {
+    documentId: v.id("documents"),
+  },
+  handler: async (ctx, args) => {
+    const identity = await ctx.auth.getUserIdentity();
+    if (!identity) throw new Error("请先登录");
+    const userId = identity.subject;
+
+    // 1. 获取源文档
+    const sourceDoc = await ctx.db.get(args.documentId);
+    if (!sourceDoc) throw new Error("文档不存在");
+    
+    // 检查权限：源文档必须是公开的，或者是自己的
+    if (!sourceDoc.isPublished && sourceDoc.userId !== userId) {
+      throw new Error("无法复用未公开的私有文档");
+    }
+
+    // 2. 创建新文档 (复制元数据)
+    const newDocId = await ctx.db.insert("documents", {
+      userId,
+      title: `${sourceDoc.title} (Copy)`,
+      description: sourceDoc.description,
+      promptPrefix: sourceDoc.promptPrefix,
+      promptSuffix: sourceDoc.promptSuffix,
+      isArchived: false,
+      referenceCount: 0, // 初始为0，稍后添加块时如果处理引用则增加
+      authorName: identity.nickname || identity.name || identity.givenName,
+      authorAvatar: identity.pictureUrl,
+    });
+
+    // 3. 复制块
+    // 注意：只复制 content 类型的块，或者浅复制引用块
+    const sourceBlocks = await ctx.db
+      .query("blocks")
+      .withIndex("by_documentId_order", (q) => q.eq("documentId", sourceDoc._id))
+      .collect();
+
+    let referenceCount = 0;
+
+    await Promise.all(
+      sourceBlocks.map(async (block) => {
+        // 现版本：仅复制内容块 (type === "text")，忽略引用块
+        if (block.type === "text") {
+            await ctx.db.insert("blocks", {
+              documentId: newDocId,
+              type: "text",
+              content: block.content,
+              contentMarkdown: block.contentMarkdown,
+              order: block.order,
+            });
+        }
+      })
+    );
+
+    // 更新引用计数为 0 (因为没有复制引用块)
+    await ctx.db.patch(newDocId, { referenceCount: 0 });
+
+    // 4. 更新源文档的统计数据
+    await ctx.db.patch(sourceDoc._id, {
+      clones: (sourceDoc.clones || 0) + 1,
+    });
+
+    return newDocId;
   },
 });
 
@@ -748,4 +829,3 @@ export const updateBlockAgentSteps = internalMutation({
     await ctx.db.patch(args.blockId, { steps: args.steps });
   },
 });
-
