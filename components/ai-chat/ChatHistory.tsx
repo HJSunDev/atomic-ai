@@ -15,6 +15,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
@@ -72,15 +73,14 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
     const isMenuOpen = openMenuConversationId === conversation._id;
     const isFavorited = conversation.isFavorited || false;
     const isEditing = editingConversationId === conversation._id;
-    const isCurrent = isSelected; // 当前会话标识
     
     return (
       <div
         key={conversation._id}
         className={cn(
-          "group flex items-center p-3 mx-3 my-1 rounded-lg cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800/50",
-          isSelected && !isEditing && "bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800",
-          isMenuOpen && !isEditing && "bg-gray-50 dark:bg-gray-800/50"
+          "group flex items-center p-[7px] mx-[6px] rounded-md cursor-pointer hover:bg-gray-100 dark:hover:bg-[#27272A]",
+          isSelected && !isEditing && "bg-gray-100 dark:bg-[#27272A]",
+          isMenuOpen && !isEditing && "bg-gray-100 dark:bg-[#27272A]"
         )}
         onClick={() => {
           if (!isEditing) {
@@ -88,7 +88,7 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
           }
         }}
       >
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 overflow-hidden">
           {isEditing ? (
             <Input
               ref={inputRef}
@@ -96,31 +96,24 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
               onChange={(e) => setEditingTitle(e.target.value)}
               onBlur={handleTitleSubmit}
               onKeyDown={handleKeyDown}
-              className="text-sm font-medium border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 h-auto"
+              className="text-[14px] font-normal flex-1 truncate border-none bg-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 px-0 py-0 h-[1.125rem] leading-[1.125rem] selection:bg-gray-200 dark:selection:bg-gray-600 selection:text-inherit rounded-none text-[#262626] dark:text-gray-200"
               onClick={(e) => e.stopPropagation()}
             />
           ) : (
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
-                <span className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">
+                <span className={cn(
+                  "text-[14px] font-normal truncate transition-colors",
+                  "text-[#262626] dark:text-gray-200"
+                )}>
                   {conversation.title || "无标题对话"}
                 </span>
-                {isCurrent && (
-                  <span className="px-2 py-0.5 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full">
-                    当前的
-                  </span>
-                )}
               </div>
-              {/* 这里可以添加会话预览文本或时间戳 */}
-              <span className="text-xs text-gray-500 dark:text-gray-400 truncate mt-0.5">
-                {/* 占位符：最后一条消息预览 */}
-                点击查看对话详情...
-              </span>
             </div>
           )}
         </div>
         
-        {/* 操作菜单 */}
+        {/* 操作菜单 - 仅hover或菜单打开时显示 */}
         <DropdownMenu onOpenChange={(open) => {
           if (!open && isMenuOpen) {
             setOpenMenuConversationId(null);
@@ -131,54 +124,55 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
           <DropdownMenuTrigger asChild>
             <div
               className={cn(
-                "ml-2 p-1.5 rounded-md transition-all opacity-0 group-hover:opacity-100",
+                "ml-auto p-[7px] rounded-md transition-all opacity-0 group-hover:opacity-100",
                 "hover:bg-gray-200 dark:hover:bg-gray-700",
-                isMenuOpen && "opacity-100 bg-gray-200 dark:bg-gray-700"
+                (isMenuOpen || isSelected) && "opacity-100" // 选中时也稍微显示，或者保持只在hover显
               )}
               onClick={(e) => e.stopPropagation()}
             >
-              <MoreVertical className="w-4 h-4 text-gray-400" />
+              <MoreVertical className="w-3 h-3 text-gray-400" />
             </div>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-40">
+          <DropdownMenuContent align="end" className="w-36 py-2 dark:bg-[#202020] dark:border-gray-700">
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 handleEditTitle(conversation);
               }}
-              className="cursor-pointer"
+              className="cursor-pointer text-xs"
             >
-              <Edit className="w-4 h-4 mr-2" />
-              编辑标题
+              <Edit className="w-3.5 h-3.5 mr-2 opacity-70" />
+              重命名
             </DropdownMenuItem>
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 handleToggleFavorite(conversation._id, isFavorited);
               }}
-              className="cursor-pointer"
+              className="cursor-pointer text-xs"
             >
               {isFavorited ? (
                 <>
-                  <StarOff className="w-4 h-4 mr-2" />
+                  <StarOff className="w-3.5 h-3.5 mr-2 opacity-70" />
                   取消收藏
                 </>
               ) : (
                 <>
-                  <Star className="w-4 h-4 mr-2" />
+                  <Star className="w-3.5 h-3.5 mr-2 opacity-70" />
                   添加到收藏
                 </>
               )}
             </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={(e) => {
                 e.stopPropagation();
                 handleDeleteConversation(conversation._id);
               }}
-              className="text-red-600 focus:text-red-600 cursor-pointer"
+              className="text-destructive focus:text-destructive cursor-pointer text-xs"
             >
-              <Trash2 className="w-4 h-4 mr-2" />
-              删除对话
+              <Trash2 className="w-3.5 h-3.5 mr-2 opacity-70" />
+              删除
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -191,19 +185,19 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
     if (!searchResults) return null;
 
     return (
-      <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 px-3 mb-3">
-          搜索结果 ({searchResults.length})
+      <div className="pb-4 mt-5">
+        <h3 className="px-3 py-2 text-[16px] font-semibold text-[#262626] dark:text-gray-200 mb-2 mt-2">
+          搜索结果 {searchResults.length > 0 && `(${searchResults.length})`}
         </h3>
         
         {searchResults.length === 0 ? (
-          <div className="text-center py-8">
-            <div className="text-gray-500 dark:text-gray-400 text-sm">
+          <div className="text-center py-12">
+            <div className="text-muted-foreground text-sm">
               没有找到匹配的对话
             </div>
           </div>
         ) : (
-          <div className="space-y-1">
+          <div className="space-y-0.5">
             {searchResults.map(renderConversationItem)}
           </div>
         )}
@@ -218,29 +212,29 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
     }
     
     const favoritedConversations = conversationData.favorited;
-    const displayedFavorites = showAllFavorites ? favoritedConversations : favoritedConversations.slice(0, 3);
-    const hasMoreFavorites = favoritedConversations.length > 3;
+    const displayedFavorites = showAllFavorites ? favoritedConversations : favoritedConversations.slice(0, 5); // 增加默认显示数量
+    const hasMoreFavorites = favoritedConversations.length > 5;
     
     return (
-      <div className="mb-6">
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 px-3 mb-3">收藏</h3>
+      <div className="mt-2 mb-4">
+        <h3 className="px-3 py-2 text-[16px] font-semibold text-[#262626] dark:text-gray-200">收藏</h3>
         
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {displayedFavorites.map(renderConversationItem)}
         </div>
         
         {hasMoreFavorites && (
           <div
-            className="flex items-center p-3 mx-3 hover:bg-gray-50 dark:hover:bg-gray-800/50 cursor-pointer rounded-lg mt-2"
+            className="flex items-center px-[7px] mx-[6px] cursor-pointer mt-1"
             onClick={() => setShowAllFavorites(!showAllFavorites)}
           >
-            <span className="text-sm text-gray-500 dark:text-gray-400">
-              {showAllFavorites ? "收起" : `查看更多 (${favoritedConversations.length - 3})`}
-            </span>
-            <ChevronDown className={cn(
-              "w-4 h-4 ml-1 text-gray-500 transition-transform",
-              showAllFavorites && "rotate-180"
-            )} />
+             <span className="flex items-center text-[14px] font-normal text-[#8c8c8c] pl-1">
+                {showAllFavorites ? "收起" : `查看更多 (${favoritedConversations.length - 5})`}
+                <ChevronDown className={cn(
+                  "w-3 h-3 ml-1 transition-transform duration-200",
+                  showAllFavorites && "rotate-180"
+                )} />
+             </span>
           </div>
         )}
       </div>
@@ -251,8 +245,8 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
   const renderRecentChatsSection = () => {
     if (!conversationData?.grouped || conversationData.grouped.length === 0) {
       return (
-        <div className="text-center py-8">
-          <div className="text-gray-500 dark:text-gray-400 text-sm">
+        <div className="flex flex-col items-center justify-center py-16 px-4 text-center">
+          <div className="text-muted-foreground text-sm">
             暂无聊天记录
           </div>
         </div>
@@ -262,15 +256,17 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
     const groupedConversations = conversationData.grouped;
     
     return (
-      <div>
-        <h3 className="text-sm font-medium text-gray-900 dark:text-gray-100 px-3 mb-3">最近</h3>
-        
+      <div className="mt-2">
+        <div className="px-3 py-2 text-[16px] font-semibold text-[#262626] dark:text-gray-200 flex items-center justify-between">
+           <span>最近</span>
+           {/* <MoreVertical className="w-4 h-4 text-gray-500 cursor-pointer" /> */}
+        </div>
         {groupedConversations.map((group: { groupName: string; conversations: Doc<"conversations">[] }) => (
-          <div key={group.groupName} className="mb-4">
-            <div className="px-3 py-1 text-xs text-gray-500 dark:text-gray-400 font-medium">
+          <div key={group.groupName} className="mb-2">
+            <div className="px-3 text-[12px] font-normal text-[#8c8c8c] py-1">
               {group.groupName}
             </div>
-            <div className="space-y-1">
+            <div className="space-y-0.5">
               {group.conversations.map(renderConversationItem)}
             </div>
           </div>
@@ -281,18 +277,14 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
   
   // 渲染加载状态
   const renderLoadingSkeleton = () => (
-    <div className="space-y-4">
+    <div className="space-y-6 px-2 mt-5">
       {/* 收藏区域骨架屏 */}
       <div>
-        <Skeleton className="h-5 w-12 mb-3 mx-3" />
-        <div className="space-y-2">
-          {[...Array(2)].map((_, i) => (
-            <div key={i} className="flex items-center p-3 mx-3">
-              <div className="flex-1">
-                <Skeleton className="h-4 w-32 mb-1" />
-                <Skeleton className="h-3 w-24" />
-              </div>
-              <Skeleton className="h-4 w-4 ml-2" />
+        <Skeleton className="h-4 w-12 mb-3 mx-3 opacity-50" />
+        <div className="space-y-1">
+          {[...Array(3)].map((_, i) => (
+            <div key={i} className="flex items-center px-3 py-2">
+              <Skeleton className="h-3 w-32 opacity-60" />
             </div>
           ))}
         </div>
@@ -300,19 +292,14 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
       
       {/* 最近聊天区域骨架屏 */}
       <div>
-        <Skeleton className="h-5 w-12 mb-3 mx-3" />
+        <Skeleton className="h-4 w-12 mb-3 mx-3 opacity-50" />
         <div className="space-y-4">
           {[...Array(2)].map((_, groupIndex) => (
             <div key={groupIndex}>
-              <Skeleton className="h-3 w-16 mb-2 mx-3" />
-              <div className="space-y-2">
-                {[...Array(3)].map((_, i) => (
-                  <div key={i} className="flex items-center p-3 mx-3">
-                    <div className="flex-1">
-                      <Skeleton className="h-4 w-28 mb-1" />
-                      <Skeleton className="h-3 w-20" />
-                    </div>
-                    <Skeleton className="h-4 w-4 ml-2" />
+              <div className="space-y-1">
+                {[...Array(4)].map((_, i) => (
+                  <div key={i} className="flex items-center px-3 py-2">
+                    <Skeleton className="h-3 w-40 opacity-60" />
                   </div>
                 ))}
               </div>
@@ -328,28 +315,31 @@ export function ChatHistory({ children, onSheetToggle, ...props }: ChatHistoryPr
       <SheetTrigger asChild {...props}>
         {children}
       </SheetTrigger>
-      <SheetContent side="right" className="w-80 sm:w-96 p-0">
-        <SheetHeader className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <SheetTitle className="text-lg font-semibold text-gray-900 dark:text-gray-100">
-            聊天历史
+      <SheetContent 
+        side="right" 
+        className="w-80 sm:w-96 p-0 gap-0 flex flex-col border-l border-border/40 shadow-2xl"
+      >
+        <SheetHeader className="px-5 py-4 shrink-0">
+          <SheetTitle className="text-lg font-bold text-foreground flex items-center gap-2">
+             历史记录
           </SheetTitle>
         </SheetHeader>
         
-        {/* 搜索框 */}
-        <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+        {/* 搜索框 - 优化为 Notion 风格 */}
+        <div className="px-4 pb-2 shrink-0">
+          <div className="relative group">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground/70 group-focus-within:text-foreground transition-colors" />
             <Input
               placeholder="搜索对话..."
               value={searchValue}
               onChange={(e) => setSearchValue(e.target.value)}
-              className="pl-10 bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700 focus:border-blue-500 dark:focus:border-blue-400"
+              className="pl-9 h-9 bg-secondary/50 hover:bg-secondary/80 focus-visible:bg-secondary border-transparent shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 transition-all rounded-md placeholder:text-muted-foreground/60 text-sm"
             />
           </div>
         </div>
         
-        {/* 聊天列表 */}
-        <div className="flex-1 overflow-y-auto py-4">
+        {/* 聊天列表 - 滚动区域 */}
+        <div className="flex-1 overflow-y-auto py-2 custom-scrollbar">
           {isLoading ? (
             renderLoadingSkeleton()
           ) : isSearching ? (

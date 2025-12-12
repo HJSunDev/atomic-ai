@@ -47,7 +47,7 @@ export function ComingSoon({
         e.preventDefault();
         e.stopPropagation();
       }}
-      title="该功能正在开发中..."
+      title="Work In Progress..."
       {...props}
     >
       {/* 

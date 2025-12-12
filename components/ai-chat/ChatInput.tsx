@@ -31,6 +31,7 @@ import Image from "next/image";
 import { ModelSelector } from "./ModelSelector";
 import { NetworkSearchEntry } from "./NetworkSearchEntry";
 import { ContextAdder, type SelectedContext, type ContextUsageType } from "./ContextAdder";
+import { ComingSoon } from "@/components/custom/coming-soon";
 
 // 暴露给父组件的方法接口
 export interface ChatInputHandle {
@@ -188,12 +189,14 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
         {/* 会话操作区 */}
         {!isMaximized && (
           <div className="px-4 py-1 flex items-center border-gray-100 dark:border-gray-800">
-            <button
-              className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
-              disabled={isLoading} // 加载时禁用按钮
-            >
-              <Brain className="w-4 h-4 text-[#212125] dark:text-gray-300" />
-            </button>
+            <ComingSoon showBadge={true}>
+              <button
+                className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
+                disabled={isLoading} // 加载时禁用按钮
+              >
+                <Brain className="w-4 h-4 text-[#212125] dark:text-gray-300" />
+              </button>
+            </ComingSoon>
             <div className="flex items-center justify-center ml-auto gap-1">
               {/* 历史消息图标 */}
               <Tooltip open={isTooltipDisabled ? false : undefined}>

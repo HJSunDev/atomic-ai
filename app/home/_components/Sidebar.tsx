@@ -161,7 +161,7 @@ export function Sidebar() {
       </header>
 
       {/* 主内容区域 - 菜单项列表 */}
-      <div className={cn("flex-1")}>
+      <section className={cn("flex-1")}>
         {/* 主功能导航项 */}
         <nav className="px-2 space-y-1">
           {/* 主页 */}
@@ -444,7 +444,7 @@ export function Sidebar() {
             </div>
           )}
         </nav>
-      </div>
+      </section>
       
       {/* 底部图标导航栏 */}
       <footer className={cn(
@@ -456,10 +456,14 @@ export function Sidebar() {
         <Link href="/" className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer">
           <Home className="h-[1.125rem] w-[1.125rem] text-gray-600 dark:text-gray-400" />
         </Link>
-        <div className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer">
-          <HelpCircle className="h-[1.125rem] w-[1.125rem] text-gray-600 dark:text-gray-400" />
-        </div>
-        <ThemeToggle />
+        <ComingSoon>
+          <div className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-[#27272A] cursor-pointer">
+            <HelpCircle className="h-[1.125rem] w-[1.125rem] text-gray-600 dark:text-gray-400" />
+          </div>
+        </ComingSoon>
+        <ComingSoon>
+          <ThemeToggle />
+        </ComingSoon>
       </footer>
 
       {/* 使用Portal将菜单渲染到body层级，避免被父容器的overflow:hidden截断 */}
