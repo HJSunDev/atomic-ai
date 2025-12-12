@@ -24,6 +24,7 @@ import { useSidebarMenuStore } from "@/store/home";
 import { useAppNavigation } from "@/hooks/useAppNavigation";
 import type { MenuItemId } from "@/store/home/use-sidebar-menu-store";
 import { HomeNavIcon, AIRobotIcon } from "@/components/icons";
+import { ComingSoon } from "@/components/custom";
 
 
 export function Sidebar() {
@@ -487,48 +488,52 @@ export function Sidebar() {
             <div className="py-3 px-2 bg-white rounded-xl shadow-xl border border-gray-100 dark:border-gray-700 w-60 dark:bg-[#202020]">
               {/* 以下为菜单项 */}
               
-              <div className="block" onClick={() => handleMenuClick("knowledge-base") }>
-                <div className={cn(
-                  "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
-                  activeMenuId === "knowledge-base"
-                    ? "bg-primary/10 dark:bg-[#27272A]"
-                    : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
-                )}>
-                  <BookOpen className={cn(
-                    "h-[1rem] w-[1rem]",
+              <ComingSoon className="w-full">
+                <div className="block" onClick={() => handleMenuClick("knowledge-base") }>
+                  <div className={cn(
+                    "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
                     activeMenuId === "knowledge-base"
-                      ? "text-primary dark:text-gray-200"
-                      : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
-                  )} />
-                  <span className={cn(
-                    "text-sm",
-                    activeMenuId === "knowledge-base" && "text-primary dark:text-gray-200 font-medium"
-                  )}>知识库</span>
+                      ? "bg-primary/10 dark:bg-[#27272A]"
+                      : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
+                  )}>
+                    <BookOpen className={cn(
+                      "h-[1rem] w-[1rem]",
+                      activeMenuId === "knowledge-base"
+                        ? "text-primary dark:text-gray-200"
+                        : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+                    )} />
+                    <span className={cn(
+                      "text-sm",
+                      activeMenuId === "knowledge-base" && "text-primary dark:text-gray-200 font-medium"
+                    )}>知识库</span>
+                  </div>
                 </div>
-              </div>
+              </ComingSoon>
               
               <div className="my-2 border-t border-gray-100 dark:border-gray-700"></div>
               
               
-              <div className="block" onClick={() => handleMenuClick("feedback") }>
-                <div className={cn(
-                  "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
-                  activeMenuId === "feedback"
-                    ? "bg-primary/10 dark:bg-[#27272A]"
-                    : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
-                )}>
-                  <MessageSquare className={cn(
-                    "h-[1rem] w-[1rem]",
+              <ComingSoon className="w-full">
+                <div className="block" onClick={() => handleMenuClick("feedback") }>
+                  <div className={cn(
+                    "w-full px-3 py-2 text-left rounded-lg flex items-center gap-3 group transition-colors cursor-pointer",
                     activeMenuId === "feedback"
-                      ? "text-primary dark:text-gray-200"
-                      : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
-                  )} />
-                  <span className={cn(
-                    "text-sm",
-                    activeMenuId === "feedback" && "text-primary dark:text-gray-200 font-medium"
-                  )}>反馈</span>
+                      ? "bg-primary/10 dark:bg-[#27272A]"
+                      : "hover:bg-gray-50 dark:hover:bg-[#27272A]/70"
+                  )}>
+                    <MessageSquare className={cn(
+                      "h-[1rem] w-[1rem]",
+                      activeMenuId === "feedback"
+                        ? "text-primary dark:text-gray-200"
+                        : "text-gray-500 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors"
+                    )} />
+                    <span className={cn(
+                      "text-sm",
+                      activeMenuId === "feedback" && "text-primary dark:text-gray-200 font-medium"
+                    )}>反馈</span>
+                  </div>
                 </div>
-              </div>
+              </ComingSoon>
               
             </div>
           </div>
