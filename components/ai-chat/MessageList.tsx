@@ -4,6 +4,8 @@ import { Message, MessageStreamingEffects } from "./AiChatCore";
 import { Id } from "@/convex/_generated/dataModel";
 import { Skeleton } from "@/components/ui/skeleton";
 import { MessageRenderer, type MessagePart } from "./MessageRenderer";
+import { MessageActionBar } from "./MessageActionBar";
+import { type SceneAction } from "@/store/home/use-ai-context-store";
 import { FaceIcon } from "@/components/ai-assistant/FaceIcon";
 import { cn } from "@/lib/utils";
 
@@ -13,6 +15,8 @@ interface MessageListProps {
   emptyState?: React.ReactNode;
   streamingMessageId?: Id<"messages"> | null; // 流式传输消息ID
   isMessagesLoading?: boolean; // 消息加载状态
+  /** 当前场景注入的动态动作 */
+  sceneActions?: SceneAction[];
 }
 
 // 骨架屏组件 - 模拟真实的消息对话结构
@@ -381,6 +385,7 @@ export function MessageList({
   emptyState, 
   streamingMessageId,
   isMessagesLoading,
+  sceneActions = [], 
 }: MessageListProps) {
   const [copiedId, setCopiedId] = useState<Id<"messages"> | null>(null);
 
@@ -510,8 +515,8 @@ export function MessageList({
                 )}
               </div>
               
-              {/* AI消息功能区 - 仅保留复制 */}
-              <footer className={`mt-2 flex items-center gap-1.5 ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
+              {/* AI消息功能区 */}
+              <footer className={`mt-2 flex items-center gap-1.5 flex-wrap ${index === messages.length - 1 ? 'visible' : 'invisible group-hover:visible'}`}>
                 <button
                   className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center bg-white dark:bg-[#27272A] cursor-pointer"
                   onClick={() => handleCopy(message)}
@@ -523,6 +528,14 @@ export function MessageList({
                     <Copy className="w-3.5 h-3.5 text-gray-500 dark:text-gray-400" />
                   )}
                 </button>
+
+                {/* 场景注入的动态操作 */}
+                {sceneActions && sceneActions.length > 0 && (
+                  <MessageActionBar 
+                    message={message} 
+                    actions={sceneActions} 
+                  />
+                )}
               </footer>
             </section>
           )}

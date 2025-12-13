@@ -1,6 +1,6 @@
 "use client";
 
-import { ReactNode, useEffect, useRef } from "react";
+import { ReactNode, useEffect, useRef, useState } from "react";
 import { Sidebar } from "./_components/Sidebar";
 import { GlobalCatalyst } from "./_components/GlobalCatalyst";
 import { AiChatPanel } from "./_components/AiChatPanel";
@@ -16,6 +16,15 @@ import { useMenuRouteSync } from "@/hooks/use-menu-route-sync";
 // 一个用于调试AI上下文堆栈的独立组件
 const AiContextStackDebugger = () => {
   const contextStack = useAiContextStore(state => state.contextStack);
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = () => {
+    const content = JSON.stringify(contextStack, null, 2);
+    navigator.clipboard.writeText(content).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
 
   return (
     <div
@@ -36,7 +45,24 @@ const AiContextStackDebugger = () => {
         border: '1px solid rgba(255, 255, 255, 0.2)',
       }}
     >
-      <h3 style={{ margin: '0 0 0.5rem', borderBottom: '1px solid white' }}>AI Context Stack (Top Last)</h3>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem', borderBottom: '1px solid white', paddingBottom: '0.25rem' }}>
+        <h3 style={{ margin: 0 }}>AI Context Stack (Top Last)</h3>
+        <button 
+          onClick={handleCopy}
+          style={{
+            background: copied ? '#4ade80' : 'rgba(255, 255, 255, 0.2)',
+            color: copied ? 'black' : 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '2px 6px',
+            fontSize: '10px',
+            cursor: 'pointer',
+            transition: 'all 0.2s'
+          }}
+        >
+          {copied ? 'copied' : 'copy'}
+        </button>
+      </div>
       <pre>{JSON.stringify(contextStack, null, 2)}</pre>
     </div>
   );

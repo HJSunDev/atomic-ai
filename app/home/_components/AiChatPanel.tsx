@@ -19,6 +19,12 @@ export function AiChatPanel() {
   const activeContext = useAiContextStore((state) => state.getActiveContext());
   const sceneName = activeContext?.metadata?.name ?? activeContext?.type ?? "无场景";
 
+  // 获取当前场景定义的动态操作
+  // 仅在 context 模式下生效
+  const sceneActions = (panelMode === 'context' && activeContext?.sceneActions) 
+    ? activeContext.sceneActions 
+    : undefined;
+
   // 定义提示卡片数据
   const promptCards = [
     {
@@ -91,6 +97,7 @@ export function AiChatPanel() {
                 messagesEndRef={messagesEndRef}
                 streamingMessageId={streamingMessageId}
                 isMessagesLoading={isMessagesLoading}
+                sceneActions={sceneActions}
                 emptyState={
                   <EmptyState
                     promptCards={promptCards.map(card => ({

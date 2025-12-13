@@ -1,4 +1,58 @@
 import { create } from "zustand";
+import { type LucideIcon } from "lucide-react";
+import React from "react";
+
+// 定义通用的 Message 接口，避免直接引用 UI 组件导致循环依赖
+// 这与 components/ai-chat/AiChatCore.tsx 中的 Message 类型兼容
+export interface AiMessage {
+  _id: string;
+  role: "user" | "assistant" | "system";
+  content: string;
+  metadata?: Record<string, any>;
+  [key: string]: any;
+}
+
+// 场景动作接口
+export interface SceneAction {
+  /** 唯一标识，用于 React key */
+  id: string;
+  
+  /** 按钮显示的文本 */
+  label: string;
+  
+  /** 
+   * 图标组件。
+   * 直接传递组件引用 (如 Lucide 的 Copy, Play 等)，实现无限扩展。
+   */
+  icon?: LucideIcon | React.ComponentType<{ className?: string }>;
+  
+  /** 
+   * 按钮样式变体，用于区分重要程度
+   * default: 标准按钮
+   * outline: 描边按钮
+   * ghost: 幽灵按钮 (适合次要操作)
+   * secondary: 强调色背景
+   */
+  variant?: 'default' | 'outline' | 'ghost' | 'secondary';
+  
+  /** 
+   * 核心过滤器：决定此按钮是否应该出现在这条特定消息下。
+   * @param message 完整的消息对象
+   */
+  shouldShow?: (message: AiMessage) => boolean;
+  
+  /**
+   * 执行逻辑。
+   * 支持异步 (Promise)，UI 层可以据此显示 Loading 状态。
+   * @param message 完整的消息对象
+   */
+  handler: (message: AiMessage) => void | Promise<void>;
+  
+  /** 
+   * 鼠标悬停时的提示文本 (可选)
+   */
+  tooltip?: string;
+}
 
 // 定义AI上下文的接口
 export interface AiContext {
@@ -50,6 +104,12 @@ export interface AiContext {
    * 可用于存储场景化的初始提示、可用工具集等。
    */
   metadata?: Record<string, any>; 
+
+  /** 
+   * 注入当前场景的动态能力
+   * 允许场景定义一组操作，这些操作会出现在 AI 消息的底部
+   */
+  sceneActions?: SceneAction[];
 }
 
 // 定义AI上下文Store的状态类型
