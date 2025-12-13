@@ -44,6 +44,16 @@ export interface SceneAction {
   handler: (message: AiMessage) => void | Promise<void>;
 }
 
+// 定义输入框暴露的控制接口
+export interface ChatInputControls {
+  /** 追加内容到输入框末尾 */
+  append: (text: string) => void;
+  /** 替换输入框内容 */
+  replace: (text: string) => void;
+  /** 获取当前输入框焦点 */
+  focus: () => void;
+}
+
 // 定义AI上下文的接口
 export interface AiContext {
   /**
@@ -128,6 +138,14 @@ interface AiContextState {
    * @returns 如果栈非空，返回栈顶的AiContext对象；否则返回null。
    */
   getActiveContext: () => AiContext | null;
+
+  // --- Input Bridge ---
+  /** 输入框控制器 (可能为空，如果面板未打开) */
+  inputControls: ChatInputControls | null;
+  /** 注册控制器 (由 ChatInput 调用) */
+  registerInputControls: (controls: ChatInputControls) => void;
+  /** 注销控制器 */
+  unregisterInputControls: () => void;
 }
 
 // 创建AI上下文的Zustand Store
@@ -167,4 +185,9 @@ export const useAiContextStore = create<AiContextState>()((set, get) => ({
     // 若不存在局部唤醒器上下文，则回退到栈顶元素
     return stack[stack.length - 1];
   },
+
+  // --- Input Bridge ---
+  inputControls: null,
+  registerInputControls: (controls) => set({ inputControls: controls }),
+  unregisterInputControls: () => set({ inputControls: null }),
 }));

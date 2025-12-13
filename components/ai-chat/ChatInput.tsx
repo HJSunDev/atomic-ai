@@ -19,6 +19,7 @@ import { ChatHistory } from "./ChatHistory";
 import { cn } from "@/lib/utils";
 import { AVAILABLE_MODELS } from "@/convex/_lib/models";
 import { useChatStore } from "@/store/home/useChatStore";
+import { useAiContextStore } from "@/store/home/use-ai-context-store";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +70,38 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
 
   // 内部 textarea ref，用于组件内部操作
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+
+  const registerInputControls = useAiContextStore((s) => s.registerInputControls);
+  const unregisterInputControls = useAiContextStore((s) => s.unregisterInputControls);
+
+  // 注册输入框控制能力到全局 Store
+  useEffect(() => {
+    registerInputControls({
+      append: (text: string) => {
+        setInputValue((prev) => prev + text);
+        // 自动滚动到底部
+        requestAnimationFrame(() => {
+          if (textareaRef.current) {
+            textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
+            textareaRef.current.focus();
+          }
+        });
+      },
+      replace: (text: string) => {
+        setInputValue(text);
+        requestAnimationFrame(() => {
+          textareaRef.current?.focus();
+        });
+      },
+      focus: () => {
+        textareaRef.current?.focus();
+      }
+    });
+
+    return () => {
+      unregisterInputControls();
+    };
+  }, [registerInputControls, unregisterInputControls]);
 
   // 上下文操作回调
   const handleAddContext = React.useCallback((context: SelectedContext) => {
