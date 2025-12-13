@@ -1,13 +1,15 @@
 "use client";
 
 import { useEditor, EditorContent } from '@tiptap/react';
-import { FloatingMenu } from '@tiptap/react/menus';
+import { FloatingMenu, BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
+import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useEffect, useState } from 'react';
 import type { EditorState } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
 import { FloatingMenuBar } from './FloatingMenuBar';
+import { BubbleMenuBar } from './BubbleMenuBar';
 import { Table } from '@tiptap/extension-table';
 import TableRow from '@tiptap/extension-table-row';
 import TableCell from '@tiptap/extension-table-cell';
@@ -81,6 +83,8 @@ export const TiptapEditor = ({
       Placeholder.configure({
         placeholder,
       }),
+      // 气泡菜单扩展
+      BubbleMenuExtension,
       // 表格支持
       Table.configure({
         resizable: true,
@@ -187,6 +191,13 @@ export const TiptapEditor = ({
         >
           <FloatingMenuBar editor={editor} />
         </FloatingMenu>
+      )}
+
+      {/* BubbleMenu：选中文本时显示 */}
+      {editor && !hideToolbar && (
+        <BubbleMenu editor={editor}>
+          <BubbleMenuBar editor={editor} />
+        </BubbleMenu>
       )}
     </div>
   );
