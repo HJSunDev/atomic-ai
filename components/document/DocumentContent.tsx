@@ -18,11 +18,12 @@ import { Check, X, MoreHorizontal, Plus, AlignLeft, Loader2, Sparkles, AlertCirc
 import { LocalCatalyst } from "@/components/ai-assistant/LocalCatalyst";
 import { SidebarDisplayIcon, ModalDisplayIcon, FullscreenDisplayIcon } from "@/components/icons";
 import { useAutoSaveDocument } from "@/hooks/useAutoSaveDocument";
-import { useCallback, useState, useEffect, useRef } from "react";
+import { useCallback, useState, useEffect, useRef, forwardRef, useImperativeHandle } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "sonner";
+import { markdownToTiptapJSON } from "@/lib/markdown";
 
 // 提取为独立组件，避免因父组件重渲染而导致自身被重新创建
 interface DisplayModeSelectorProps {
@@ -84,6 +85,15 @@ const DisplayModeSelector = ({ displayMode, onDisplayModeChange }: DisplayModeSe
   </DropdownMenu>
 );
 
+// 定义向外暴露的接口句柄
+export interface DocumentContentHandle {
+  /**
+   * 将 Markdown 内容追加到文档末尾
+   * @param markdown - 要追加的 Markdown 字符串
+   */
+  appendContent: (markdown: string) => void;
+}
+
 // 文档内容容器：统一的头部+主体布局，便于在不同容器中复用
 interface DocumentContentProps {
   onRequestClose?: () => void;
@@ -93,7 +103,8 @@ interface DocumentContentProps {
   documentId?: string;
 }
 
-export const DocumentContent = ({ onRequestClose, contextId, documentId: propDocumentId }: DocumentContentProps) => {
+export const DocumentContent = forwardRef<DocumentContentHandle, DocumentContentProps>(
+  ({ onRequestClose, contextId, documentId: propDocumentId }, ref) => {
   const router = useRouter();
   const displayMode = useDocumentStore((s) => s.displayMode);
   const storeDocumentId = useDocumentStore((s) => s.documentId);
@@ -144,6 +155,49 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
     streamingMarkdown,
     isStreaming,
   } = useAutoSaveDocument(finalDocumentId ?? null);
+
+  // 向外暴露能力：追加内容到文档
+  useImperativeHandle(ref, () => ({
+    appendContent: (newMarkdown: string) => {
+      if (!newMarkdown) return;
+
+      try {
+        // 1. 解析新内容为 Tiptap JSON
+        const newContentJson = markdownToTiptapJSON(newMarkdown);
+        if (!newContentJson || !newContentJson.content) return;
+
+        // 2. 解析当前文档内容
+        let currentDoc: any = { type: 'doc', content: [] };
+        if (content) {
+          try {
+            currentDoc = JSON.parse(content);
+          } catch (e) {
+            // 如果解析失败（比如是空字符串），使用默认空文档结构
+            currentDoc = { type: 'doc', content: [] };
+          }
+        }
+        
+        // 确保 content 数组存在
+        if (!Array.isArray(currentDoc.content)) {
+          currentDoc.content = [];
+        }
+
+        // 3. 追加内容 (在中间加一个空段落以保持间距，提升阅读体验)
+        if (currentDoc.content.length > 0) {
+          currentDoc.content.push({ type: "paragraph" });
+        }
+        currentDoc.content.push(...newContentJson.content);
+
+        // 4. 更新状态 (这将触发 useAutoSaveDocument 的防抖保存)
+        setContent(JSON.stringify(currentDoc));
+        toast.success("已追加到文档结尾", { position: 'top-center' });
+      } catch (error) {
+        console.error("追加内容失败", error);
+        toast.error("追加内容失败", { position: 'top-center' });
+      }
+    }
+  }), [content, setContent]);
+
 
   // 当用户点击“添加”后，此状态为 true，输入框出现并自动聚焦。
   // 如果输入框失去焦点且内容为空，此状态将重置为 false，输入框消失。
@@ -425,4 +479,7 @@ export const DocumentContent = ({ onRequestClose, contextId, documentId: propDoc
       )}
     </section>
   );
-};
+});
+
+// 设置组件显示名称，便于调试
+DocumentContent.displayName = "DocumentContent";

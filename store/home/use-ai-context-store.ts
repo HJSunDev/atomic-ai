@@ -17,23 +17,18 @@ export interface SceneAction {
   /** 唯一标识，用于 React key */
   id: string;
   
-  /** 按钮显示的文本 */
-  label: string;
+  /** 
+   * 提示文本 (可选)。
+   * 如果提供，将作为 Tooltip 内容和 aria-label。
+   * 如果不提供，按钮将只有图标
+   */
+  tooltip?: string;
   
   /** 
-   * 图标组件。
-   * 直接传递组件引用 (如 Lucide 的 Copy, Play 等)，实现无限扩展。
+   * 图标组件（必填）。
+   * 直接传递组件引用 (如 Lucide 的 Copy, Play 等)。
    */
-  icon?: LucideIcon | React.ComponentType<{ className?: string }>;
-  
-  /** 
-   * 按钮样式变体，用于区分重要程度
-   * default: 标准按钮
-   * outline: 描边按钮
-   * ghost: 幽灵按钮 (适合次要操作)
-   * secondary: 强调色背景
-   */
-  variant?: 'default' | 'outline' | 'ghost' | 'secondary';
+  icon: LucideIcon | React.ComponentType<{ className?: string }>;
   
   /** 
    * 核心过滤器：决定此按钮是否应该出现在这条特定消息下。
@@ -47,11 +42,6 @@ export interface SceneAction {
    * @param message 完整的消息对象
    */
   handler: (message: AiMessage) => void | Promise<void>;
-  
-  /** 
-   * 鼠标悬停时的提示文本 (可选)
-   */
-  tooltip?: string;
 }
 
 // 定义AI上下文的接口

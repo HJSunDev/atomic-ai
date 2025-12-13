@@ -3,6 +3,12 @@ import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { type Message } from "./AiChatCore";
 import { type SceneAction, type AiMessage } from "@/store/home/use-ai-context-store";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface MessageActionBarProps {
   message: Message;
@@ -33,49 +39,57 @@ export function MessageActionBar({ message, actions, className }: MessageActionB
       await action.handler(message as unknown as AiMessage);
     } catch (error) {
       console.error(`Action ${action.id} failed:`, error);
-      // 这里未来可以集成 toast.error("操作失败")
     } finally {
       setExecutingId(null);
     }
   };
 
   return (
-    <div className={cn("flex flex-wrap items-center gap-2", className)}>
+    <div className={cn("flex flex-wrap items-center gap-1", className)}>
       {/* 分隔线：将通用操作(如复制)与场景操作分开 */}
-      <div className="w-px h-3 bg-border mx-1" />
+      <div className="w-px h-3 bg-border/60 mx-1" />
       
-      {visibleActions.map((action) => {
-        const Icon = action.icon;
-        const isLoading = executingId === action.id;
+      <TooltipProvider delayDuration={300}>
+        {visibleActions.map((action) => {
+          const Icon = action.icon;
+          const isLoading = executingId === action.id;
 
-        return (
-          <button
-            key={action.id}
-            onClick={() => handleActionClick(action)}
-            disabled={isLoading}
-            className={cn(
-              "flex items-center gap-1.5 px-2 py-1 rounded text-xs font-medium transition-colors border select-none",
-              // 根据 variant 应用不同的样式
-              action.variant === 'secondary' 
-                ? "bg-blue-50 text-blue-600 border-blue-100 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-900/50 dark:hover:bg-blue-900/60"
-                : action.variant === 'outline'
-                  ? "bg-transparent text-foreground border-border hover:bg-accent"
-                  : action.variant === 'ghost'
-                    ? "bg-transparent border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
-                    : "bg-muted/50 text-muted-foreground border-transparent hover:bg-muted hover:text-foreground", // default
-              isLoading && "opacity-70 cursor-wait"
-            )}
-            title={action.tooltip || action.label}
-          >
-            {isLoading ? (
-              <Loader2 className="w-3 h-3 animate-spin" />
-            ) : Icon ? (
-              <Icon className="w-3 h-3" />
-            ) : null}
-            <span>{action.label}</span>
-          </button>
-        );
-      })}
+          const ButtonContent = (
+            <button
+              onClick={() => handleActionClick(action)}
+              disabled={isLoading}
+              className={cn(
+                "flex items-center justify-center w-6 h-6 rounded hover:bg-gray-100 dark:hover:bg-gray-700 transition-all duration-200 cursor-pointer outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1",
+                // Notion 风格：默认使用无背景、灰色图标
+                "text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300",
+                isLoading && "opacity-70 cursor-wait"
+              )}
+              aria-label={action.tooltip}
+            >
+              {isLoading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <Icon className="w-3.5 h-3.5" />
+              )}
+            </button>
+          );
+
+          if (action.tooltip) {
+            return (
+              <Tooltip key={action.id}>
+                <TooltipTrigger asChild>
+                  {ButtonContent}
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="text-xs">
+                  <p>{action.tooltip}</p>
+                </TooltipContent>
+              </Tooltip>
+            );
+          }
+
+          return <React.Fragment key={action.id}>{ButtonContent}</React.Fragment>;
+        })}
+      </TooltipProvider>
     </div>
   );
 }
