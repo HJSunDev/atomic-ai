@@ -3,14 +3,16 @@
 import { TiptapEditor } from "./TiptapEditor";
 import type React from "react";
 import { useState, useEffect, useRef } from "react";
-import { Plus } from "lucide-react";
+import { Plus, Sparkles, Loader2 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { useMutation } from "convex/react";
+import { useMutation, useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { markdownToTiptapJSON } from '@/lib/markdown';
+import { toast } from "sonner";
+import { useChatStore } from "@/store/home/useChatStore";
 
 // 文档表单属性（现在是受控组件）
 interface DocumentFormProps {
@@ -136,7 +138,53 @@ export const DocumentForm = ({
   // 派生状态：根据描述内容的行数和编辑状态，动态计算其样式
   const descriptionHasLessThanTwoLines = description.length === 0 || !description.includes('\n');
   const descriptionHeightClass = (isEditingDescription || !descriptionHasLessThanTwoLines) ? 'min-h-[2.8rem]' : 'min-h-[1.2rem]';
-  const descriptionEditingClass = isEditingDescription ? 'bg-gray-50 rounded-md p-2' : 'px-0';
+  const descriptionEditingClass = isEditingDescription ? 'bg-gray-50 rounded-md p-2 pb-8' : 'px-0';
+
+  // 自动生成描述相关
+  const executeTask = useAction(api.chat.action.executeTask);
+  const [isGeneratingDescription, setIsGeneratingDescription] = useState(false);
+  const { selectedModel, userApiKey } = useChatStore();
+
+  const handleGenerateDescription = async () => {
+    // 如果没有内容，提示用户
+    if (!content || content.length < 10) {
+      toast.error("文档内容太少，无法生成描述");
+      return;
+    }
+    
+    // 如果正在生成，忽略
+    if (isGeneratingDescription) return;
+
+    try {
+      setIsGeneratingDescription(true);
+      const result = await executeTask({
+        taskIdentifier: "GENERATE_DOCUMENT_DESCRIPTION",
+        inputText: content, // 传递文档内容（可能是JSON字符串，LLM能理解）
+        modelId: selectedModel,
+        userApiKey: userApiKey ?? undefined,
+      });
+
+      if (result.success && result.data) {
+        let generatedText = result.data.trim();
+        // 清洗可能的引号
+        if (generatedText.startsWith('"') && generatedText.endsWith('"')) {
+          generatedText = generatedText.slice(1, -1);
+        } else if (generatedText.startsWith("'") && generatedText.endsWith("'")) {
+          generatedText = generatedText.slice(1, -1);
+        }
+        
+        setDescription(generatedText);
+        toast.success("描述已生成");
+      } else {
+        toast.error(result.error || "生成失败，请重试");
+      }
+    } catch (error) {
+      console.error("生成描述失败:", error);
+      toast.error("请求失败，请稍后重试");
+    } finally {
+      setIsGeneratingDescription(false);
+    }
+  };
 
   // 标题变更
   const handleTitleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -175,7 +223,7 @@ export const DocumentForm = ({
       </section>
 
       {/* 描述输入：更加简洁的描述区域 */}
-      <section className="mb-[8px]">
+      <section className="mb-[8px] relative group">
         <Textarea
           className={`w-full resize-none border-0 shadow-none focus-visible:ring-0 py-0 !text-[13px] text-gray-400 placeholder:text-[#a8a49c] leading-relaxed max-h-[8.9rem] overflow-y-auto ${descriptionHeightClass} ${descriptionEditingClass}`}
           placeholder="添加描述..."
@@ -183,8 +231,32 @@ export const DocumentForm = ({
           onChange={handleDescriptionChange}
           onFocus={() => setIsEditingDescription(true)}
           onBlur={() => setIsEditingDescription(false)}
-          disabled={disabled}
+          disabled={disabled || isGeneratingDescription}
         />
+        
+        {/* 自动生成按钮 - 仅在编辑状态显示 */}
+        {isEditingDescription && (
+          <button
+            className="absolute bottom-2 right-2 flex items-center gap-1.5 px-2 py-1 rounded hover:bg-gray-200/50 text-xs text-gray-400 hover:text-gray-600 transition-colors duration-200 select-none z-10 cursor-pointer"
+            // 防止点击按钮导致 textarea 失去焦点而隐藏按钮
+            onMouseDown={(e) => e.preventDefault()}
+            onClick={handleGenerateDescription}
+            disabled={isGeneratingDescription || !content}
+            title="根据文档内容自动生成描述"
+          >
+            {isGeneratingDescription ? (
+              <>
+                <Loader2 className="w-3 h-3 animate-spin" />
+                <span>总结中...</span>
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-3 h-3" />
+                <span>总结</span>
+              </>
+            )}
+          </button>
+        )}
       </section>
 
       {/* 前置信息：可折叠的输入区域 */}

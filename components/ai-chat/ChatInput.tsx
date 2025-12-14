@@ -5,6 +5,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useAction } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { toast } from "sonner";
 import {
   Send,
   Sparkles,
@@ -70,6 +73,57 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
 
   // 内部 textarea ref，用于组件内部操作
   const textareaRef = React.useRef<HTMLTextAreaElement>(null);
+  
+  // 使用 ref 追踪 inputValue，以便在 handleOptimizePrompt 中获取最新值而不触发重渲染
+  const inputValueRef = React.useRef(inputValue);
+  useEffect(() => {
+    inputValueRef.current = inputValue;
+  }, [inputValue]);
+
+  // 从 Store 获取当前模型配置
+  const { selectedModel, userApiKey } = useChatStore();
+
+  // 引入 action
+  const executeTask = useAction(api.chat.action.executeTask);
+  const [isOptimizing, setIsOptimizing] = useState(false);
+
+  // 使用 useCallback 优化函数引用，依赖项中不包含 inputValue
+  const handleOptimizePrompt = React.useCallback(async () => {
+    const currentInput = inputValueRef.current;
+    if (!currentInput.trim() || isOptimizing) return;
+
+    try {
+      setIsOptimizing(true);
+      const result = await executeTask({
+        taskIdentifier: "OPTIMIZE_PROMPT",
+        inputText: currentInput,
+        modelId: selectedModel,
+        userApiKey: userApiKey ?? undefined,
+      });
+
+      if (result.success && result.data) {
+        // 去除可能的引号（如果 LLM 有时会包裹引号）
+        let optimizedText = result.data.trim();
+        // 简单的清洗：如果首尾有引号则去除
+        if (optimizedText.startsWith('"') && optimizedText.endsWith('"')) {
+          optimizedText = optimizedText.slice(1, -1);
+        } else if (optimizedText.startsWith("'") && optimizedText.endsWith("'")) {
+          optimizedText = optimizedText.slice(1, -1);
+        }
+        
+        setInputValue(optimizedText);
+      } else {
+        toast.error(result.error || "优化失败，请重试", { position: "top-center" });
+      }
+    } catch (error) {
+      console.error("Failed to optimize prompt:", error);
+      toast.error("优化请求失败", { position: "top-center" });
+    } finally {
+      setIsOptimizing(false);
+      // 重新聚焦输入框
+      textareaRef.current?.focus();
+    }
+  }, [executeTask, isOptimizing, selectedModel, userApiKey]);
 
   const registerInputControls = useAiContextStore((s) => s.registerInputControls);
   const unregisterInputControls = useAiContextStore((s) => s.unregisterInputControls);
@@ -184,13 +238,13 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
             : "relative"
         )}
       >
-        {/* 提示词功能区 */}
+          {/* 提示词功能区 */}
         {/* {!isMaximized && (
           <div className="px-4 py-1 flex items-center gap-3">
             <div className="flex items-center gap-1">
               <button
                 className="h-7 px-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700"
-                disabled={isLoading} // 加载时禁用按钮
+                disabled={isLoading || isOptimizing} // 加载或优化时禁用按钮
               >
                 <div className="w-4 h-4 bg-gray-400 dark:bg-gray-600 rounded-full"></div>
                 <span className="text-xs text-gray-600 dark:text-gray-400">
@@ -199,7 +253,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
               </button>
               <button
                 className="h-7 px-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700"
-                disabled={isLoading} // 加载时禁用按钮
+                disabled={isLoading || isOptimizing} // 加载或优化时禁用按钮
               >
                 <div className="w-4 h-4 bg-gray-400 dark:bg-gray-600 rounded-full"></div>
                 <span className="text-xs text-gray-600 dark:text-gray-400">
@@ -208,7 +262,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
               </button>
               <button
                 className="h-7 px-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center gap-2 border border-gray-200 dark:border-gray-700"
-                disabled={isLoading} // 加载时禁用按钮
+                disabled={isLoading || isOptimizing} // 加载或优化时禁用按钮
               >
                 <div className="w-4 h-4 bg-gray-400 dark:bg-gray-600 rounded-full"></div>
                 <span className="text-xs text-gray-600 dark:text-gray-400">
@@ -225,7 +279,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
             <ComingSoon showBadge={true}>
               <button
                 className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center"
-                disabled={isLoading} // 加载时禁用按钮
+                disabled={isLoading || isOptimizing} // 加载或优化时禁用按钮
               >
                 <Brain className="w-4 h-4 text-[#212125] dark:text-gray-300" />
               </button>
@@ -249,7 +303,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
                   >
                     <button
                       className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center cursor-pointer"
-                      disabled={isLoading} // 加载时禁用按钮
+                      disabled={isLoading || isOptimizing} // 加载或优化时禁用按钮
                     >
                       <Clock className="h-4 w-4 text-[#212125] dark:text-gray-300" />
                     </button>
@@ -264,7 +318,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
                 <TooltipTrigger asChild>
                   <button
                     className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-800 flex items-center justify-center cursor-pointer"
-                    disabled={isLoading} // 加载时禁用按钮
+                    disabled={isLoading || isOptimizing} // 加载或优化时禁用按钮
                     onClick={() => onNewConversation?.()} // 调用新建对话回调
                   >
                     <MessageSquarePlus className="h-4 w-4 text-[#212125] dark:text-gray-300" />
@@ -357,7 +411,7 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
               onFocus={() => setIsFocused(true)}
               onBlur={() => setIsFocused(false)}
               onKeyDown={(e) => {
-                if (e.key === "Enter" && !isLoading) {
+                if (e.key === "Enter" && !isLoading && !isOptimizing) {
                   if (isMaximized) {
                     // 放大状态下：Shift + Enter 发送，单独 Enter 换行
                     if (e.shiftKey) {
@@ -374,24 +428,42 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
                   }
                 }
               }}
-              disabled={isLoading} // 加载时禁用输入
+              disabled={isLoading || isOptimizing} // 加载或优化时禁用输入
             />
 
             {/* textarea右下侧功能区 */}
             <div className="bg-white dark:bg-[#202020] pb-[2px] px-3 flex items-center justify-end border-gray-100 dark:border-gray-700">
               <div className="flex items-center">
-                <button
-                  className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center"
-                  disabled={isLoading} // 加载时禁用按钮
-                >
-                  <Sparkles className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                </button>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      className={cn(
+                        "w-7 h-7 rounded-md flex items-center justify-center transition-all duration-200",
+                        inputValue.trim() && !isLoading && !isOptimizing
+                          ? "hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer text-gray-400 hover:text-gray-700 dark:text-gray-500 dark:hover:text-gray-300"
+                          : "cursor-not-allowed text-gray-200 dark:text-gray-700 opacity-50"
+                      )}
+                      disabled={!inputValue.trim() || isLoading || isOptimizing}
+                      onClick={handleOptimizePrompt}
+                    >
+                      {isOptimizing ? (
+                        <Loader2 className="w-4 h-4 animate-spin text-gray-400 dark:text-gray-500" />
+                      ) : (
+                        <Sparkles className="w-4 h-4" />
+                      )}
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent>
+                    <p>优化提示词</p>
+                  </TooltipContent>
+                </Tooltip>
+
                 {!isMaximized && (
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
                         className="w-7 h-7 rounded-md hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center justify-center cursor-pointer"
-                        disabled={isLoading} // 加载时禁用按钮
+                        disabled={isLoading || isOptimizing} // 加载或优化时禁用按钮
                         onClick={toggleMaximize}
                       >
                         <Maximize2 className="w-4 h-4 text-gray-500 dark:text-gray-400" />
@@ -406,11 +478,11 @@ export const ChatInput = forwardRef<ChatInputHandle, ChatInputProps>(({
                 {/* 发送按钮 - 根据输入内容决定样式和交互性 */}
                 <button
                   className={`w-7 h-7 rounded-md flex items-center justify-center ${
-                    inputValue.trim() && !isLoading
+                    inputValue.trim() && !isLoading && !isOptimizing
                       ? "hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer"
                       : "cursor-not-allowed"
                   }`}
-                  disabled={!inputValue.trim() || isLoading}
+                  disabled={!inputValue.trim() || isLoading || isOptimizing}
                   onClick={handleSendMessage}
                 >
                   {isLoading ? (

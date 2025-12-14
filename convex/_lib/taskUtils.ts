@@ -7,7 +7,8 @@ import { v } from "convex/values";
 export type TaskIdentifier = 
   | "OPTIMIZE_TITLE" 
   | "OPTIMIZE_PROMPT" 
-  | "DETECT_INTENT";
+  | "DETECT_INTENT"
+  | "GENERATE_DOCUMENT_DESCRIPTION";
 
 /**
  * Convex 验证器，用于验证任务标识符参数
@@ -16,7 +17,8 @@ export type TaskIdentifier =
 export const taskIdentifierValidator = v.union(
   v.literal("OPTIMIZE_TITLE"),
   v.literal("OPTIMIZE_PROMPT"),
-  v.literal("DETECT_INTENT")
+  v.literal("DETECT_INTENT"),
+  v.literal("GENERATE_DOCUMENT_DESCRIPTION")
 );
 
 // 使用 Record<TaskIdentifier, string> 来存储提示词模板
@@ -72,6 +74,22 @@ const promptTemplates: Record<TaskIdentifier, string> = {
     "示例输出：\n" +
     `{ "intent": "app", "confidence": 0.95, "reason": "用户请求生成游戏", "summary": "生成贪吃蛇游戏" }\n\n` +
     "用户输入：\n" +
+    "'{inputText}'",
+
+  /**
+   * 生成文档描述的任务提示
+   * 用于根据文档内容生成简短的摘要描述（约50字）
+   * 适用于文档列表展示或元数据补充
+   */
+  GENERATE_DOCUMENT_DESCRIPTION:
+    "你是一个专业的内容摘要助手。" +
+    "请阅读以下文档内容，为其写一个简短的描述。\n" +
+    "要求：\n" +
+    "1. 长度控制在 70 字左右。\n" +
+    "2. 准确概括文档的核心主题或主要内容。\n" +
+    "3. 语言精炼、客观，不要使用“本文”、“这篇文档”等自我指涉的词汇，直接描述内容。\n" +
+    "4. 只返回描述文本本身，不要包含引号或其他解释性文字。\n" +
+    "文档内容：\n\n" +
     "'{inputText}'",
 };
 
