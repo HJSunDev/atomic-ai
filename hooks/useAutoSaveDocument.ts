@@ -122,20 +122,30 @@ export const useAutoSaveDocument = (documentId: string | null) => {
 
       // 重置并延后开启“允许保存”的开关，避免将远程同步误判为用户输入
       initializationCompleteRef.current = false;
+    }
+
+    // 确保定时器存活
+    // 只要 initializationCompleteRef 是 false，就必须确保有一个定时器在跑。
+    // 这解决了 React Strict Mode 或快速重渲染导致定时器被意外清除的问题。
+    if (!initializationCompleteRef.current) {
       if (initCompletionTimerRef.current) {
         clearTimeout(initCompletionTimerRef.current);
       }
+      
       // 设置一个计时器，在所有防抖延迟（最长800ms）结束后，标记初始化完成
       initCompletionTimerRef.current = setTimeout(() => {
         initializationCompleteRef.current = true;
+        initCompletionTimerRef.current = null; // 跑完后清理引用
       }, 900);
     }
+
     // 返回一个清理函数。
     // 在组件卸载，或 documentId/documentData 变化导致 effect 重新执行之前，
     // 清除上一个 effect 设置的计时器，防止内存泄漏或意外的状态更新。
     return () => {
       if (initCompletionTimerRef.current) {
         clearTimeout(initCompletionTimerRef.current);
+        initCompletionTimerRef.current = null;
       }
     };
   }, [documentId, documentData]);

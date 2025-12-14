@@ -33,29 +33,41 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
   openrouter: {
     // 付费模型
     paid: {
-      "gpt-4o": {
-        modelName: "gpt-4o",
+      "gpt-5.2-chat": {
+        modelName: "openai/gpt-5.2-chat",
         provider: "openai",
         baseURL: "https://openrouter.ai/api/v1",
         temperature: 0.5,
         maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
-        description: "OpenAI的多模态旗舰模型，具备强大的推理能力和知识广度，适合复杂分析和创意任务",
-        isRecommended: false,
-        isFree: false,
-        shortName: "GPT-4o",
-        modelSeries: "gpt"
-      },
-      "gpt-5-chat": {
-        modelName: "openai/gpt-5-chat",
-        provider: "openai",
-        baseURL: "https://openrouter.ai/api/v1",
-        temperature: 0.5,
-        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
-        description: "OpenAI新一代对话模型，面向企业级应用，具备更强的多模态、长上下文与稳健推理能力",
+        description: "OpenAI 5.2 系列的快速轻量级成员 (Instant)，针对低延迟对话优化，具备自适应推理能力，在保持强大通用智能的同时更加温暖和人性化",
         isRecommended: true,
         isFree: false,
-        shortName: "GPT-5",
+        shortName: "GPT-5.2",
         modelSeries: "gpt"
+      },
+      "gemini-3-pro-preview": {
+        modelName: "google/gemini-3-pro-preview",
+        provider: "google",
+        baseURL: "https://openrouter.ai/api/v1",
+        temperature: 0.5,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
+        description: "Google 旗舰前沿模型，具备高精度多模态推理能力，拥有 1M token 上下文，在代理编码和复杂任务规划方面表现卓越",
+        isRecommended: true,
+        isFree: false,
+        shortName: "Gemini 3 Pro",
+        modelSeries: "gemini"
+      },
+      "glm-4.6": {
+        modelName: "z-ai/glm-4.6",
+        provider: "z-ai",
+        baseURL: "https://openrouter.ai/api/v1",
+        temperature: 0.5,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
+        description: "GLM 新一代模型，上下文扩展至 200K，在编码性能、逻辑推理和 Agent 智能体能力上有显著提升",
+        isRecommended: true,
+        isFree: false,
+        shortName: "GLM 4.6",
+        modelSeries: "glm"
       },
       "gemini-2.5-pro": {
         modelName: "google/gemini-2.5-pro",
@@ -64,7 +76,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         temperature: 0.5,
         maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "Google 的 Gemini 2.5 Pro，针对高级推理、编码、数学与科学任务优化，具备精细的上下文理解与思维模式，适合高要求生产级场景",
-        isRecommended: true,
+        isRecommended: false,
         isFree: false,
         shortName: "Gemini 2.5 Pro",
         modelSeries: "gemini"
@@ -76,7 +88,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         temperature: 0.5,
         maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "Anthropic 的 Claude Sonnet 4.5，面向真实生产工作流与编码任务优化，强调工具编排、长上下文与稳健推理，适合工程、研究与企业级场景",
-        isRecommended: true,
+        isRecommended: false,
         isFree: false,
         shortName: "Claude Sonnet 4.5",
         modelSeries: "claude"
