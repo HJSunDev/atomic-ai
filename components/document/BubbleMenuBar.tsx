@@ -8,6 +8,7 @@ import {
   Code,
   Zap
 } from 'lucide-react';
+import { useAiInput } from '@/hooks/useAiInput';
 
 interface BubbleMenuBarProps {
   editor: Editor | null;
@@ -20,6 +21,8 @@ interface BubbleMenuBarProps {
  * 
  */
 export const BubbleMenuBar = ({ editor }: BubbleMenuBarProps) => {
+  const { insertToChat } = useAiInput();
+
   if (!editor) {
     return null;
   }
@@ -64,7 +67,9 @@ export const BubbleMenuBar = ({ editor }: BubbleMenuBarProps) => {
         
         // 获取选中的文本
         const text = editor.state.doc.textBetween(from, to, ' ');
-        console.log('Selected text for AI:', text);
+        
+        // 使用 Input Bridge 将内容追加到聊天输入框
+        insertToChat(text);
       },
     },
   ];

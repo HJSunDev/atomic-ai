@@ -8,12 +8,10 @@ import {
   User,
   Settings,
   LogOut,
-  HelpCircle,
   ChevronRight
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { createPortal } from "react-dom";
 
 interface CustomUserAvatarProps {
@@ -141,6 +139,7 @@ export function CustomUserAvatar({
                 alt={user?.fullName || "用户头像"} 
                 width={40} 
                 height={40}
+                unoptimized // 避免服务端IP解析问题
                 className="w-full h-full object-cover"
               />
             ) : (
@@ -172,16 +171,6 @@ export function CustomUserAvatar({
             </div>
             <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
           </button>
-          
-          <Link href="/help" className="block">
-            <div className="w-full px-3 py-2 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 rounded-lg flex items-center justify-between group transition-colors">
-              <div className="flex items-center">
-                <HelpCircle className="mr-3 h-4 w-4 text-gray-500 group-hover:text-primary transition-colors" />
-                <span>帮助中心</span>
-              </div>
-              <ChevronRight className="h-4 w-4 text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300 transition-colors" />
-            </div>
-          </Link>
         </div>
         
         <div className="mt-2 pt-2 px-1 border-t border-gray-100 dark:border-gray-700">
@@ -204,7 +193,7 @@ export function CustomUserAvatar({
         ref={buttonRef}
         onClick={toggleMenu}
         className={cn(
-          "rounded-full overflow-hidden border border-gray-200 dark:border-gray-700",
+          "rounded-full overflow-hidden border border-gray-200 dark:border-gray-700 cursor-pointer",
           sizeMap[size].avatar
         )}
       >
@@ -215,6 +204,7 @@ export function CustomUserAvatar({
             width={40} 
             height={40} 
             priority
+            unoptimized // 避免服务端IP解析问题 (img.clerk.com resolved to private ip)
             className="w-full h-full object-cover"
           />
         ) : (

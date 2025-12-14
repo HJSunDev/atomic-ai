@@ -10,7 +10,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@clerk/nextjs": "^6.12.4",
+    "@clerk/nextjs": "^6.36.2",
     "@codesandbox/sandpack-react": "^2.20.0",
     "@codesandbox/sandpack-themes": "^2.0.21",
     "@convex-dev/persistent-text-streaming": "^0.2.3",
@@ -53,10 +53,10 @@
     "langchain": "^0.3.24",
     "lucide-react": "^0.479.0",
     "marked": "^17.0.0",
-    "next": "15.2.1",
+    "next": "^16.0.10",
     "next-themes": "^0.4.6",
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3",
     "react-markdown": "^10.1.0",
     "react-resizable-panels": "^3.0.6",
     "react-syntax-highlighter": "^15.6.1",
@@ -79,7 +79,7 @@
     "@types/react-dom": "^19",
     "@types/turndown": "^5.0.6",
     "eslint": "^9",
-    "eslint-config-next": "15.2.1",
+    "eslint-config-next": "^16.0.10",
     "tailwindcss": "^4",
     "typescript": "^5"
   }
