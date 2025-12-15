@@ -23,7 +23,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipProvider, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
 import { toast } from "sonner";
-import { markdownToTiptapJSON } from "@/lib/markdown";
+import { markdownToTiptapJSON, jsonToMarkdownV2 } from "@/lib/markdown";
+import { useAiContextStore } from "@/store/home/use-ai-context-store";
 
 // 提取为独立组件，避免因父组件重渲染而导致自身被重新创建
 interface DisplayModeSelectorProps {
@@ -205,6 +206,44 @@ export const DocumentContent = forwardRef<DocumentContentHandle, DocumentContent
 
   // 为了进入编辑模式时可以从文本末尾继续输入，保存 textarea 的引用
   const suffixTextareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+  // --- 场景上下文注册 ---
+  const registerSceneContextGetter = useAiContextStore((s) => s.registerSceneContextGetter);
+  const unregisterSceneContextGetter = useAiContextStore((s) => s.unregisterSceneContextGetter);
+  
+  // 使用 Ref 追踪最新内容，避免频繁触发注册更新
+  const latestContentRef = useRef({ title, content });
+  
+  useEffect(() => {
+    latestContentRef.current = { title, content };
+  }, [title, content]);
+
+  useEffect(() => {
+    // 注册上下文获取器
+    registerSceneContextGetter(() => {
+      const { title, content } = latestContentRef.current;
+      
+      // 将 Tiptap JSON 转换为 Markdown
+      const markdown = jsonToMarkdownV2(content);
+      
+      const contextStr = `
+[当前活跃文档]
+标题：${title || "未命名文档"}
+内容：
+${markdown || "(空文档)"}
+      `.trim();
+
+      return {
+        type: 'document-editor',
+        content: contextStr
+      };
+    });
+
+    // 清理函数
+    return () => {
+      unregisterSceneContextGetter();
+    };
+  }, [registerSceneContextGetter, unregisterSceneContextGetter]);
 
   // 当进入编辑模式时，将光标移动到现有文本的末尾，便于用户继续追加内容
   useEffect(() => {

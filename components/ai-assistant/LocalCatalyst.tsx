@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useAiPanelStore } from "@/store";
 import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 import { useAiContextStore } from "@/store/home/use-ai-context-store";
+import { useChatStore } from "@/store/home/useChatStore";
 
 interface LocalCatalystProps {
   // 必须提供此组件所属的上下文ID，用于精确匹配
@@ -21,7 +22,8 @@ export function LocalCatalyst({ ownerContextId, className }: LocalCatalystProps)
       // 如果有，则执行该自定义行为
       activeContext.onCatalystClick();
     } else {
-      // 否则，执行默认行为：直接打开AI面板
+      // 否则，执行默认行为：直接打开AI面板，并开启新会话
+      useChatStore.getState().startNewConversation();
       setAiPanelVisibility(true);
     }
   };

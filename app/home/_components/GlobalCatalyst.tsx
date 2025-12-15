@@ -4,6 +4,7 @@ import { cn } from "@/lib/utils";
 import { useAiPanelStore } from "@/store";
 import { AiAssistantAvatar } from "@/components/ai-assistant/AiAssistantAvatar";
 import { useAiContextStore } from "@/store/home/use-ai-context-store";
+import { useChatStore } from "@/store/home/useChatStore";
 
 interface GlobalCatalystProps {
   className?: string;
@@ -18,6 +19,8 @@ export function GlobalCatalyst({ className }: GlobalCatalystProps) {
 
   // 点击交互：打开AI面板
   const handleInteraction = () => {
+    // 打开AI面板前，先重置为新会话，确保用户进入一个新的对话上下文
+    useChatStore.getState().startNewConversation();
     // 打开AI面板（此时已确保当前菜单支持AI面板且面板未打开）
     setAiPanelVisibility(true);
   };

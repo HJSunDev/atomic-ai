@@ -51,6 +51,13 @@ export const streamAssistantResponse = action({
         specification: v.optional(v.string()),
         // 动态指定的背景信息
         backgroundInfo: v.optional(v.string()),
+        // 场景上下文：由前端场景组件生成的当前状态描述
+        sceneContext: v.optional(
+          v.object({
+            type: v.string(), // 场景类型标识，如 "document", "canvas"
+            content: v.string(), // 场景内容的文本描述
+          })
+        ),
         // 文档现在是带有类型的对象数组
         documents: v.optional(
           v.array(
@@ -356,6 +363,13 @@ export const streamGeneratePromptContent = action({
         specification: v.optional(v.string()),
         // 动态指定的背景信息
         backgroundInfo: v.optional(v.string()),
+        // 场景上下文：由前端场景组件生成的当前状态描述
+        sceneContext: v.optional(
+          v.object({
+            type: v.string(), // 场景类型标识，如 "document", "canvas"
+            content: v.string(), // 场景内容的文本描述
+          })
+        ),
         // 文档现在是带有类型的对象数组
         documents: v.optional(
           v.array(

@@ -10,6 +10,7 @@ import { useAiPanelStore, AiPanelMode } from "@/store/home/use-ai-panel-store";
 import { useAiContextStore } from "@/store/home/use-ai-context-store";
 import { MessageSquare, Layers } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SceneContextIndicator } from "@/components/ai-chat/SceneContextIndicator";
 
 export function AiChatPanel() {
 
@@ -58,7 +59,7 @@ export function AiChatPanel() {
         }) => (
           <>
             {/* 左上角模式切换 - 极简分段控制器 */}
-            <aside className="absolute top-2 left-2 z-20 select-none group/mode-switch">
+            <aside className="absolute top-2 left-2 z-20 select-none group/mode-switch flex items-center gap-2">
               <div className="flex items-center p-0.5 bg-transparent group-hover/mode-switch:bg-muted/40 transition-colors rounded-lg">
                 {modes.map((mode) => {
                   const isActive = panelMode === mode.id;
@@ -88,6 +89,9 @@ export function AiChatPanel() {
                   );
                 })}
               </div>
+              
+              {/* 场景上下文指示器：仅在 Context 模式下显示 */}
+              {panelMode === 'context' && <SceneContextIndicator />}
             </aside>
             
             {/* 内容区域 */}
