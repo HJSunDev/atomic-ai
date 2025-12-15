@@ -2,6 +2,7 @@
  * 定义上下文构建器所需的数据结构
  */
 interface ContextParts {
+  sceneContext?: string; // 场景上下文：由场景组件自行生成的当前状态描述
   coreTask?: string;
   specification?: string;
   backgroundInfo?: string;
@@ -22,6 +23,17 @@ export class ContextBuilder {
    */
   constructor(userInput: string) {
     this.parts = { userInput };
+  }
+
+  /**
+   * 添加“场景上下文”
+   * @param context 由场景组件自行生成的当前状态描述字符串
+   */
+  public withSceneContext(context: string | null | undefined): this {
+    if (context) {
+      this.parts.sceneContext = context;
+    }
+    return this;
   }
 
   /**
@@ -113,6 +125,11 @@ export class ContextBuilder {
    */
   public build(): string {
     const template: string[] = [];
+
+    // 场景上下文最优先：确立当前的对话环境
+    if (this.parts.sceneContext) {
+      template.push(`【当前场景上下文】\n${this.parts.sceneContext}`);
+    }
 
     // 各部分遵循预设的顺序和格式
     if (this.parts.coreTask) {

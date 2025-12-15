@@ -4,6 +4,7 @@ import { useUser } from "@clerk/nextjs";
 import { api } from "@/convex/_generated/api";
 import { Id } from "@/convex/_generated/dataModel";
 import { useChatStore } from "@/store/home/useChatStore";
+import { useAiContextStore } from "@/store/home/use-ai-context-store";
 import { ThinkingCursor, TypingCursor } from "@/components/custom";
 import { ChatInputHandle } from "./ChatInput";
 import { SelectedContext } from "./ContextAdder";
@@ -192,13 +193,23 @@ export function AiChatCore({
         // 设置流式传输状态
         setStreamingMessageId(assistantMessageId);
 
+        // 获取场景上下文
+        const { getSceneContext } = useAiContextStore.getState();
+        const sceneContext = getSceneContext();
+
         // 构造动态上下文参数
-        const contextPayload = contexts && contexts.length > 0 ? {
-          documents: contexts.map(c => ({
+        const contextPayload: any = {};
+        
+        if (contexts && contexts.length > 0) {
+          contextPayload.documents = contexts.map(c => ({
             id: c.id,
             type: c.type
-          }))
-        } : undefined;
+          }));
+        }
+
+        if (sceneContext) {
+          contextPayload.sceneContext = sceneContext;
+        }
 
         // 步骤2: 异步开始流式传输（不使用await，让它在后台运行）
         streamAssistantResponse({

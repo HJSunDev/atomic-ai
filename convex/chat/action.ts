@@ -42,7 +42,7 @@ export const streamAssistantResponse = action({
         webSearch: v.optional(v.boolean()),
       })
     ),
-    // 新增：动态上下文构建器参数
+    // 动态上下文构建器参数
     context: v.optional(
       v.object({
         // 动态指定的核心任务

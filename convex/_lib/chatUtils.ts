@@ -153,6 +153,10 @@ export const buildChatInput = async (
       id: Id<"documents">;
       type: "core_task" | "specification" | "background_info";
     }[];
+    sceneContext?: {
+      type: string;
+      content: string;
+    };
   }
 ): Promise<string> => {
 
@@ -160,6 +164,11 @@ export const buildChatInput = async (
 
   if (!context) {
     return builder.build();
+  }
+
+  // 注入场景上下文
+  if (context.sceneContext) {
+    builder.withSceneContext(context.sceneContext.content);
   }
 
   // 1. 处理非文档的动态内容

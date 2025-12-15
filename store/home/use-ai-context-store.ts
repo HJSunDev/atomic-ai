@@ -139,6 +139,22 @@ interface AiContextState {
    */
   getActiveContext: () => AiContext | null;
 
+  // --- Scene Context Bridge ---
+  /** 当前场景上下文获取器 (内部状态) */
+  sceneContextGetter: (() => { type: string; content: string } | null) | null;
+
+  /** 
+   * 注册场景上下文获取器。
+   * 场景组件在挂载时调用此方法，提供获取其内部状态的函数。
+   */
+  registerSceneContextGetter: (getter: () => { type: string; content: string } | null) => void;
+  
+  /** 注销场景上下文获取器 */
+  unregisterSceneContextGetter: () => void;
+  
+  /** 获取当前场景的上下文 */
+  getSceneContext: () => { type: string; content: string } | null;
+
   // --- Input Bridge ---
   /** 输入框控制器 (可能为空，如果面板未打开) */
   inputControls: ChatInputControls | null;
@@ -184,6 +200,17 @@ export const useAiContextStore = create<AiContextState>()((set, get) => ({
 
     // 若不存在局部唤醒器上下文，则回退到栈顶元素
     return stack[stack.length - 1];
+  },
+
+  // --- Scene Context Bridge ---
+  sceneContextGetter: null as (() => { type: string; content: string } | null) | null,
+  
+  registerSceneContextGetter: (getter) => set({ sceneContextGetter: getter }),
+  unregisterSceneContextGetter: () => set({ sceneContextGetter: null }),
+  
+  getSceneContext: () => {
+    const getter = get().sceneContextGetter;
+    return getter ? getter() : null;
   },
 
   // --- Input Bridge ---
