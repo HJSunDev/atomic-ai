@@ -82,6 +82,7 @@ export const streamGenerateApp = action({
   },
   handler: async (ctx, args) => {
     const startTime = Date.now();
+    let assistantMessageId: Id<"app_messages"> | undefined;
 
     try {
       // 1. 身份验证
@@ -115,7 +116,7 @@ export const streamGenerateApp = action({
       );
 
       // 5. 创建 AI 消息占位符
-      const assistantMessageId = await ctx.runMutation(
+      assistantMessageId = await ctx.runMutation(
         internal.factory.mutations.createMessage,
         {
           appId: args.appId,
@@ -267,6 +268,23 @@ The user will provide instructions to modify this code. Please generate the COMP
       const endTime = Date.now();
       const durationMs = endTime - startTime;
       const errorMessage = error instanceof Error ? error.message : "未知错误";
+
+      // 如果已创建了消息，需要更新状态以避免前端卡死
+      if (assistantMessageId) {
+        try {
+          // 1. 更新消息内容显示错误信息
+          await updateAppMessageContent(
+            ctx, 
+            assistantMessageId, 
+            `抱歉，生成代码时遇到错误: ${errorMessage}\n\n请稍后重试。`
+          );
+          
+          // 2. 标记流式传输结束，释放前端加载状态
+          await markMessageStreamingComplete(ctx, assistantMessageId);
+        } catch (cleanupError) {
+          console.error("清理错误状态失败:", cleanupError);
+        }
+      }
 
       // 结构化错误日志
       try {
