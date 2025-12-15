@@ -5,6 +5,8 @@ import { FloatingMenu, BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import BubbleMenuExtension from '@tiptap/extension-bubble-menu';
 import Placeholder from '@tiptap/extension-placeholder';
+import CodeBlockLowlight from '@tiptap/extension-code-block-lowlight';
+import { all, createLowlight } from 'lowlight';
 import { useEffect, useState } from 'react';
 import type { EditorState } from '@tiptap/pm/state';
 import type { EditorView } from '@tiptap/pm/view';
@@ -16,6 +18,9 @@ import TableCell from '@tiptap/extension-table-cell';
 import TableHeader from '@tiptap/extension-table-header';
 import './tiptap-editor.css';
 import { useMarkdownSync } from '@/hooks/useMarkdownSync';
+
+// 创建 lowlight 实例并注册所有语言
+const lowlight = createLowlight(all);
 
 interface TiptapEditorProps {
   content: string;
@@ -78,6 +83,12 @@ export const TiptapEditor = ({
           keepMarks: true,
           keepAttributes: false,
         },
+        // 禁用默认的 codeBlock，使用 codeBlockLowlight 代替
+        codeBlock: false,
+      }),
+      // 代码块高亮扩展
+      CodeBlockLowlight.configure({
+        lowlight,
       }),
       // Placeholder扩展
       Placeholder.configure({

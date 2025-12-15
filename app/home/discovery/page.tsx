@@ -269,7 +269,7 @@ export default function DiscoveryPage() {
           {isLoading ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
               {[...Array(8)].map((_, i) => (
-                <div key={i} className="h-[320px] bg-gray-100 dark:bg-gray-800/50 rounded-xl animate-pulse" />
+                <div key={i} className="aspect-[3/4] w-full bg-gray-100 dark:bg-gray-800/50 rounded-xl animate-pulse" />
               ))}
             </div>
           ) : items && items.length > 0 ? (

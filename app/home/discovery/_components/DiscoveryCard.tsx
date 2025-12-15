@@ -74,10 +74,10 @@ export function DiscoveryCard({ item }: DiscoveryCardProps) {
   return (
     <div 
       onClick={handleClick}
-      className="group flex flex-col h-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 cursor-pointer"
+      className="group flex flex-col h-full bg-white dark:bg-[#161616] border border-gray-200 dark:border-gray-800 rounded-xl overflow-hidden hover:shadow-md transition-all duration-300 cursor-pointer aspect-[3/4]"
     >
-      {/* 卡片头部 / 预览区域 */}
-      <div className={cn(
+      {/* 上半部分 / 预览区域 */}
+      <section className={cn(
         "relative w-full overflow-hidden border-b border-gray-100 dark:border-gray-800",
         isApp ? "aspect-[16/10]" : "aspect-[16/10] p-6 bg-gray-50/50 dark:bg-gray-900/50"
       )}>
@@ -129,30 +129,25 @@ export function DiscoveryCard({ item }: DiscoveryCardProps) {
               {item.description}
             </p>
             {/* 渐隐效果 */}
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-gray-50 dark:from-[#131313] to-transparent" />
+            <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-gray-50 via-gray-50/60 to-transparent dark:from-[#131313] dark:via-[#131313]/60" />
           </div>
         )}
 
-        {/* 类型标签 (右上角) */}
+        {/* 类型标签 */}
         <div className="absolute top-3 right-3">
           <Badge variant="secondary" className="bg-white/90 dark:bg-black/90 backdrop-blur-sm shadow-sm border border-gray-100 dark:border-gray-800 text-[10px] font-medium text-gray-500 h-5 px-1.5">
             {isApp ? <AppWindow className="w-3 h-3 mr-1" /> : <FileText className="w-3 h-3 mr-1" />}
             {isApp ? 'App' : 'Prompt'}
           </Badge>
         </div>
-      </div>
+      </section>
 
       {/* 卡片主体 */}
-      <div className="p-4 flex flex-col flex-1">
+      <section className="p-4 flex flex-col flex-1">
         <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100 mb-1 group-hover:text-primary transition-colors line-clamp-1">
           {item.title}
         </h3>
         
-        {isApp && (
-          <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-2 mb-3">
-            {item.description}
-          </p>
-        )}
 
         <div className="flex flex-wrap gap-1 mb-4 mt-auto pt-2">
           {item.tags?.slice(0, 3).map(tag => (
@@ -163,7 +158,7 @@ export function DiscoveryCard({ item }: DiscoveryCardProps) {
         </div>
 
         {/* 底部: 作者与统计 */}
-        <div className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-3 mt-auto">
+        <footer className="flex items-center justify-between border-t border-gray-100 dark:border-gray-800 pt-3 mt-auto">
           {/* 作者 */}
           <div className="flex items-center gap-2">
              <div className="w-5 h-5 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-800 flex items-center justify-center overflow-hidden">
@@ -181,7 +176,7 @@ export function DiscoveryCard({ item }: DiscoveryCardProps) {
           </div>
 
           {/* 统计数据 */}
-          <div className="flex items-center gap-3 text-xs text-gray-400">
+          <section className="flex items-center gap-3 text-xs text-gray-400">
             {item.stats.views !== undefined && (
               <div className="flex items-center gap-1 hover:text-gray-600 transition-colors cursor-default" title="Views">
                  <Eye className="w-3.5 h-3.5" />
@@ -215,9 +210,9 @@ export function DiscoveryCard({ item }: DiscoveryCardProps) {
                 )}
                <span>{formatNumber(item.stats.clones || 0)}</span>
             </div>
-          </div>
-        </div>
-      </div>
+          </section>
+        </footer>
+      </section>
     </div>
   );
 }

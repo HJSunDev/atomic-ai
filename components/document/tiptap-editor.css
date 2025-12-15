@@ -156,9 +156,10 @@
 
 /* Code blocks */
 .tiptap-editor .ProseMirror pre {
-  background-color: #1f2937;
-  color: #f9fafb;
+  background-color: #0d1117;
+  color: #c9d1d9;
   border-radius: 0.5rem;
+  border: 1px solid #30363d;
   padding: 1rem;
   margin: 1rem 0;
   overflow-x: auto;
@@ -173,6 +174,78 @@
   padding: 0;
   border-radius: 0;
   font-size: inherit;
+  font-family: inherit;
+}
+
+/* Syntax Highlighting - GitHub Dark Style */
+.tiptap-editor .hljs-comment,
+.tiptap-editor .hljs-quote,
+.tiptap-editor .hljs-meta {
+  color: #8b949e;
+}
+
+.tiptap-editor .hljs-doctag,
+.tiptap-editor .hljs-keyword,
+.tiptap-editor .hljs-formula {
+  color: #ff7b72;
+}
+
+.tiptap-editor .hljs-section,
+.tiptap-editor .hljs-name,
+.tiptap-editor .hljs-selector-tag,
+.tiptap-editor .hljs-deletion,
+.tiptap-editor .hljs-subst {
+  color: #79c0ff;
+}
+
+.tiptap-editor .hljs-literal {
+  color: #79c0ff;
+}
+
+.tiptap-editor .hljs-string,
+.tiptap-editor .hljs-regexp,
+.tiptap-editor .hljs-addition,
+.tiptap-editor .hljs-attribute,
+.tiptap-editor .hljs-meta .hljs-string {
+  color: #a5d6ff;
+}
+
+.tiptap-editor .hljs-attr,
+.tiptap-editor .hljs-variable,
+.tiptap-editor .hljs-template-variable,
+.tiptap-editor .hljs-type,
+.tiptap-editor .hljs-selector-class,
+.tiptap-editor .hljs-selector-attr,
+.tiptap-editor .hljs-selector-pseudo,
+.tiptap-editor .hljs-number {
+  color: #79c0ff;
+}
+
+.tiptap-editor .hljs-symbol,
+.tiptap-editor .hljs-bullet,
+.tiptap-editor .hljs-link,
+.tiptap-editor .hljs-meta .hljs-keyword,
+.tiptap-editor .hljs-selector-id,
+.tiptap-editor .hljs-title {
+  color: #d2a8ff;
+}
+
+.tiptap-editor .hljs-built_in,
+.tiptap-editor .hljs-title.class_,
+.tiptap-editor .hljs-class .hljs-title {
+  color: #d2a8ff;
+}
+
+.tiptap-editor .hljs-emphasis {
+  font-style: italic;
+}
+
+.tiptap-editor .hljs-strong {
+  font-weight: bold;
+}
+
+.tiptap-editor .hljs-link {
+  text-decoration: underline;
 }
 
 /* Strong and em */
