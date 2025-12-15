@@ -468,7 +468,7 @@ export function MessageList({
                   </div>
                   <span className="text-sm font-medium">OmniAid</span>
                   {message.metadata?.aiModel && (
-                    <span className="text-xs bg-blue-100 dark:bg-blue-900 px-2 py-0.5 rounded text-blue-800 dark:text-blue-200">
+                    <span className="text-[10px] font-medium text-gray-500 dark:text-gray-400 border border-gray-200 dark:border-gray-700 rounded px-1.5 py-0.5 bg-gray-50 dark:bg-gray-800/50">
                       {message.metadata.aiModel}
                     </span>
                   )}

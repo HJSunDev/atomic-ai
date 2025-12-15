@@ -122,9 +122,18 @@ export function AiChatCore({
 
     const streamingMessage = messages.find((m) => m._id === streamingMessageId);
     
-    // 如果找到消息且已有完整元数据，说明流式传输完成
-    if (streamingMessage && streamingMessage.metadata?.durationMs) {
-      setStreamingMessageId(null);
+    // 如果找到消息且满足结束条件，说明流式传输完成
+    if (streamingMessage) {
+      const metadata = streamingMessage.metadata;
+      // 核心原则：优先根据明确的业务状态(status)判断流程是否结束，而不是依赖副作用数据(durationMs)。
+      const isComplete = 
+        metadata?.status === "success" || 
+        metadata?.status === "error" || 
+        metadata?.durationMs !== undefined;
+
+      if (isComplete) {
+        setStreamingMessageId(null);
+      }
     }
   }, [messages, streamingMessageId]);
 
