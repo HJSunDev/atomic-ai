@@ -460,70 +460,91 @@ export const generateMicroAppHtml = ({ title = "AI Micro App", code, theme = "li
   // 4. 构建初始化脚本 (Bootloader)
   // 根据模式选择不同的初始化策略
   const bootloaderScript = isReactMode ? `
-    // React 模式初始化：需要等待 Babel 加载和编译
-    function initApp() {
+    // React 模式初始化：事件驱动 + 手动编译
+    // 优势：
+    // 使用 requestAnimationFrame 确保首屏最快可见
+    // 使用 onload 事件触发
+    // 强制 modules: false，完美支持 Import Maps
+    
+    function compileAndRun() {
       try {
-        if (typeof Babel !== 'undefined') {
-          // 1. 触发编译
-          if (Babel.transformScriptTags) {
-            Babel.transformScriptTags();
-          } else {
-            // 备用编译方案
-            const babelScripts = document.querySelectorAll('script[type="text/babel"]');
-            babelScripts.forEach(script => {
-              try {
-                const isModule = script.hasAttribute('data-type') && script.getAttribute('data-type') === 'module';
-                const transformed = Babel.transform(script.innerHTML, {
-                  presets: ['react', ['env', { modules: false }]]
-                });
-                const newScript = document.createElement('script');
-                newScript.type = isModule ? 'module' : 'text/javascript';
-                newScript.textContent = transformed.code;
-                script.parentNode.replaceChild(newScript, script);
-              } catch (e) { console.warn('Transformation failed:', e); }
-            });
-          }
-        }
+        const babelScripts = document.querySelectorAll('script[type="text/babel"]');
         
-        // 2. 移除 Loading (给予 React 渲染缓冲时间)
-        setTimeout(() => {
-          const loader = document.getElementById('global-loader');
-          const root = document.getElementById('app-root');
-          if (loader) { loader.style.opacity = '0'; setTimeout(() => loader.remove(), 500); }
-          if (root) root.classList.remove('opacity-0');
-          if (typeof AOS !== 'undefined') AOS.init({ duration: 800, once: true });
-        }, 800);
+        babelScripts.forEach(script => {
+          // 1. 识别是否需要作为模块处理 (配合 Import Maps)
+          // 如果有 data-type="module" 或者是包含 import/export 的代码，都视为模块
+          const isModule = script.getAttribute('data-type') === 'module' || 
+                           script.innerHTML.includes('import ') || 
+                           script.innerHTML.includes('export ');
+          
+          // 2. 核心编译：手动调用 Babel，强制保留 ES Modules 语法
+          // 这是防止 Babel 默认将 import 转译为 require (导致浏览器报错) 的关键配置
+          const output = Babel.transform(script.innerHTML, {
+            presets: [
+              'react',
+              ['env', { modules: false }] // 关键：不转译 import/export
+            ],
+            filename: 'dynamic-component.jsx' // 提供文件名有助于 SourceMap 调试
+          });
+
+          // 3. 注入新代码
+          const newScript = document.createElement('script');
+          newScript.type = isModule ? 'module' : 'text/javascript';
+          newScript.textContent = output.code;
+          
+          // 替换旧脚本执行
+          script.parentNode.replaceChild(newScript, script);
+        });
+
+        // 4. 性能优化：在下一帧移除遮罩
+        // 此时 React 代码已经注入并开始执行 (如果是同步渲染)
+        // 使用双重 rAF 确保浏览器完成 Layout 和 Paint，避免画面撕裂或白屏
+        requestAnimationFrame(() => {
+           requestAnimationFrame(() => {
+              const loader = document.getElementById('global-loader');
+              const root = document.getElementById('app-root');
+              
+              if (root) root.classList.remove('opacity-0');
+              
+              if (loader) {
+                 loader.style.opacity = '0';
+                 // 等待 CSS transition (0.5s) 结束后从 DOM 移除
+                 setTimeout(() => loader.remove(), 500); 
+              }
+              
+              if (typeof AOS !== 'undefined') AOS.init({ duration: 800, once: true });
+           });
+        });
 
       } catch (error) {
-        console.error('App initialization error:', error);
-        document.getElementById('error-box').style.display = 'block';
-        document.getElementById('error-box').textContent = 'Init Error: ' + error.message;
-        document.getElementById('global-loader').style.display = 'none';
+        console.error('Babel Compile Error:', error);
+        const errBox = document.getElementById('error-box');
+        if (errBox) {
+            errBox.style.display = 'block';
+            errBox.textContent = 'Compile Error: ' + error.message;
+        }
+        const loader = document.getElementById('global-loader');
+        if (loader) loader.style.display = 'none';
       }
     }
 
-    // 轮询等待 Babel
-    function waitForBabel() {
-      if (typeof Babel !== 'undefined') {
-        setTimeout(initApp, 100);
-      } else {
-        let attempts = 0;
-        const checkInterval = setInterval(() => {
-          attempts++;
-          if (typeof Babel !== 'undefined') {
-            clearInterval(checkInterval);
-            setTimeout(initApp, 100);
-          } else if (attempts >= 100) { // 5秒超时
-            clearInterval(checkInterval);
-            console.warn('Babel timeout, forcing init');
-            initApp();
-          }
-        }, 50);
-      }
+    // 事件驱动架构
+    if (typeof Babel !== 'undefined') {
+      // 命中缓存或加载极快的情况
+      compileAndRun();
+    } else {
+      // 监听 script 标签上埋下的事件
+      window.addEventListener('babel-loaded', compileAndRun);
+      window.addEventListener('babel-error', () => {
+         const errBox = document.getElementById('error-box');
+         if (errBox) {
+            errBox.style.display = 'block';
+            errBox.innerText = 'Failed to load Babel compiler from CDN.';
+         }
+         const loader = document.getElementById('global-loader');
+         if (loader) loader.remove();
+      });
     }
-    
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', waitForBabel);
-    else waitForBabel();
   ` : `
     // 原生模式初始化：极速响应
     // 不等待所有图片资源加载（load），只要 DOM 准备好（DOMContentLoaded）就显示
@@ -611,7 +632,10 @@ export const generateMicroAppHtml = ({ title = "AI Micro App", code, theme = "li
   </script>
 
   <!-- === 3. Babel (仅 React 模式加载) === -->
-  ${isReactMode ? '<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>' : ''}
+  ${isReactMode ? `<script src="https://unpkg.com/@babel/standalone/babel.min.js" 
+    onload="window.dispatchEvent(new Event('babel-loaded'))"
+    onerror="window.dispatchEvent(new Event('babel-error'))"
+  ></script>` : ''}
 
   <!-- === 4. Import Maps (按需加载的神器) === -->
   <!-- 只有当 AI 写了 import ... from 'react' 时，浏览器才会下载这些库 -->

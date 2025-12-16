@@ -31,7 +31,7 @@ You have an ES Module Import Map set up. You can import these libraries directly
 - canvas-confetti (for celebration effects)
 - chart.js/auto (for charts)
 - three (for 3D scenes)
-- lucide-react (React icons)
+- lucide-react (React icons). STRICTLY use Lucide names (e.g., 'Mail' not 'Envelope').
 
 ### 4. Implementation Strategy
 Choose the best approach based on the user's request:
@@ -70,6 +70,14 @@ Choose the best approach based on the user's request:
 - **Modern UI**: Use rounded corners (rounded-xl), soft shadows (shadow-lg), and ample padding (p-6).
 - **Colors**: Use the primary color scale (e.g., bg-primary-600, text-primary-500) to match the brand.
 - **Typography**: Use prose prose-slate wrapper for long text content.
+
+### 6. Icon Usage Rules (STRICT)
+- **Source of Truth**: You are using \`lucide-react\`. Do NOT use FontAwesome, Material Icons, or Phosphor names.
+- **Common Mistakes to AVOID**:
+  - ❌ \`Envelope\` -> ✅ Use \`Mail\`
+  - ❌ \`PaperPlane\` / \`PaperPlaneTilt\` -> ✅ Use \`Send\`
+  - ❌ \`Bin\` / \`TrashCan\` -> ✅ Use \`Trash2\`
+  - ❌ \`RocketLaunch\` -> ✅ Use \`Rocket\`
 
 ### 7. Images (Hybrid Strategy)
 Choose the best image source based on the context:
