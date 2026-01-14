@@ -57,6 +57,18 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         shortName: "Gemini 3 Pro",
         modelSeries: "gemini"
       },
+      "glm-4.7": {
+        modelName: "z-ai/glm-4.7",
+        provider: "z-ai",
+        baseURL: "https://openrouter.ai/api/v1",
+        temperature: 0.5,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
+        description: "Z.AI 最新旗舰模型，针对编程与复杂任务规划优化，多步推理更稳定。在保持自然对话的同时，大幅提升了 Agent 智能体的执行能力与前端交互美学",
+        isRecommended: false,
+        isFree: false,
+        shortName: "GLM 4.7",
+        modelSeries: "glm"
+      },
       "glm-4.6": {
         modelName: "z-ai/glm-4.6",
         provider: "z-ai",
@@ -64,7 +76,7 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         temperature: 0.5,
         maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "GLM 新一代模型，上下文扩展至 200K，在编码性能、逻辑推理和 Agent 智能体能力上有显著提升",
-        isRecommended: true,
+        isRecommended: false,
         isFree: false,
         shortName: "GLM 4.6",
         modelSeries: "glm"
@@ -100,10 +112,34 @@ export const MODELS_BY_PROVIDER: Record<ProviderType, {
         temperature: 0.5,
         maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
         description: "Moonshot AI 的 Kimi K2 Thinking，面向 agentic、长程推理与工具使用的生产级模型，支持超长上下文与稳定的分步推理能力",
-        isRecommended: true,
+        isRecommended: false,
         isFree: false,
         shortName: "Kimi K2 Thinking",
         modelSeries: "kimi"
+      },
+      "minimax-m2.1": {
+        modelName: "minimax/minimax-m2.1",
+        provider: "minimax",
+        baseURL: "https://openrouter.ai/api/v1",
+        temperature: 0.5,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
+        description: "MiniMax 专为编码与 Agent 工作流优化的轻量级 SOTA 模型。以 10B 激活参数实现性能飞跃，兼顾低延迟与高扩展性，在多语言编程任务中表现卓越",
+        isRecommended: false,
+        isFree: false,
+        shortName: "MiniMax M2.1",
+        modelSeries: "minimax"
+      },
+      "deepseek-v3.2": {
+        modelName: "deepseek/deepseek-v3.2",
+        provider: "deepseek",
+        baseURL: "https://openrouter.ai/api/v1",
+        temperature: 0.5,
+        maxTokens: GENERAL_PAID_MODEL_MAX_DOC_OUTPUT,
+        description: "DeepSeek 新一代高效能推理模型，融合 DSA 稀疏注意力机制。具备 GPT-5 级性能与金牌级数学/编程能力，针对 Agent 工具调用深度优化",
+        isRecommended: false,
+        isFree: false,
+        shortName: "DeepSeek V3.2",
+        modelSeries: "deepseek"
       },
     },
     // 免费模型
